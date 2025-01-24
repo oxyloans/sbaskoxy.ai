@@ -25,12 +25,7 @@ const Ricebags: React.FC = () => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "https://meta.oxyloans.com/api/erice-service/user/showItemsForCustomrs",
-          {
-            headers: {
-              Authorization: `Bearer <your_token_here>`,
-            },
-          }
+          "https://meta.oxyglobal.tech/api/product-service/showItemsForCustomrs",
         );
 
         const manualCategory: Category = {

@@ -10,7 +10,7 @@ import Logo from "../assets/img/logo.png";
 
 const Footer: React.FC = () => {
   return (
-    <footer className="p-8 bg-gray-50 shadow-lg text-center md:text-left">
+    <footer className="p-8 bg-gray-50 shadow-lg text-center md:text-left drop-shadow-lg mt-10">
       {/* Grid Layout for Footer Sections */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         {/* Logo and Social Media Section */}
