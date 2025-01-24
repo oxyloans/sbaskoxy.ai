@@ -4,7 +4,8 @@ import { FaSearch } from "react-icons/fa";
 import "./herosection.css";
 import Header from "./Header";
 import ReactMarkdown from "react-markdown";
-
+import { HiOutlineDocument } from "react-icons/hi";
+import Container from "./ContainerPolicy";
 import { Link, useNavigate } from "react-router-dom";
 import HM1 from "../assets/img/1.png";
 import HM2 from "../assets/img/2.png";
@@ -54,7 +55,6 @@ interface ImageData {
   alt: string;
   text: string;
   link: string;
-  
 }
 
 // Images and their metadata with page links
@@ -335,7 +335,7 @@ const HeroSection: React.FC = () => {
     setQuery(e.target.value);
   };
 
-  const handleSearch = async () => {
+  const handleSearch1 = async () => {
     if (query.trim() === "") {
       alert("Please enter a valid question");
       return;
@@ -378,16 +378,35 @@ const HeroSection: React.FC = () => {
   const closeModal = () => {
     setShowModal(false);
   };
+  const [showContainer, setShowContainer] = useState(false);
+
+  const handleButtonClick = () => {
+    window.open(
+      "https://drive.google.com/file/d/1x_0b6DIt5-rbq1fubeHcIMO5Grxr46p1/view",
+      "_blank"
+    ); // Set state to show the container when the button is clicked
+  };
 
   const handleLoginClick = () => {
     closeModal();
     navigate("/whatapplogin"); // Navigate to the login page
   };
+  const [isSearchInProgress, setIsSearchInProgress] = useState(false);
 
   const imageGroup1 = repeatAndShuffleImages(images, 20);
   const imageGroup2 = repeatAndShuffleImages(images, 20);
   const imageGroup3 = repeatAndShuffleImages(images, 20);
 
+  const userId = localStorage.getItem("userId");
+  const handleSearch = () => {
+    if (userId) {
+      // If user is signed in, redirect to dashboard
+      window.location.href = `/dashboard?query=${encodeURIComponent(query)}`;
+    } else {
+      // Otherwise, redirect to normal page
+      window.location.href = `/normal?query=${encodeURIComponent(query)}`;
+    }
+  };
   return (
     <section className="section">
       {/* Header Section */}
@@ -420,32 +439,34 @@ const HeroSection: React.FC = () => {
                   onChange={handleInputChange}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      // Trigger redirection when Enter is pressed
-                      window.location.href = `/normal?${query}`;
+                      handleSearch(); // Trigger the search action on Enter
                     }
                   }}
                 />
                 <button
-                  className="search-button"
-                  onClick={() => {
-                    window.location.href = `/normal?${query}`;
-                  }}
+                  className="absolute top-1/2 right-2 transform -translate-y-1/2  text-black p-2 rounded-full "
+                  onClick={handleSearch}
                 >
-                  <span className="search-icon icons">&#128269;</span>{" "}
-                  {/* Placeholder for Search Icon */}
+                  <FaSearch />
                 </button>
               </div>
-
-              {/* Optional: Display the API response */}
-              {/* {response && (
-    <div className="response-container">
-      <h3></h3>
-      <p><ReactMarkdown>{JSON.stringify(response, null, 2)}</ReactMarkdown></p>
-    </div>
-  )} */}
             </div>
           </div>
         </div>
+        {/* <div>
+          
+          <button
+            className="fixed bottom-8 right-8 px-6 py-3 bg-[#04AA6D] text-white rounded-lg shadow-lg hover:bg-[#B71C1C] transition-all text-sm md:text-base lg:text-lg flex items-center justify-center z-50"
+            aria-label="Open Container Policy PDF"
+            onClick={handleButtonClick} // Attach click handler to the button
+          >
+         
+            Container Policy Preview
+          </button>
+
+
+          {showContainer && <Container />}
+        </div> */}
 
         {/* Image Section - 40% of screen width */}
         <div className="div2 ">
@@ -454,9 +475,8 @@ const HeroSection: React.FC = () => {
               {imageGroup1.map((image, index) => (
                 <div className="image-item" key={index}>
                   <div onClick={() => handleImageClick(image)}>
-                    
-                      <img src={image.src} alt={image.alt} />
-                 
+                    <img src={image.src} alt={image.alt} />
+
                     <div className="image-text">{image.text}</div>
                   </div>
                 </div>
@@ -529,9 +549,8 @@ const HeroSection: React.FC = () => {
               {imageGroup2.map((image, index) => (
                 <div className="image-item" key={index}>
                   <div onClick={() => handleImageClick(image)}>
-                  
-                      <img src={image.src} alt={image.alt} />
-                    
+                    <img src={image.src} alt={image.alt} />
+
                     <div className="image-text">{image.text}</div>
                   </div>
                 </div>
@@ -544,9 +563,8 @@ const HeroSection: React.FC = () => {
               {imageGroup3.map((image, index) => (
                 <div className="image-item" key={index}>
                   <div onClick={() => handleImageClick(image)}>
-                    
-                      <img src={image.src} alt={image.alt} />
-                   
+                    <img src={image.src} alt={image.alt} />
+
                     <div className="image-text">{image.text}</div>
                   </div>
                 </div>

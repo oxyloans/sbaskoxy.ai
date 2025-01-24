@@ -3,10 +3,11 @@ import "./Freerudraksha.css";
 import "./DiwaliPage.css";
 import axios from "axios";
 import { FaMapMarkerAlt } from "react-icons/fa";
-
+import ScrollToTop from "./ScrollToTop";
 import TeluguShiva from "../assets/img/telugu.png";
 import EnglishShiva from "../assets/img/english.png";
 import Image1 from "../assets/img/WEBSITE (1).png";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import Image2 from "../assets/img/R2.png";
 import Image3 from "../assets/img/images.png";
 import Image4 from "../assets/img/chat-icon-2048x2048-i7er18st.png";
@@ -14,7 +15,7 @@ import Footer from "./Footer";
 import { Modal, Button, Input, message } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons";
-
+import { useNavigate } from "react-router-dom";
 import img1 from "../assets/img/image1.png";
 import img2 from "../assets/img/image2.png";
 import img3 from "../assets/img/image3.png";
@@ -55,6 +56,8 @@ const Freerudraksha: React.FC = () => {
   const [modalType, setModalType] = useState<string>("");
   const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [issuccessOpen, setSuccessOpen] = useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const storedPhoneNumber = localStorage.getItem("whatsappNumber");
   // Fetch user ID from storage if needed.
@@ -63,9 +66,11 @@ const Freerudraksha: React.FC = () => {
   const [isOfficeConfirmationVisible, setIsOfficeConfirmationVisible] =
     useState(false);
   const [savedAddress, setSavedAddress] = useState<string>("");
-  const [delivery, setDelivery] = useState<string>("");
 
+  const [delivery, setDelivery] = useState<string>("");
+  const [isprofileOpen, setIsprofileOpen] = useState<boolean>(false);
   const [query, setQuery] = useState("");
+  const [queryError, setQueryError] = useState<string>("");
   const [isModalOpen1, setIsModalOpen1] = useState<boolean>(false);
   const userId = localStorage.getItem("userId");
   console.log(userId);
@@ -76,33 +81,6 @@ const Freerudraksha: React.FC = () => {
       setIsModalOpen(true);
     } else {
       message.error("Phone number is not available in local storage.");
-    }
-  };
-
-  const handleSend = () => {
-    if (query.trim()) {
-      // Handle sending the query
-      console.log("User Query:", query);
-      setIsModalOpen(false);
-      setQuery("");
-      alert("Your query has been sent successfully!");
-    } else {
-      alert("Please write a query before submitting.");
-    }
-  };
-  const whatsappNumber = "9160463697";
-
-  const handleMessage = (action: string) => {
-    if (action === "Write to Us") {
-      console.log("Navigating to 'Write to Us' feature...");
-      //  window.location.href = "/contact-form";
-    } else if (action === "Chat with Us") {
-      console.log("Opening WhatsApp chat...");
-      const message = `Hi`;
-      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        message
-      )}`;
-      window.open(url, "_blank");
     }
   };
 
@@ -251,6 +229,7 @@ const Freerudraksha: React.FC = () => {
       setIsModalOpen(false);
     }
   };
+
   const handleDeliverySelection = (deliveryType: string) => {
     if (deliveryType === "PickInOffice") {
       setIsOfficeConfirmationVisible(true); // Show office details confirmation
@@ -258,52 +237,293 @@ const Freerudraksha: React.FC = () => {
       submitRequest(deliveryType);
     }
   };
+
+  const email = localStorage.getItem("email");
+  const mobileNumber = localStorage.getItem("whatsappNumber");
+
+  const navigate = useNavigate();
+  const handlePopUOk = () => {
+    setIsOpen(false);
+    navigate("/user-profile");
+  };
+
+  const handleWriteToUs = () => {
+    if (
+      !email ||
+      email === "null" ||
+      !mobileNumber ||
+      mobileNumber === "null"
+    ) {
+      setIsprofileOpen(true);
+    } else {
+      setIsOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    if (issuccessOpen) {
+      const timer = setTimeout(() => {
+        setSuccessOpen(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [issuccessOpen]);
+  const handleWriteToUsSubmitButton = async () => {
+    if (!query || query.trim() === "") {
+      setQueryError("Please enter the query before submitting.");
+      return; // Exit the function if the query is invalid
+    }
+    // Payload with the data to send to the API
+    const payload = {
+      email: email, // You might want to replace this with dynamic values
+      mobileNumber: mobileNumber, // You might want to replace this with dynamic values
+      queryStatus: "PENDING",
+      projectType: "ASKOXY",
+      askOxyOfers: "FREERUDRAKSHA",
+      adminDocumentId: "",
+      comments: "",
+      id: "",
+      resolvedBy: "",
+      resolvedOn: "",
+      status: "",
+      userDocumentId: "",
+      query: query,
+      userId: userId,
+    };
+
+    // Log the query to check the input before sending
+    console.log("Query:", query);
+    const accessToken = localStorage.getItem("accessToken");
+
+    const apiUrl = `https://meta.oxyloans.com/api/write-to-us/student/saveData`;
+    const headers = {
+      Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
+    };
+
+    try {
+      // Sending the POST request to the API
+      const response = await axios.post(apiUrl, payload, { headers: headers });
+
+      // Check if the response was successful
+      if (response.data) {
+        console.log("Response:", response.data);
+        setSuccessOpen(true);
+        setIsOpen(false);
+      }
+    } catch (error) {
+      // Handle error if the request fails
+      console.error("Error sending the query:", error);
+      // alert("Failed to send query. Please try again.");
+    }
+  };
+
   return (
     <div>
-      <header className="header relative p-4 md:p-6 lg:p-8 bg-gray-50">
+      <header>
         {/* Title and Buttons Container */}
-        <div className="flex flex-col md:flex-row items-center md:items-start justify-between">
+        <div className="flex flex-col md:flex-row items-center md:items-start justify-center">
           {/* Title */}
-          <h1 className="text-left md:text-center text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight mb-6 md:mb-0"></h1>
-          <h1 className="text-center md:text-center text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl leading-tight mb-6 md:mb-0">
+          <h1 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-3xl lg:text45xl leading-tight mb-6 md:mb-0">
             The Two Worlds
           </h1>
+        </div>
 
-          {/* Buttons */}
-          <div className="flex flex-col md:flex-row justify-center md:justify-end items-center gap-4">
-            <button
-              className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 text-sm md:text-base lg:text-lg transition duration-300"
-              aria-label="Write To Us"
-            >
-              Write To Us
-            </button>
-            {/* Uncomment below button if needed */}
-            {/* <button
-        className="w-full md:w-auto px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 text-sm md:text-base lg:text-lg transition duration-300"
-        aria-label="Chat With Us"
-      >
-        Chat With Us
-      </button> */}
-          </div>
+        {/* Buttons */}
+        <div className="flex flex-col md:flex-row justify-center md:justify-end items-center gap-4">
+          <button
+            className="w-full md:w-auto px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
+            onClick={handleWhatsappClick}
+            aria-label="Request Free Rudraksha"
+          >
+            I Want Free Rudraksha
+          </button>
+
+          <button
+            className="w-full md:w-auto px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-md hover:bg-[#008CBA] text-sm md:text-base lg:text-lg transition duration-300"
+            aria-label="Write To Us"
+            onClick={handleWriteToUs}
+          >
+            Write To Us
+          </button>
+
+          {/* Uncomment below button if needed */}
+          {/* <button
+            className="w-full md:w-auto px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 text-sm md:text-base lg:text-lg transition duration-300"
+            aria-label="Chat With Us"
+          >
+           Ticket History
+          </button> */}
+
+          {isOpen && (
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
+              <div className="relative bg-white rounded-lg shadow-md p-6 w-96">
+                {/* Close Button */}
+                <i
+                  className="fas fa-times absolute top-3 right-3 text-xl text-gray-700 cursor-pointer hover:text-red-500"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close"
+                />
+
+                {/* Modal Content */}
+                <h2 className="text-xl font-bold mb-4 text-[#3d2a71]">
+                  Write To Us
+                </h2>
+
+                {/* Mobile Number Field */}
+                <div className="mb-4">
+                  <label
+                    className="block text-m text-black font-medium mb-1"
+                    htmlFor="phone"
+                  >
+                    Mobile Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    disabled={true}
+                    value={mobileNumber || ""}
+                    // value={"9908636995"}
+                    className="block w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3d2a71] focus:border-[#3d2a71] transition-all duration-200"
+                    placeholder="Enter your mobile number"
+                    style={{ fontSize: "0.8rem" }}
+                  />
+                </div>
+
+                {/* Email Field */}
+                <div className="mb-4">
+                  <label
+                    className="block text-m text-black font-medium mb-1"
+                    htmlFor="email"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={email || ""}
+                    // value={"kowthavarapuanusha@gmail.com"}
+                    disabled={true}
+                    className="block w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3d2a71] focus:border-[#3d2a71] transition-all duration-200"
+                    placeholder="Enter your email"
+                    style={{ fontSize: "0.8rem" }}
+                  />
+                </div>
+
+                {/* Query Field */}
+                <div className="mb-4">
+                  <label
+                    className="block text-m text-black font-medium mb-1"
+                    htmlFor="query"
+                  >
+                    Query
+                  </label>
+                  <textarea
+                    id="query"
+                    rows={3}
+                    className="block w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3d2a71] focus:border-[#3d2a71] transition-all duration-200"
+                    placeholder="Write to us"
+                    style={{ fontSize: "0.8rem" }}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                  {queryError && (
+                    <p className="text-red-500 text-sm mt-1">{queryError}</p>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-center">
+                  <button
+                    className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
+                    onClick={handleWriteToUsSubmitButton}
+                  >
+                    Submit Query
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isprofileOpen && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+              <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-transform scale-105">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl text-[#3d2a71] font-bold">
+                    Alert...!
+                  </h2>
+                  <button
+                    className="font-bold text-2xl text-red-500 hover:text-red-700 focus:outline-none"
+                    onClick={() => setIsprofileOpen(false)}
+                  >
+                    &times;
+                  </button>
+                </div>
+                <p className="text-center text-black mb-6">
+                  Please fill your profile details.
+                </p>
+                <div className="flex justify-center">
+                  <button
+                    className="bg-[#f9b91a] text-white px-5 py-2 rounded-lg font-semibold hover:bg-[#f4a307] focus:outline-none"
+                    onClick={handlePopUOk}
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {issuccessOpen && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+              <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-transform scale-105 text-center">
+                <h2 className="text-xl text-green-600 font-bold mb-4">
+                  Success!
+                </h2>
+                <p className="text-black mb-6">
+                  Query submitted successfully...!
+                </p>
+                <div className="flex justify-center">
+                  <button
+                    className="bg-green-500 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-600 focus:outline-none"
+                    onClick={() => setSuccessOpen(false)}
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="worlds flex justify-center mt-8">
-        <section className="spiritual-world text-center mx-4">
-          <h2 id="h2" style={{ fontWeight: "bold"}}>
+      <div className="flex flex-col md:flex-row justify-center mt-8 px-4">
+        {/* Spiritual World Section */}
+        <section className="spiritual-world text-center mx-4 mb-8 md:mb-0">
+          <h2
+            id="h2"
+            className="font-bold text-xl sm:text-2xl md:text-3xl text-[#6A1B9A]"
+          >
             Spiritual World
           </h2>
-          <img src={Image1} alt="Spiritual World" className="world-image w-103 h-100" />
+          <img
+            src={Image1}
+            alt="Spiritual World"
+            className="world-image w-full sm:w-80 md:w-96 h-auto rounded-lg shadow-lg mt-4"
+          />
         </section>
-        <section className="ai-world text-center mx-4">
-          <h2 id="h2" style={{ fontWeight: "bold" }}>
+
+        {/* AI & Generative AI World Section */}
+        <section className="ai-world text-center mx-4 mb-8 md:mb-0">
+          <h2
+            id="h2"
+            className="font-bold text-xl sm:text-2xl md:text-3xl text-[#6A1B9A]"
+          >
             AI & Generative AI World
           </h2>
           <img
             src={Image2}
             alt="AI & Generative AI World"
-            className="world-image"
+            className="world-image w-full sm:w-80 md:w-96 h-auto rounded-lg shadow-lg mt-4"
           />
         </section>
       </div>
@@ -332,15 +552,6 @@ const Freerudraksha: React.FC = () => {
       </div>
 
       {/* Button Section */}
-      <div className="flex justify-center mt-8">
-        <button
-          className="w-52 h-12 text-lg font-bold bg-green-600 text-white rounded-md hover:bg-green-700 transition-all"
-          onClick={handleWhatsappClick}
-          aria-label="Request Free Rudraksha"
-        >
-          I Want Free Rudraksha
-        </button>
-      </div>
 
       {/* Modals */}
       <Modal
@@ -519,10 +730,10 @@ const Freerudraksha: React.FC = () => {
 
       <div>
         <h1 className="text-center mx-4 my-12 text-3xl md:text-5xl font-bold">
-          <span className="text-green-600">
+          <span className="text-[#04AA6D]">
             <span className="text-[#0a6fba]">OXY</span> GROUP
           </span>{" "}
-          <span className="text-[#FFA500]">COMPANIES</span>
+          <span className="text-[#FFA400]">COMPANIES</span>
         </h1>
 
         <div className="event-container1">
@@ -682,7 +893,7 @@ const Freerudraksha: React.FC = () => {
         </div>
 
         {/* Group Section */}
-        <div className="px-6 py-5 bg-[#f1f1f1] md:p-10 rounded-md">
+        {/* <div className="px-6 py-5 bg-[#f1f1f1] md:p-10 rounded-md">
           <h1
             className="text-center my-4 text-4xl sm:text-5xl md:text-6xl lg:text-7xl"
             style={{ fontSize: "clamp(2rem, 8vw, 50px)" }} // Responsively scales font size
@@ -721,7 +932,7 @@ const Freerudraksha: React.FC = () => {
               →
             </button>
           </div>
-        </div>
+        </div> */}
       </div>
       <Footer />
     </div>

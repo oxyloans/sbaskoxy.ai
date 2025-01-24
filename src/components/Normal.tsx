@@ -84,6 +84,7 @@ const Normal = () => {
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [profiledata, setprofiledata] = useState({});
+  const scrollableRef = useRef<HTMLDivElement | null>(null);
 
   // New State for History
   const [history, setHistory] = useState<string[]>([]);
@@ -268,15 +269,15 @@ const Normal = () => {
   //   })
 
   // },[])
-  useEffect(() => {
-    const islogin = localStorage.getItem("userId");
-    if (questionCount > 3) {
-      if (islogin) {
-      } else {
-        histary("/login");
-      }
-    }
-  }, [questionCount]);
+  // useEffect(() => {
+  //   const islogin = localStorage.getItem("userId");
+  //   if (questionCount > 3) {
+  //     if (islogin) {
+  //     } else {
+  //       histary("/login");
+  //     }
+  //   }
+  // }, [questionCount]);
 
   const handleCopy = (content: string) => {
     navigator.clipboard.writeText(content);
@@ -363,7 +364,7 @@ const Normal = () => {
 
     try {
       const response = await axios.post(
-        // `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(queryInput)}`
+       
         apiurl
       );
 
@@ -434,12 +435,19 @@ const Normal = () => {
 
   // Handle click on static chat bubble
   const handleBubbleClick = (content: string) => {
-    console.log("Bubble clicked:", content); // Debugging log
-    setInput(content); // Set input value when a bubble is clicked
-    setShowStaticBubbles(false); // Hide static bubbles after click
-    setShowSendButton(true); // Show send button
-    if (inputRef.current) {
-      inputRef.current.focus(); // Focus the input field
+    if (content.includes("section=")) {
+      navigate(`/normal?${content}`, { replace: true });
+    } else {
+      setInput(content);
+      setShowStaticBubbles(false);
+      setShowSendButton(true);
+      setriceTopicsshow(true);
+      // navigate(`/dashboard?query=${encodeURIComponent(content)}`, {
+      //   replace: true,
+      // });
+      if (inputRef.current) {
+        inputRef.current.focus(); // Focus the input field
+      }
     }
   };
   // const handleBackToChatClick = () => {
@@ -450,11 +458,14 @@ const Normal = () => {
   // Handle new chat click
  const handleNewChatClick = () => {
    setMessages([]); // Clear messages
-   if (inputRef.current) {
-     inputRef.current.value = ""; // Clear the input field
-     setShowSendButton(false); // Hide the send button
-   }
-   navigate("/normal", { state: { showStaticBubbles: true } });
+  setriceTopicsshow(true);
+  
+   navigate("/normal");
+   setShowStaticBubbles(true); 
+    if (inputRef.current) {
+      inputRef.current.value = ""; // Clear the input field
+      setShowSendButton(false); // Hide the send button
+    }
  };
   const handleHistoryItemClick = (historyItem: string) => {
     setInput(historyItem); // Set input to the history item
@@ -473,34 +484,14 @@ const Normal = () => {
     setChatHistory(savedHistory);
   }, []);
 
-  // Delete history permanently
-  const handleDeleteHistory = (index: number) => {
-    const updatedHistory = chathistory.filter((_, i) => i !== index);
-    setChatHistory(updatedHistory);
 
-    // Update localStorage
-    localStorage.setItem("chathistory", JSON.stringify(updatedHistory));
-  };
 
-  const questions = messages.filter((msg) => msg.type === "question");
-  const answers = messages.filter((msg) => msg.type === "answer");
-
-  const imageData = [
-    {
-      oxyLoans: Image1,
-      link: "https://oxyloans.com/login",
-    },
-    {
-      oxyLoans: Image2,
-      link: "https://erice.in/",
-    },
-  ];
 
   const navigate = useNavigate(); // Initialize navigate function
 
   // Function to handle the click event
   const handleRedirect = () => {
-    navigate("/"); // Redirect to the login page
+    navigate("/normal"); // Redirect to the login page
   };
 
   
@@ -520,10 +511,10 @@ const truncateText = (
   return (
     <div className="max-h-screen  fixed bg-[#351664] text-white overflow-y-auto  w-full flex flex-col">
       {/* Header */}
-      <header className="flex flex-col md:flex-row items-center justify-between p-4 bg-[#351664] border-b-2 border-white">
+      <header className="flex md:flex-row items-center justify-between gap-1 p-4 bg-[#351664] border-b-4 border-white">
         {/* Logo with Icon */}
         <button
-          className="flex items-center text-2xl font-bold bg-transparent border-none cursor-pointer focus:outline-none mb-2 md:mb-0"
+          className="flex items-center text-2xl font-bold bg-transparent border-none cursor-pointer focus:outline-none mb-4 md:mb-0"
           onClick={handleRedirect}
         >
           <span className="text-white">ASKOXY</span>
@@ -531,52 +522,47 @@ const truncateText = (
         </button>
 
         {/* Right Section: Profile and SignOut */}
-        <div className="flex flex-col md:flex-row items-center  space-y-2 md:space-y-0 md:space-x-4">
+        <div className="flex items-center  gap-1 bg-transparent border-none cursor-pointer focus:outline-none mb-4 md:mb-0">
+     
+        
+
           {/* SignOut Button */}
           <button
             onClick={() => {
-              if (localStorage.getItem("userId")) {
-                localStorage.removeItem("userId");
-                navigate("/whatapplogin");
-              } else {
-                navigate("/whatapplogin");
-              }
+             
+             
+              navigate("/whatapplogin");
             }}
-            className="text-white bg-[#ffa800] px-4 py-2 rounded-full font-bold"
+            // bg-[#04AA6D]
+            className="flex items-center 
+           
+            text-black bg-white   px-4 py-2 rounded-full font-bold"
           >
-            SignOut
+            
+            SignIn
           </button>
-          {/* Profile Info Section (AuthorInfo) */}
 
-          <div className="flex items-center space-x-2">
-            <AuthorInfo
-              name={`${profileData?.firstName || ""} ${
-                profileData?.lastName || ""
-              }`.trim()}
-              location={profileData?.city || ""}
-              email={profileData?.email || ""}
-              icon={<FaUserCircle />}
-            />
-          </div>
+         
+
+         
         </div>
       </header>
 
       {/* <ModalComponent /> */}
-      <main className="flex  flex-col flex-grow w-full overflow-y-auto p-3 md:flex-row">
+      <main className="flex hidden md:block flex-col flex-grow w-full overflow-y-auto p-3 md:flex-row">
         {/* Combined Left, Center, and Right Panel */}
         <div className="flex flex-col  flex-grow bg-white rounded-lg shadow-md lg:flex-row">
           {/* Left Panel */}
           {/* {showLeftPanel && ( */}
-          <aside className="w-full p-3 text-black bg-gray-100 rounded-l-lg md:w-1/6 flex flex-col overflow-y-auto">
-            <div className="flex items-center justify-between font-bold ">
+          <aside className=" w-full p-3 text-black bg-gray-100 rounded-l-lg md:w-1/6 flex flex-col overflow-y-auto">
+            <div className="flex items-center  justify-between font-bold">
+              {/* Edit Button */}
               <button
                 onClick={() => handleEditClick()}
-                className=" rounded-md"
+                className="rounded-md"
                 title="Edit"
               >
                 <div className="hover:bg-gray-200 p-2 rounded-full">
-                  {" "}
-                  {/* Add background color here */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -593,17 +579,17 @@ const truncateText = (
                   </svg>
                 </div>
               </button>
-              <span className="flex-1 text-center text-[#351664] ">
-                History
-              </span>
+
+              {/* History Title */}
+              <span className="flex-1 text-center text-[#351664]">History</span>
+
+              {/* New Chat Button */}
               <button
                 onClick={handleNewChatClick}
-                className=" rounded-md"
+                className="rounded-md"
                 title="New Chat"
               >
                 <div className="hover:bg-gray-200 p-2 rounded-full">
-                  {" "}
-                  {/* Add background color here */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -621,13 +607,16 @@ const truncateText = (
                 </div>
               </button>
             </div>
+
+            {/* Editing Mode Indicator */}
             {isEditing && (
               <p className="text-sm text-[#351664] mb-4 text-center">
                 Editing mode enabled...
               </p>
             )}
 
-            <div className="mt-4 h-80 border-t border-gray-300 pt-2">
+            {/* Chat History */}
+            <div className="mt-4 hidden md:block h-80 border-t border-gray-300 pt-2">
               {chathistory.length === 0 ? (
                 <p className="text-sm text-gray-500 italic text-center">
                   No history available.
@@ -637,16 +626,14 @@ const truncateText = (
                   <div
                     key={index}
                     className="flex items-center justify-between p-2 mb-4 bg-gray-200 rounded cursor-pointer"
-                    onClick={() => handleHistoryItemClick(item.userQuations)} // Update input with selected history item
+                    onClick={() => handleHistoryItemClick(item.userQuations)}
                   >
                     <Link
                       className="text-sm text-gray-800"
                       to={`?${encodeURIComponent(item.userQuations)}`}
                     >
-                      {/* Display a truncated version if necessary */}
                       {truncateText(item.userQuations, 25)}
                     </Link>
-                  
                   </div>
                 ))
               )}
@@ -656,150 +643,164 @@ const truncateText = (
           {/* }) */}
 
           {/* Center Panel */}
-          <section className="relative  overflow-y-auto  flex flex-col flex-grow w-full    p-6 md:w-1/2 bg-gray-50">
-          
-              <>
-                {/* Static Rice Related Text */}
-                <h2
-                  className="fw-500"
-                  style={{ zIndex: "10", color: "black", fontWeight: "700" }}
-                >
-                  Welcome{" "}
-                  {profileData
-                    ? `    ${profileData.firstName} ${profileData.lastName}`
-                    : "Guest"}
-                </h2>
+          <section
+            ref={scrollableRef}
+            className="relative overflow-y-auto rounded-r-lg  rounded-l-lg flex flex-col flex-grow w-full  p-6 md:w-1/2 bg-gray-50"
+          >
+            <>
+              {/* Static Rice Related Text */}
+              {
+                <div className="flex items-center justify-between p-2">
+                  {/* Left side: Welcome Text */}
+                  <h2
+                    className="fw-500"
+                    style={{
+                      zIndex: "10",
+                      color: "black",
+                      fontWeight: "700",
+                    }}
+                  >
+                    Welcome{" "}
+                    {profileData
+                      ? `    ${profileData.firstName} ${profileData.lastName}`
+                      : "Guest"}
+                  </h2>
 
-                {showStaticBubbles && (
-                  <>
-                    <div className="absolute inset-0 flex items-center justify-center p-4">
-                      <div className="grid grid-cols-2 gap-4 overflow-y-auto max-h-60">
-                        {" "}
-                        {/* Add max-height and overflow */}
-                        {riceTopicsshow && (
-                          <>
-                            {riceTopics.map((topic) => (
-                              <div
-                                key={topic.id}
-                                className="flex items-center justify-center max-w-xs p-4 text-black transition duration-200 bg-gray-200 rounded-lg chat-bubble hover:bg-gray-300"
-                                style={{
-                                  wordWrap: "break-word",
-                                  zIndex: "10",
-                                }}
-                                onClick={() => {
-                                  handleBubbleClick(topic.title);
-                                  setInput(topic.title);
-                                }}
-                              >
-                                <ReactMarkdown className="text-center">
-                                  {topic.title}
-                                </ReactMarkdown>
-                              </div>
-                            ))}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Chat messages */}
-                <div
-                  className="relative flex-grow p-4  chat-container"
-                  // style={{ maxHeight: "calc(100vh - 12rem)" }}
-                >
-                  <div>
-                    {isLoading ? (
-                      <div className="flex items-center justify-center h-24">
-                        <Example variant="loading01" />
-                      </div>
-                    ) : (
-                      <>
-                        {/* Render Questions followed by their corresponding Answers */}
-                        {messages.map((message, index) => (
-                          <div
-                            key={index}
-                            className={`col-span-8 mb-6 p-3 rounded-md ${
-                              message.type === "question"
-                                ? "bg-blue-200 col-span-3 text-black"
-                                : "bg-green-200 col-span-5 text-black"
-                            }`}
-                          >
-                            <ReactMarkdown>{message.content}</ReactMarkdown>
-                            <div className="flex mt-2 space-x-1">
-                              {/* Copy Button */}
-                              <button
-                                className="p-2 bg-white rounded-full mr"
-                                onClick={() => handleCopy(message.content)}
-                                title="Copy"
-                              >
-                                <FaRegCopy />
-                              </button>
-
-                              {/* Speaker (Read Aloud) Button */}
-                              {isReading ? (
-                                <button
-                                  className="p-2 bg-white mr rounded-full"
-                                  onClick={() =>
-                                    window.speechSynthesis.cancel()
-                                  }
-                                  title="Stop Read Aloud"
-                                >
-                                  <FaVolumeOff />
-                                </button>
-                              ) : (
-                                <button
-                                  className="p-2 bg-white mr rounded-full"
-                                  onClick={() =>
-                                    handleReadAloud(message.content)
-                                  }
-                                  title="Read Aloud"
-                                >
-                                  <FaVolumeUp />
-                                </button>
-                              )}
-
-                              {/* Share Button */}
-                              <button
-                                className="p-2 bg-white rounded-full mr"
-                                onClick={() => handleShare(message.content)}
-                                title="Share"
-                              >
-                                <FaShareAlt />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                  <div ref={bottomRef} />{" "}
-                  {/* This ref will be used to scroll to the bottom */}
+                  {/* <button
+                        className="bg-[#04AA6D] text-white px-4 py-2 rounded-full font-bold"
+                        
+                      >
+                        Multi Chain ID
+                      </button> */}
                 </div>
-                {/* Input Bar */}
-                <div className="absolute inset-x-0 bottom-0 flex items-center p-2 bg-white border-t border-gray-300 md:relative">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={input}
-                    onChange={handleInputChangeWithVisibility}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ask questions..."
-                    className="flex-grow p-2 rounded-full shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffa800] text-black"
-                  />
-                  {showSendButton && (
-                    <button
-                      onClick={() => handleSend(input)}
-                      className={`ml-2 bg-[#ffa800] text-white px-4 py-2 rounded-full shadow-md ${
-                        isLoading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Sending..." : "Send"}
-                    </button>
+              }
+
+              {showStaticBubbles && (
+                <>
+                  <div className="absolute inset-0 flex items-center justify-center p-2">
+                    <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-70">
+                      {" "}
+                      {/* Add max-height and overflow */}
+                      {riceTopicsshow && (
+                        <>
+                          {riceTopics.map((topic) => (
+                            <div
+                              key={topic.id}
+                              className="flex items-center justify-center max-w-xs p-3 text-black transition duration-200 bg-gray-200 rounded-lg chat-bubble hover:bg-gray-300"
+                              style={{
+                                wordWrap: "break-word",
+                                zIndex: "10",
+                              }}
+                              onClick={() => {
+                                handleBubbleClick(topic.title);
+                                setInput(topic.title);
+                              }}
+                            >
+                              <ReactMarkdown className="text-center">
+                                {topic.title}
+                              </ReactMarkdown>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Chat messages */}
+              <div
+                className="relative flex-grow p-4  chat-container"
+                // style={{ maxHeight: "calc(100vh - 12rem)" }}
+              >
+                <div>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-24">
+                      <Example variant="loading01" />
+                    </div>
+                  ) : (
+                    <>
+                      {/* Render Questions followed by their corresponding Answers */}
+                      {messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`col-span-8 mb-6 p-3 rounded-md ${
+                            message.type === "question"
+                              ? "bg-blue-200 col-span-3 text-black"
+                              : "bg-green-200 col-span-5 text-black"
+                          }`}
+                        >
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                          <div className="flex mt-2 space-x-1">
+                            {/* Copy Button */}
+                            <button
+                              className="p-2 bg-white rounded-full mr"
+                              onClick={() => handleCopy(message.content)}
+                              title="Copy"
+                            >
+                              <FaRegCopy />
+                            </button>
+
+                            {/* Speaker (Read Aloud) Button */}
+                            {isReading ? (
+                              <button
+                                className="p-2 bg-white mr rounded-full"
+                                onClick={() => window.speechSynthesis.cancel()}
+                                title="Stop Read Aloud"
+                              >
+                                <FaVolumeOff />
+                              </button>
+                            ) : (
+                              <button
+                                className="p-2 bg-white mr rounded-full"
+                                onClick={() => handleReadAloud(message.content)}
+                                title="Read Aloud"
+                              >
+                                <FaVolumeUp />
+                              </button>
+                            )}
+
+                            {/* Share Button */}
+                            <button
+                              className="p-2 bg-white rounded-full mr"
+                              onClick={() => handleShare(message.content)}
+                              title="Share"
+                            >
+                              <FaShareAlt />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
-              </>
+                <div ref={bottomRef} />{" "}
+                {/* This ref will be used to scroll to the bottom */}
+              </div>
+              {/* Input Bar */}
+              <div className="absolute inset-x-0 bottom-0 flex items-center p-2 bg-white border-t border-gray-300 md:relative">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={handleInputChangeWithVisibility}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask question..."
+                  className="flex-grow p-2 rounded-full shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffa800] text-black text-sm md:text-base"
+                />
+                {showSendButton && (
+                  <button
+                    onClick={() => handleSend(input)}
+                    className={`ml-2 bg-[#ffa800] text-white px-3 py-1 md:px-4 md:py-2 rounded-full shadow-md ${
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Sending..." : "Send"}
+                  </button>
+                )}
+              </div>
+            </>
           </section>
 
           {/* Right Panel */}

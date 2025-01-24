@@ -94,7 +94,7 @@ const Happy_Diwali: React.FC = () => {
             </p>
             <p>Click the button below to send us a message on WhatsApp.</p>
             <p className="whatsapp-message">
-              "All the best to study abroad aspirants applying for the March
+              "All the best to study abroad aspirants applying for the January
               intake!"
             </p>
             <div className="buttons">

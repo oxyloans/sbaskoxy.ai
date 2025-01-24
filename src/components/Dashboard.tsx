@@ -3,6 +3,10 @@ import Image1 from "../assets/img/AD1 (1).jpg";
 import Image2 from "../assets/img/AD2.jpg";
 import ReactMarkdown from "react-markdown";
 import axios from "axios";
+import HiringService from "./HiringService";
+import Askoxylogowhite from "../assets/img/askoxylogowhite.png";
+import buyrice from "../assets/img/buyrice.png";
+
 import "./erice.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import B1 from "../assets/img/B1.jpg";
@@ -14,10 +18,13 @@ import FR3 from "../assets/img/freeaiandgenai.png";
 import FR4 from "../assets/img/machines.png";
 import FR5 from "../assets/img/legail.jpg";
 import LegalService from "./LegalService";
+import FR6 from "../assets/img/wearehiring.png";
 import Pushpa2GPT from "./Pushpa2GPT";
 import { FaVolumeOff, FaVolumeUp, FaRegCopy, FaShareAlt } from "react-icons/fa";
 import { error } from "console";
 import ChatHistory from "./ChatHistory";
+import { FaSignOutAlt } from "react-icons/fa";
+
 import Example from "./Example";
 import AuthorInfo from "./AuthorInfo";
 import ModalComponent from "./ModalComponent";
@@ -32,6 +39,7 @@ import FreeSample from "./FreeSample";
 import FreeAiandGenAi from "./FreeAi&GenAi";
 import MachinesManufacturingServices from "./Machines&ManufacturingService";
 import MyRotaryServices from "./MyRotary";
+import TicketHistory from "./TicketHistory";
 interface ChatMessage {
   type: "question" | "answer";
   content: string;
@@ -60,6 +68,8 @@ interface ProfileData {
   panVerified: boolean | null;
   whatsappVerified: boolean | null;
   name: string | null;
+  multiChainId: string | null;
+  coinAllocated: number | null;
 }
 
 type ChatHistoryItem = {
@@ -68,6 +78,7 @@ type ChatHistoryItem = {
   ericeQueries: string | null;
 };
 const Dasboard = () => {
+  const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
@@ -84,6 +95,9 @@ const Dasboard = () => {
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [profiledata, setprofiledata] = useState({});
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [multichainid, setmultichainid] = useState("");
+  const [bmvcoin, setbmvcoin] = useState();
 
   // New State for History
   const [history, setHistory] = useState<string[]>([]);
@@ -103,83 +117,226 @@ const Dasboard = () => {
     useState(false);
   const [showMyRotaryService, setShowMyRotaryService] = useState(false);
   const [showLegalService, setShowLegalService] = useState(false);
+  const [showHiringService, setShowHiringService] = useState(false);
+  const [ticketHistory, setTicketHistory] = useState(false);
+  const scrollableRef = useRef<HTMLDivElement | null>(null);
+  const componentRef = useRef<HTMLDivElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // const [showVanabhojanam, setShowVanabhojanam] = useState(false);
-  // const [showLeftPanel, setShowLeftPanel] = useState(true);
-  // const [showPushpa2Gpt, setShowPushpa2Gpt] = useState(false);
-  const handleFreerudrakshaClick = () => {
-    setShowFreerudraksha(true);
+  // Detect viewport size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // Define your mobile breakpoint here
+    };
 
+    handleResize(); // Initial check
+    window.addEventListener("resize", handleResize);
+
+    const handleMultichainID=() => {
+      axios.get(`http://182.18.139.138:9024/api/user-service/getProfile/${localStorage.getItem("userId")}`)
+      .then((response) => {
+        console.log(response.data);
+        setmultichainid(response.data.multiChainId);
+        setbmvcoin(response.data.coinAllocated);
+      })
+      .catch((error) => {
+        console.error("There was an error making the request:", error);
+      });
+    }
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const section = params.get("section");
+    const query = params.get("query");
+
+    // Reset all states
+    setShowFreerudraksha(false);
     setShowStudyAbroad(false);
+    setShowHiringService(false);
     setShowFreeSample(false);
     setShowFreeaiandgenai(false);
     setShowMachinesManufacturing(false);
     setShowMyRotaryService(false);
     setShowLegalService(false);
+    setTicketHistory(false);
+
+    // Handle section navigation (don't store in history)
+    if (section) {
+      switch (section) {
+        case "freerudraksha":
+          setShowFreerudraksha(true);
+          break;
+        case "study-abroad":
+          setShowStudyAbroad(true);
+          break;
+        case "free-sample":
+          setShowFreeSample(true);
+          break;
+        case "free-ai-gen-ai":
+          setShowFreeaiandgenai(true);
+          break;
+        case "machines-manufacturing":
+          setShowMachinesManufacturing(true);
+          break;
+        case "my-rotary":
+          setShowMyRotaryService(true);
+          break;
+        case "legal-service":
+          setShowLegalService(true);
+          break;
+        case "we-are-hiring":
+          setShowHiringService(true);
+          break;
+        case "tickethistory":
+          setTicketHistory(true);
+          break;
+      }
+      // Clear messages when switching sections
+      setMessages([]);
+      setShowStaticBubbles(true);
+    }
+
+    // Handle search query (store in history)
+    if (query && !section) {
+      setriceTopicsshow(false); // Hide rice topics when there's a query
+      handleSend(query);
+    }
+
+    // Scroll logic
+    if (isMobile) {
+      componentRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    handleMultichainID();
+
+    // if (scrollableRef.current) {
+    //   scrollableRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    // }
+  }, [location.search, isMobile]);
+
+const handleFreerudrakshaClick = () => {
+  navigate("/dashboard?section=freerudraksha", { replace: true });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Force a reflow and then scroll
+  setTimeout(() => {
+    if (isMobile) {
+      componentRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, 50); // 50ms delay to ensure DOM updates first
+};
+
+  const handletickethistory = () => {
+    navigate("/dashboard?section=tickethistory", { replace: true });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  setTimeout(() => {
+    if (isMobile) {
+      componentRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, 50);
   };
 
   const handleStudyAbroadClick = () => {
-    setShowStudyAbroad(true);
-    setShowFreerudraksha(false);
-    setShowFreeSample(false);
-    setShowFreeaiandgenai(false);
-    setShowMachinesManufacturing(false);
-    setShowMyRotaryService(false);
-    setShowLegalService(false);
+    navigate("/dashboard?section=study-abroad", { replace: true });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+   setTimeout(() => {
+     if (isMobile) {
+       componentRef.current?.scrollIntoView({ behavior: "smooth" });
+     } else {
+       scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+     }
+   }, 50);
   };
 
   const handleFreeSampleClick = () => {
-    setShowStudyAbroad(false);
-    setShowFreerudraksha(false);
-    setShowFreeSample(true);
-    setShowFreeaiandgenai(false);
-    setShowMachinesManufacturing(false);
-    setShowMyRotaryService(false);
-    setShowLegalService(false);
+    navigate("/dashboard?section=free-sample", { replace: true });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const handleFreeAiandGenAiClick = () => {
-    setShowStudyAbroad(false);
-    setShowFreerudraksha(false);
-    setShowFreeSample(false);
-    setShowFreeaiandgenai(true);
-    setShowMachinesManufacturing(false);
-    setShowMyRotaryService(false);
-    setShowLegalService(false);
+    navigate("/dashboard?section=free-ai-gen-ai", { replace: true });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const handleMachinesandManufacturingClick = () => {
-    setShowStudyAbroad(false);
-    setShowFreerudraksha(false);
-    setShowFreeSample(false);
-    setShowFreeaiandgenai(false);
-    setShowMachinesManufacturing(true);
-    setShowMyRotaryService(false);
-    setShowLegalService(false);
-    // histary("/machines&manufacturing");
+    navigate("/dashboard?section=machines-manufacturing", { replace: true });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
+  };
+  const handledWeAreHiring = () => {
+    navigate("/dashboard?section=we-are-hiring", { replace: true });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const handleMyRotaryClick = () => {
-    setShowMyRotaryService(true);
-    setShowStudyAbroad(false);
-    setShowFreerudraksha(false);
-
-    setShowFreeSample(false);
-    setShowFreeaiandgenai(false);
-    setShowMachinesManufacturing(false);
-
-    setShowLegalService(false);
-    // histary("/machines&manufacturing");
+    navigate("/dashboard?section=my-rotary", { replace: true });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+   setTimeout(() => {
+     if (isMobile) {
+       componentRef.current?.scrollIntoView({ behavior: "smooth" });
+     } else {
+       scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+     }
+   }, 50);
   };
 
   const handledLegalServiceClick = () => {
-    setShowLegalService(true);
-    setShowStudyAbroad(false);
-    setShowFreerudraksha(false);
-    setShowFreeSample(false);
-    setShowFreeaiandgenai(false);
-    setShowMachinesManufacturing(false);
-    setShowMyRotaryService(false);
+    navigate("/dashboard?section=legal-service", { replace: true });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+   setTimeout(() => {
+     if (isMobile) {
+       componentRef.current?.scrollIntoView({ behavior: "smooth" });
+     } else {
+       scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+     }
+   }, 50);
   };
 
   useEffect(() => {
@@ -212,6 +369,8 @@ const Dasboard = () => {
       .then((response) => {
         console.log(response.data);
         setProfileData(response.data); // Set the profile data to state
+        localStorage.setItem("email", response.data.email);
+        localStorage.setItem("mobileNumber", response.data.mobileNumber);
       })
       .catch((error) => {
         console.error("There was an error making the request:", error);
@@ -277,81 +436,6 @@ const Dasboard = () => {
     }
   }, [messages]);
 
-  let queryString = window.location.search;
-  useEffect(() => {
-    // Remove the first "?" from the string
-    const result = queryString.replace("?", "").replace(/%20/g, " ");
-    console.log(result); // Output: "data"
-
-    const handleSend = async (queryInput: string) => {
-      if (queryInput.trim() === "") return;
-
-      // Add the user's question to the chat
-      setMessages((prev) => [
-        ...prev,
-        { type: "question", content: queryInput },
-      ]);
-
-      // Save the query to history
-      setHistory((prevHistory) => [queryInput, ...prevHistory]);
-
-      setInput("");
-      setIsLoading(true);
-      setQuestionCount((prevCount) => prevCount + 1); // Increment question count
-
-      const apiurl =
-        userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
-              queryInput
-            )}&userId=${userId}`
-          : `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
-              queryInput
-            )}`;
-
-      try {
-        // Make API request to the specified endpoint
-        setriceTopicsshow(false);
-        const response = await axios.post(apiurl);
-
-        // Process the API response and update the chat
-        setMessages((prev) => [
-          ...prev,
-          { type: "answer", content: response.data },
-        ]);
-      } catch (error) {
-        console.error("Error fetching response:", error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            type: "answer",
-            content: "Sorry, there was an error. Please try again later.",
-          },
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    handleSend(result);
-  }, [queryString]);
-  // Handle image enlargement
-  const handleImageClick = (image: string) => {
-    setEnlargedImage(image);
-  };
-
-  // useEffect(() => {
-  //   const response = axios.get("http://65.0.147.157:9001/api/student-service/user/queries");
-  //   response.then((data) => {
-  //     console.log(data)
-  //     if (data.status === 200) {
-  //       console.log(data.data)
-  //       setchathistory(data.data)
-  //     }
-
-  //   }).catch((error) => {
-  //     console.log(error)
-  //   })
-
-  // },[])
   useEffect(() => {
     const islogin = localStorage.getItem("userId");
     if (questionCount > 3) {
@@ -398,7 +482,6 @@ const Dasboard = () => {
     }
   };
 
-  const location = useLocation();
   const query = new URLSearchParams(location.search).get("search") || "";
 
   useEffect(() => {
@@ -426,7 +509,6 @@ const Dasboard = () => {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
-
   const handleSend = async (queryInput: string) => {
     if (queryInput.trim() === "") return;
 
@@ -446,10 +528,7 @@ const Dasboard = () => {
           )}`;
 
     try {
-      const response = await axios.post(
-        // `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(queryInput)}`
-        apiurl
-      );
+      const response = await axios.post(apiurl);
 
       // Add the API response to chat
       setMessages((prev) => [
@@ -518,38 +597,43 @@ const Dasboard = () => {
 
   // Handle click on static chat bubble
   const handleBubbleClick = (content: string) => {
-    console.log("Bubble clicked:", content); // Debugging log
-    setInput(content); // Set input value when a bubble is clicked
-    setShowStaticBubbles(false); // Hide static bubbles after click
-    setShowSendButton(true); // Show send button
-    if (inputRef.current) {
-      inputRef.current.focus(); // Focus the input field
+    if (content.includes("section=")) {
+      navigate(`/dashboard?${content}`, { replace: true });
+    } else {
+      setInput(content);
+      setShowStaticBubbles(false);
+      setShowSendButton(true);
+      setriceTopicsshow(true);
+      // navigate(`/dashboard?query=${encodeURIComponent(content)}`, {
+      //   replace: true,
+      // });
+      if (inputRef.current) {
+        inputRef.current.focus(); // Focus the input field
+      }
     }
   };
-  // const handleBackToChatClick = () => {
-  //   setShowFreerudraksha(false);    // Hide the Freerudraksha component
-  //   setShowLeftPanel(true);
-  //   setShowVanabhojanam(false)     // Show the left panel again
-  // };
-  // Handle new chat click
+
   const handleNewChatClick = () => {
     setMessages([]); // Clear the messages
-    setShowStaticBubbles(true); // Show the static chat bubbles
-    setShowFreerudraksha(false); // Reset to main chat
-    setShowStudyAbroad(false); // Reset to main chat interface
+    setShowFreerudraksha(false);
+    setShowStudyAbroad(false);
     setShowFreeSample(false);
     setShowFreeaiandgenai(false);
     setShowMachinesManufacturing(false);
     setShowMyRotaryService(false);
     setShowLegalService(false);
-    // setShowVanabhojanam(false)
-    // setShowPushpa2Gpt(false)
-    // setShowLeftPanel(true);        // Show the left panel again
+    setTicketHistory(false);
+    setriceTopicsshow(true);
+
+    navigate("/dashboard"); // Navigate first
+    setShowStaticBubbles(true); // Show static chat bubbles after navigation
+
     if (inputRef.current) {
       inputRef.current.value = ""; // Clear the input field
       setShowSendButton(false); // Hide the send button
     }
   };
+
   const handleHistoryItemClick = (historyItem: string) => {
     setInput(historyItem); // Set input to the history item
     setShowSendButton(true); // Show send button
@@ -567,276 +651,324 @@ const Dasboard = () => {
     setChatHistory(savedHistory);
   }, []);
 
-  // Delete history permanently
-  const handleDeleteHistory = (index: number) => {
-    const updatedHistory = chathistory.filter((_, i) => i !== index);
-    setChatHistory(updatedHistory);
-
-    // Update localStorage
-    localStorage.setItem("chathistory", JSON.stringify(updatedHistory));
-  };
-
-  const questions = messages.filter((msg) => msg.type === "question");
-  const answers = messages.filter((msg) => msg.type === "answer");
-
-  const imageData = [
-    {
-      oxyLoans: Image1,
-      link: "https://oxyloans.com/login",
-    },
-    {
-      oxyLoans: Image2,
-      link: "https://erice.in/",
-    },
-  ];
-
   const navigate = useNavigate(); // Initialize navigate function
 
   // Function to handle the click event
   const handleRedirect = () => {
-    navigate("/"); // Redirect to the login page
+    navigate("/dashboard"); // Redirect to the login page
   };
 
- 
-
-const truncateText = (
-  text: string | null | undefined,
-  length: number
-): string => {
-  if (!text) {
-    return ""; // Return an empty string if the text is null or undefined
+  const handleBuyRice = () => {
+    navigate("/buyRice");
   }
-  if (text.length <= length) {
-    return text; // Return the text as it is if it's shorter than the specified length
-  }
-  return text.slice(0, length) + "..."; // Truncate text and add ellipsis
-};
 
+  const truncateText = (
+    text: string | null | undefined,
+    length: number
+  ): string => {
+    if (!text) {
+      return ""; // Return an empty string if the text is null or undefined
+    }
+    if (text.length <= length) {
+      return text; // Return the text as it is if it's shorter than the specified length
+    }
+    return text.slice(0, length) + "..."; // Truncate text and add ellipsis
+  };
+  const [isHistoryVisible, setIsHistoryVisible] = useState(false); // State to control history visibility
+
+  const handleHistoryButtonClick = () => {
+    setIsHistoryVisible(!isHistoryVisible); // Toggle the drawer visibility
+  };
+
+  const handleMultichainID=() => {
+    axios.get(`https://meta.oxyglobal.tech/api/user-service/getProfile/${localStorage.getItem("userId")}`)
+    .then((response) => {
+      console.log(response.data);
+      setmultichainid(response.data.multiChainId);
+      setbmvcoin(response.data.coinAllocated);
+    })
+    .catch((error) => {
+      console.error("There was an error making the request:", error);
+    });
+  }
+  
 
   return (
     <div className="max-h-screen  fixed bg-[#351664] text-white overflow-y-auto  w-full flex flex-col">
-      {/* Header */}
-      <header className="flex flex-col md:flex-row items-center justify-between p-4 bg-[#351664] border-b-2 border-white">
-        {/* Logo with Icon */}
-        <button
-          className="flex items-center text-2xl font-bold bg-transparent border-none cursor-pointer focus:outline-none mb-2 md:mb-0"
-          onClick={handleRedirect}
-        >
-          <span className="text-white">ASKOXY</span>
-          <span className="text-[#ffa800]">.AI</span>
-        </button>
+     {/* Header */}
+<header className="flex flex-col md:flex-row items-center justify-between p-4 bg-[#351664]">
+  
+  <div className="flex items-center justify-between w-full md:w-auto">
 
-        {/* Right Section: Profile and SignOut */}
-        <div className="flex flex-col md:flex-row items-center  space-y-2 md:space-y-0 md:space-x-4">
-          {/* SignOut Button */}
-          <button
-            onClick={() => {
-              if (localStorage.getItem("userId")) {
-                localStorage.removeItem("userId");
-                navigate("/whatapplogin");
-              } else {
-                navigate("/whatapplogin");
-              }
-            }}
-            className="text-white bg-[#ffa800] px-4 py-2 rounded-full font-bold"
-          >
-            SignOut
-          </button>
-          {/* Profile Info Section (AuthorInfo) */}
+   {/* Logo and "Buy Rice" Button */}
+<div className="flex items-center space-x-6">
+  {/* Logo */}
+  <img
+    src={Askoxylogowhite}
+    className="h-16 w-auto sm:h-12 object-contain" // Responsive height, maintains aspect ratio
+    alt="AskOxyLogo"
+  />
+  {/* "Buy Rice" Button */}
+  <button
+    onClick={handleBuyRice}
+    className="flex items-center space-x-2 sm:space-x-1 p-2 sm:p-1 bg-transparent" // Compact padding for mobile
+  >
+    <img
+      src={buyrice}
+      className="h-16 w-auto sm:h-12 object-contain" // Responsive height, maintains aspect ratio
+      alt="BuyRice"
+    />
+  </button>
+</div>
 
-          <div className="flex items-center space-x-2">
-            <AuthorInfo
-              name={`${profileData?.firstName || ""} ${
-                profileData?.lastName || ""
-              }`.trim()}
-              location={profileData?.city || ""}
-              email={profileData?.email || ""}
-              icon={<FaUserCircle />}
-            />
-          </div>
-        </div>
-      </header>
+
+
+    {/* Mobile: SignOut Button (Icon) */}
+    <div className="md:hidden">
+      <button
+        onClick={() => {
+          if (localStorage.getItem("userId") && localStorage.getItem("email")) {
+            localStorage.removeItem("userId");
+            localStorage.removeItem("email");
+            navigate("/");
+          } else {
+            navigate("/");
+          }
+        }}
+        className="text-white"
+      >
+        <FaSignOutAlt className="h-6 w-6" /> {/* FontAwesome SignOut Icon */}
+      </button>
+    </div>
+  </div>
+
+  {/* Right Section: Ticket History, SignOut, and Profile */}
+  <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
+    {/* Ticket History Button */}
+    <button
+      onClick={handletickethistory}
+      className="hidden md:block text-white bg-[#04AA6D] px-4 py-2 rounded-full font-bold"
+    >
+      Ticket History
+    </button>
+
+    {/* SignOut Button */}
+    <button
+      onClick={() => {
+        if (localStorage.getItem("userId") && localStorage.getItem("email")) {
+          localStorage.removeItem("userId");
+          localStorage.removeItem("email");
+          navigate("/");
+        } else {
+          navigate("/");
+        }
+      }}
+      className="hidden md:block text-white bg-[#ffa800] px-4 py-2 rounded-full font-bold"
+    >
+      SignOut
+    </button>
+
+    {/* Profile Info Section (AuthorInfo) */}
+    <div className="flex flex-wrap items-center gap-2">
+      <AuthorInfo
+        name={`${profileData?.firstName || ""} ${
+          profileData?.lastName || ""
+        }`.trim()}
+        location={profileData?.city || ""}
+        email={profileData?.email || ""}
+        icon={<FaUserCircle />}
+        number={profileData?.mobileNumber || ""}
+      />
+    </div>
+  </div>
+</header>
 
       {/* <ModalComponent /> */}
       <main className="flex  flex-col flex-grow w-full overflow-y-auto p-3 md:flex-row">
         {/* Combined Left, Center, and Right Panel */}
-        <div className="flex flex-col  flex-grow bg-white rounded-lg shadow-md lg:flex-row">
+        <div className="flex flex-col bg-white flex-grow gap-1 rounded-lg shadow-md lg:flex-row">
           {/* Left Panel */}
           {/* {showLeftPanel && ( */}
-          <aside className="w-full p-3 text-black bg-gray-100 rounded-l-lg md:w-1/6 flex flex-col overflow-y-auto">
+          <aside className="w-full p-3 text-black bg-gray-100 rounded-l-lg  rounded-r-lg md:w-1/6 flex flex-col overflow-y-auto">
             <div className="flex items-center justify-between font-bold ">
               <button
-                onClick={() => handleEditClick()}
-                className=" rounded-md"
-                title="Edit"
+                onClick={handleHistoryButtonClick}
+                className="rounded-md"
+                title={isHistoryVisible ? "Back to Services" : "Chat History"}
               >
-                <div className="hover:bg-gray-200 p-2 rounded-full">
-                  {" "}
-                  {/* Add background color here */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-5 h-5 text-[#351664]"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M16.862 3.487a2.25 2.25 0 113.18 3.18L8.754 17.955l-4.504.5.5-4.504 11.112-11.112z"
-                    />
-                  </svg>
+                <div className="hover:bg-gray-200 p-1 text-[#3c1973] rounded-lg">
+                  {isHistoryVisible ? "Services" : "History"}
                 </div>
               </button>
-              <span className="flex-1 text-center text-[#351664] ">
-                History
-              </span>
               <button
                 onClick={handleNewChatClick}
                 className=" rounded-md"
                 title="New Chat"
               >
-                <div className="hover:bg-gray-200 p-2 rounded-full">
+                <div className="hover:bg-gray-200 text-[#3c1973] p-1  rounded-lg">
                   {" "}
                   {/* Add background color here */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    className="w-5 h-5 text-[#351664]"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 4.5v15m7.5-7.5h-15"
-                    />
-                  </svg>
+                  Free ChatGPT
                 </div>
               </button>
             </div>
-            {isEditing && (
+            {/* {isEditing && (
               <p className="text-sm text-[#351664] mb-4 text-center">
                 Editing mode enabled...
               </p>
+            )} */}
+
+            {!isHistoryVisible && (
+              <div className="mt-4 border-t border-gray-300 ">
+                {/* <div className="mt-2 flex justify-center items-center">
+                <button
+                  onClick={handletickethistory}
+                  className="px-4 py-2 text-black bg-[#04AA6D] text-center rounded-md cursor-pointer flex items-center justify-center"
+                >
+                  <span className="text-white text-sm leading-tight">
+                    Ticket History
+                  </span>
+                </button>
+              </div> */}
+
+                <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
+                  <button
+                    onClick={handleFreerudrakshaClick}
+                    className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
+                  >
+                    <img
+                      src={FR} // Replace with the actual image path
+                      alt="Free Rudraksha"
+                      className="w-7 h-7 mr-2 rounded-full" // Adjust image size and margin
+                    />
+                    <span className="text-[#3c1973] text-sm">
+                      Free Rudraksha
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
+                  <button
+                    onClick={handleFreeAiandGenAiClick}
+                    className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
+                  >
+                    <img
+                      src={FR3} // Replace with the actual image path
+                      alt="FreeAI & GenAI"
+                      className="w-7 h-7 mr-2 rounded-full"
+                    />
+                    <span className="text-[#3c1973] text-sm leading-tight">
+                      Free AI & GenAI Training
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
+                  <button
+                    onClick={handleFreeSampleClick}
+                    className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
+                  >
+                    <img
+                      src={FR2} // Replace with the actual image path
+                      alt="Free Rice Samples"
+                      className="w-7 h-7 mr-2 rounded-full"
+                    />
+                    <span className="text-[#3c1973] text-sm leading-tight">
+                      Free Rice Samples & Steel Container
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
+                  <button
+                    onClick={handleStudyAbroadClick}
+                    className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
+                  >
+                    <img
+                      src={FR1} // Replace with the actual image path
+                      alt="Study Abroad"
+                      className="w-7 h-7 mr-2 rounded-full"
+                    />
+                    <span className="text-[#3c1973] text-sm leading-tight">
+                      Study Abroad
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
+                  <button
+                    onClick={handledLegalServiceClick}
+                    className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
+                  >
+                    <img
+                      src={FR5} // Replace with the actual image path
+                      alt="Legail Service"
+                      className="w-7 h-7 mr-2 rounded-full"
+                    />
+                    <span className="text-[#3c1973] text-sm leading-tight">
+                      Legal Service
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
+                  <button
+                    onClick={handleMyRotaryClick}
+                    className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
+                  >
+                    <img
+                      src={FR3} // Replace with the actual image path
+                      alt="My Rotary"
+                      className="w-7 h-7 mr-2 rounded-full"
+                    />
+                    <span className=" text-[#3c1973] text-sm leading-tight">
+                      My Rotary
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
+                  <button
+                    onClick={handleMachinesandManufacturingClick}
+                    className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
+                  >
+                    <img
+                      src={FR4} // Replace with the actual image path
+                      alt="Machines and Manufacturing Services"
+                      className="w-7 h-7 rounded-full"
+                    />
+                    <span className=" text-[#3c1973] ml-2 text-sm leading-tight">
+                      Machines & Manufacturing Services
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
+                  <button
+                    onClick={handledWeAreHiring}
+                    className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
+                  >
+                    <img
+                      src={FR6} // Replace with the actual image path
+                      alt="We Are Hiring"
+                      className="w-7 h-7 rounded-full"
+                    />
+                    <span className=" text-[#3c1973] text-sm ml-2 leading-tight">
+                      We Are Hiring
+                    </span>
+                  </button>
+                </div>
+              </div>
             )}
-            <div className="mt-4 border-t border-gray-300 pt-2">
-              <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
-                <button
-                  onClick={handleFreerudrakshaClick}
-                  className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
-                >
-                  <img
-                    src={FR} // Replace with the actual image path
-                    alt="Free Rudraksha"
-                    className="w-7 h-7 mr-2 rounded-full" // Adjust image size and margin
-                  />
-                  <span className="text-[#3c1973] text-sm leading-tight">
-                    Free Rudraksha
-                  </span>
-                </button>
-              </div>
 
-              <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
-                <button
-                  onClick={handleFreeAiandGenAiClick}
-                  className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
-                >
-                  <img
-                    src={FR3} // Replace with the actual image path
-                    alt="FreeAI & GenAI"
-                    className="w-7 h-7 mr-2 rounded-full"
-                  />
-                  <span className="text-[#3c1973] text-sm leading-tight">
-                    Free AI & GenAI Training
-                  </span>
-                </button>
+            <div
+              className={`mt-2 h-80 border-gray-300 pt-2 transition-all duration-300 ${
+                isHistoryVisible ? "block" : "hidden"
+              }`}
+            >
+              <div className="flex mt-3 mb-2 ml-2 text-[#3c1973] text-md">
+                Previous History
               </div>
-
-              <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
-                <button
-                  onClick={handleFreeSampleClick}
-                  className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
-                >
-                  <img
-                    src={FR2} // Replace with the actual image path
-                    alt="Free Rice Samples"
-                    className="w-7 h-7 mr-2 rounded-full"
-                  />
-                  <span className="text-[#3c1973] text-sm leading-tight">
-                    Free Rice Samples & Steel Container
-                  </span>
-                </button>
-              </div>
-
-              <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
-                <button
-                  onClick={handleStudyAbroadClick}
-                  className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
-                >
-                  <img
-                    src={FR1} // Replace with the actual image path
-                    alt="Study Abroad"
-                    className="w-7 h-7 mr-2 rounded-full"
-                  />
-                  <span className="text-[#3c1973] text-sm leading-tight">
-                    Study Abroad
-                  </span>
-                </button>
-              </div>
-
-              <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
-                <button
-                  onClick={handledLegalServiceClick}
-                  className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
-                >
-                  <img
-                    src={FR5} // Replace with the actual image path
-                    alt="Legail Service"
-                    className="w-7 h-7 mr-2 rounded-full"
-                  />
-                  <span className="text-[#3c1973] text-sm leading-tight">
-                    Legal Service
-                  </span>
-                </button>
-              </div>
-
-              <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
-                <button
-                  onClick={handleMyRotaryClick}
-                  className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
-                >
-                  <img
-                    src={FR3} // Replace with the actual image path
-                    alt="My Rotary"
-                    className="w-7 h-7 mr-2 rounded-full"
-                  />
-                  <span className=" text-[#3c1973] text-sm leading-tight">
-                    My Rotary
-                  </span>
-                </button>
-              </div>
-
-              <div className="mt-4 flex hover:bg-gray-200 hover:rounded-lg items-center">
-                <button
-                  onClick={handleMachinesandManufacturingClick}
-                  className="px-1 py-1 text-black rounded-md cursor-pointer flex items-center"
-                >
-                  <img
-                    src={FR4} // Replace with the actual image path
-                    alt="Machines and Manufacturing Services"
-                    className="w-7 h-7 rounded-full"
-                  />
-                  <span className=" text-[#3c1973] text-sm leading-tight">
-                    Machines & Manufacturing Services
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 h-80 border-t border-gray-300 pt-2">
               {chathistory.length === 0 ? (
                 <p className="text-sm text-gray-500 italic text-center">
                   No history available.
@@ -852,181 +984,240 @@ const truncateText = (
                       className="text-sm text-gray-800"
                       to={`?${encodeURIComponent(item.userQuations)}`}
                     >
-                      {/* Truncate text with a minimum of 20 characters */}
                       {truncateText(item.userQuations, 25)}
                     </Link>
-                   
                   </div>
                 ))
               )}
             </div>
           </aside>
 
-          {/* }) */}
-
           {/* Center Panel */}
-          <section className="relative  overflow-y-auto  flex flex-col flex-grow w-full    p-6 md:w-1/2 bg-gray-50">
-            {showFreerudraksha ? (
-              <Freerudraksha />
-            ) : showStudyAbroad ? (
-              <StudyAbroad />
-            ) : showFreeSample ? (
-              <FreeSample />
-            ) : showFreeaiandgenai ? (
-              <FreeAiandGenAi />
-            ) : showMachinesManufacturing ? (
-              <MachinesManufacturingServices />
-            ) : showMyRotaryService ? (
-              <MyRotaryServices />
-            ) : showLegalService ? (
-              <LegalService />
-            ) : (
-              <>
-                {/* Static Rice Related Text */}
-                <h2
-                  className="fw-500"
-                  style={{ zIndex: "10", color: "black", fontWeight: "700" }}
-                >
-                  Welcome{" "}
-                  {profileData
-                    ? `    ${profileData.firstName} ${profileData.lastName}`
-                    : "Guest"}
-                </h2>
+          <section
+            ref={scrollableRef}
+            className="relative overflow-y-auto rounded-r-lg  rounded-l-lg flex flex-col flex-grow w-full  p-6 md:w-1/2 bg-gray-50"
+          >
+            {showFreerudraksha && (
+              <div ref={componentRef}>
+                <Freerudraksha />
+              </div>
+            )}
+            {showStudyAbroad && (
+              <div ref={componentRef}>
+                <StudyAbroad />
+              </div>
+            )}
+            {showFreeSample && (
+              <div ref={componentRef}>
+                <FreeSample />
+              </div>
+            )}
+            {showFreeaiandgenai && (
+              <div ref={componentRef}>
+                <FreeAiandGenAi />
+              </div>
+            )}
+            {showMachinesManufacturing && (
+              <div ref={componentRef}>
+                <MachinesManufacturingServices />
+              </div>
+            )}
+            {showMyRotaryService && (
+              <div ref={componentRef}>
+                <MyRotaryServices />
+              </div>
+            )}
+            {showHiringService && (
+              <div ref={componentRef}>
+                <HiringService />{" "}
+              </div>
+            )}
+            {showLegalService && (
+              <div ref={componentRef}>
+                <LegalService />
+              </div>
+            )}
+            {ticketHistory && (
+              <div ref={componentRef}>
+                <TicketHistory />
+              </div>
+            )}
+            {!showFreerudraksha &&
+              !showHiringService &&
+              !showStudyAbroad &&
+              !showFreeSample &&
+              !showFreeaiandgenai &&
+              !showMachinesManufacturing &&
+              !showMyRotaryService &&
+              !ticketHistory &&
+              !showLegalService && (
+                <>
+                  {/* Static Rice Related Text */}
+                  {
+                    <div className="flex items-center justify-between p-2">
+                      {/* Left side: Welcome Text */}
+                      <h2
+                        className="fw-500"
+                        style={{
+                          zIndex: "10",
+                          color: "black",
+                          fontWeight: "700",
+                        }}
+                      >
+                        Welcome{" "}
+                        {profileData
+                          ? `    ${profileData.firstName} ${profileData.lastName}`
+                          : "Guest"}
+                      </h2>
 
-                {showStaticBubbles && (
-                  <>
-                    <div className="absolute inset-0 flex items-center justify-center p-4">
-                      <div className="grid grid-cols-2 gap-4 overflow-y-auto max-h-60">
-                        {" "}
-                        {/* Add max-height and overflow */}
-                        {riceTopicsshow && (
-                          <>
-                            {riceTopics.map((topic) => (
-                              <div
-                                key={topic.id}
-                                className="flex items-center justify-center max-w-xs p-4 text-black transition duration-200 bg-gray-200 rounded-lg chat-bubble hover:bg-gray-300"
-                                style={{
-                                  wordWrap: "break-word",
-                                  zIndex: "10",
-                                }}
-                                onClick={() => {
-                                  handleBubbleClick(topic.title);
-                                  setInput(topic.title);
-                                }}
-                              >
-                                <ReactMarkdown className="text-center">
-                                  {topic.title}
-                                </ReactMarkdown>
-                              </div>
-                            ))}
-                          </>
-                        )}
-                      </div>
+                    {/* Right side: Multi Chain ID and Information */}
+                    <div className="flex flex-col items-end space-y-2">
+  {multichainid && (
+    <>
+      <p className="fw-500 bg-[grey] px-4 py-2 text-white font-bold rounded-full w-fit">
+        BlockChain ID: {multichainid}
+      </p>
+      <p className="fw-500 bg-[grey] px-4 py-2 text-white font-bold rounded-full w-fit">
+        BMV Coins: {bmvcoin}
+      </p>
+    </>
+  )}
+</div>
                     </div>
-                  </>
-                )}
+                  }
 
-                {/* Chat messages */}
-                <div
-                  className="relative flex-grow p-4  chat-container"
-                  // style={{ maxHeight: "calc(100vh - 12rem)" }}
-                >
-                  <div>
-                    {isLoading ? (
-                      <div className="flex items-center justify-center h-24">
-                        <Example variant="loading01" />
+                  {showStaticBubbles && (
+                    <>
+                      <div className="absolute inset-0 flex items-center justify-center p-2">
+                        <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-70">
+                          {" "}
+                          {/* Add max-height and overflow */}
+                          {riceTopicsshow && (
+                            <>
+                              {riceTopics.map((topic) => (
+                                <div
+                                  key={topic.id}
+                                  className="flex items-center justify-center max-w-xs p-3 text-black transition duration-200 bg-gray-200 rounded-lg chat-bubble hover:bg-gray-300"
+                                  style={{
+                                    wordWrap: "break-word",
+                                    zIndex: "10",
+                                  }}
+                                  onClick={() => {
+                                    handleBubbleClick(topic.title);
+                                    setInput(topic.title);
+                                  }}
+                                >
+                                  <ReactMarkdown className="text-center">
+                                    {topic.title}
+                                  </ReactMarkdown>
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <>
-                        {/* Render Questions followed by their corresponding Answers */}
-                        {messages.map((message, index) => (
-                          <div
-                            key={index}
-                            className={`col-span-8 mb-6 p-3 rounded-md ${
-                              message.type === "question"
-                                ? "bg-blue-200 col-span-3 text-black"
-                                : "bg-green-200 col-span-5 text-black"
-                            }`}
-                          >
-                            <ReactMarkdown>{message.content}</ReactMarkdown>
-                            <div className="flex mt-2 space-x-1">
-                              {/* Copy Button */}
-                              <button
-                                className="p-2 bg-white rounded-full mr"
-                                onClick={() => handleCopy(message.content)}
-                                title="Copy"
-                              >
-                                <FaRegCopy />
-                              </button>
+                    </>
+                  )}
 
-                              {/* Speaker (Read Aloud) Button */}
-                              {isReading ? (
+                  {/* Chat messages */}
+                  <div
+                    className="relative flex-grow p-4  chat-container"
+                    // style={{ maxHeight: "calc(100vh - 12rem)" }}
+                  >
+                    <div>
+                      {isLoading ? (
+                        <div className="flex items-center justify-center h-24">
+                          <Example variant="loading01" />
+                        </div>
+                      ) : (
+                        <>
+                          {/* Render Questions followed by their corresponding Answers */}
+                          {messages.map((message, index) => (
+                            <div
+                              key={index}
+                              className={`col-span-8 mb-6 p-3 rounded-md ${
+                                message.type === "question"
+                                  ? "bg-blue-200 col-span-3 text-black"
+                                  : "bg-green-200 col-span-5 text-black"
+                              }`}
+                            >
+                              <ReactMarkdown>{message.content}</ReactMarkdown>
+                              <div className="flex mt-2 space-x-1">
+                                {/* Copy Button */}
                                 <button
-                                  className="p-2 bg-white mr rounded-full"
-                                  onClick={() =>
-                                    window.speechSynthesis.cancel()
-                                  }
-                                  title="Stop Read Aloud"
+                                  className="p-2 bg-white rounded-full mr"
+                                  onClick={() => handleCopy(message.content)}
+                                  title="Copy"
                                 >
-                                  <FaVolumeOff />
+                                  <FaRegCopy />
                                 </button>
-                              ) : (
-                                <button
-                                  className="p-2 bg-white mr rounded-full"
-                                  onClick={() =>
-                                    handleReadAloud(message.content)
-                                  }
-                                  title="Read Aloud"
-                                >
-                                  <FaVolumeUp />
-                                </button>
-                              )}
 
-                              {/* Share Button */}
-                              <button
-                                className="p-2 bg-white rounded-full mr"
-                                onClick={() => handleShare(message.content)}
-                                title="Share"
-                              >
-                                <FaShareAlt />
-                              </button>
+                                {/* Speaker (Read Aloud) Button */}
+                                {isReading ? (
+                                  <button
+                                    className="p-2 bg-white mr rounded-full"
+                                    onClick={() =>
+                                      window.speechSynthesis.cancel()
+                                    }
+                                    title="Stop Read Aloud"
+                                  >
+                                    <FaVolumeOff />
+                                  </button>
+                                ) : (
+                                  <button
+                                    className="p-2 bg-white mr rounded-full"
+                                    onClick={() =>
+                                      handleReadAloud(message.content)
+                                    }
+                                    title="Read Aloud"
+                                  >
+                                    <FaVolumeUp />
+                                  </button>
+                                )}
+
+                                {/* Share Button */}
+                                <button
+                                  className="p-2 bg-white rounded-full mr"
+                                  onClick={() => handleShare(message.content)}
+                                  title="Share"
+                                >
+                                  <FaShareAlt />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                    <div ref={bottomRef} />{" "}
+                    {/* This ref will be used to scroll to the bottom */}
+                  </div>
+                  {/* Input Bar */}
+                  <div className="absolute inset-x-0 bottom-0 flex items-center p-2 bg-white border-t border-gray-300 md:relative">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={input}
+                      onChange={handleInputChangeWithVisibility}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Ask question..."
+                      className="flex-grow p-2 rounded-full shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffa800] text-black text-sm md:text-base"
+                    />
+                    {showSendButton && (
+                      <button
+                        onClick={() => handleSend(input)}
+                        className={`ml-2 bg-[#ffa800] text-white px-3 py-1 md:px-4 md:py-2 rounded-full shadow-md ${
+                          isLoading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Sending..." : "Send"}
+                      </button>
                     )}
                   </div>
-                  <div ref={bottomRef} />{" "}
-                  {/* This ref will be used to scroll to the bottom */}
-                </div>
-                {/* Input Bar */}
-                <div className="absolute inset-x-0 bottom-0 flex items-center p-2 bg-white border-t border-gray-300 md:relative">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={input}
-                    onChange={handleInputChangeWithVisibility}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ask questions..."
-                    className="flex-grow p-2 rounded-full shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffa800] text-black"
-                  />
-                  {showSendButton && (
-                    <button
-                      onClick={() => handleSend(input)}
-                      className={`ml-2 bg-[#ffa800] text-white px-4 py-2 rounded-full shadow-md ${
-                        isLoading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Sending..." : "Send"}
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
+                </>
+              )}
           </section>
-
-          {/* Right Panel */}
         </div>
       </main>
     </div>
