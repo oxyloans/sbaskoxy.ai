@@ -64,6 +64,17 @@ import TicketHistory from "./components/TicketHistory";
 import ThankYouPage from "./components/ThankYouPage";
 import RiceSalePage from "./components/Communities";
 import Whatsappregister from "./components/Whatsappregister";
+import ItemDisplayPage from "./kart/itemsdisplay";
+import MyWalletPage from "./kart/Wallet";
+import CartPage from "./kart/Cart";
+import MyOrders from "./kart/Myorders";
+import ProfilePage from "./kart/Profile";
+import SubscriptionPage from "./kart/Subscription";
+import WriteToUs from "./kart/Writetous";
+import TicketHistoryPage from "./kart/Tickethistory";
+import ManageAddressesPage from "./kart/Address";
+
+
 
 const App: React.FC = () => {
   return (
@@ -104,7 +115,22 @@ const App: React.FC = () => {
           <Route path="/freerudraksha" Component={Freerudraksha} />
           <Route path="/thank-you" Component={ThankYouPage} />
           <Route path="/userqueries" Component={AllQueries} />
+
+          {/* {kartpage routes} */}
           <Route path="/buyRice" element={<Ricebags />} />
+          <Route path="/itemsdisplay" element={<ItemDisplayPage />} />
+          <Route path="/wallet" element={<MyWalletPage />} />
+          <Route path="/mycart" element={<CartPage />} />
+          <Route path="/myorders" element={<MyOrders />} />
+          <Route path="/profile" element={<ProfilePage/>} />
+          <Route path="/subscription" element={<SubscriptionPage/>} />
+          <Route path="/writetous" element={<WriteToUs/>} />
+          <Route path="/tickethistory" element={<TicketHistoryPage/>} />
+          <Route path="/manageaddresses" element={<ManageAddressesPage/>} />
+
+
+
+
           <Route path="/freesample&steelcontainer" element={<FreeSample />} />
           <Route path="/freeaiandgenai" element={<FreeAiandGenAi />} />
           <Route path="/studyabroad" element={<StudyAbroad />} />

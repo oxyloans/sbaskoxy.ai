@@ -10,7 +10,7 @@ import Logo from "../assets/img/logo.png";
 
 const Footer: React.FC = () => {
   return (
-    <footer className="p-8 bg-gray-50 shadow-lg text-center md:text-left drop-shadow-lg mt-10">
+    <footer className="p-8 bg-white shadow-lg text-center md:text-left drop-shadow-lg mt-10">
       {/* Grid Layout for Footer Sections */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         {/* Logo and Social Media Section */}
@@ -28,35 +28,35 @@ const Footer: React.FC = () => {
           {/* Social Media Links */}
           <div className="flex justify-center md:justify-start space-x-4 mt-4">
             <a
-              href="https://www.facebook.com/BMV.MONEY"
+              href="https://www.facebook.com/profile.php?id=61572388385568 				"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaFacebook className="h-6 w-6 text-blue-600 hover:text-blue-800 transition-colors duration-300" />
             </a>
-            <a
+            {/* <a
               href="https://x.com/i/flow/login?redirect_after_login=%2FBmvMoney"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaTwitter className="h-6 w-6 text-blue-400 hover:text-blue-600 transition-colors duration-300" />
-            </a>
+            </a> */}
             <a
-              href="https://www.instagram.com/bmv.money/"
+              href="https://www.instagram.com/askoxy.ai/"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaInstagram className="h-6 w-6 text-pink-600 hover:text-pink-800 transition-colors duration-300" />
             </a>
-            <a
+            {/* <a
               href="https://www.youtube.com/channel/UCUQX01nSvPOkYY1w-x2sQgQ"
               target="_blank"
               rel="noopener noreferrer"
             >
               <FaYoutube className="h-6 w-6 text-red-600 hover:text-red-800 transition-colors duration-300" />
-            </a>
+            </a> */}
             <a
-              href="https://www.linkedin.com/company/bmv-money/about/"
+              href="https://www.linkedin.com/in/askoxy-ai-5a2157349/"
               target="_blank"
               rel="noopener noreferrer"
             >
