@@ -37,9 +37,9 @@ const ItemDisplayPage = () => {
   const token = localStorage.getItem("accessToken"); // Replace with actual token
 
   useEffect(() => {
-    if (!itemDetails) {
-      fetchItemDetails();
-    }
+    // if (!itemDetails) {
+    //   fetchItemDetails();
+    // }
     fetchCartData();
   }, [itemId]);
 
@@ -70,14 +70,14 @@ const ItemDisplayPage = () => {
           },
         }
       );
-      const cartItemsMap = response.data.reduce(
+      const cartItemsMap = response.data.customerCartResponseList.reduce(
         (acc: Record<string, number>, item: CartItem) => {
           acc[item.itemId] = item.cartQuantity;
           return acc;
         },
         {}
       );
-      setCartData(response.data);
+      setCartData(response.data.customerCartResponseList);
       setCartItems(cartItemsMap);
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -94,6 +94,7 @@ const ItemDisplayPage = () => {
         ...prevCartItems,
         [item.itemId]: 1,
       }));
+      
       fetchCartData();
     } catch (error) {
       console.error("Error adding item to cart:", error);
@@ -163,6 +164,7 @@ const ItemDisplayPage = () => {
 
   const removeCartItem = async (item: Item) => {
     const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
+    console.log(targetCartId);
     if (!targetCartId) return;
 
     try {

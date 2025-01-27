@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { log } from "node:console";
 const BASE_URL = "https://meta.oxyglobal.tech/api";
@@ -40,14 +40,16 @@ const Categories: React.FC<CategoriesProps> = ({
   updateCart,
   customerId, // Retrieve customerId from props
 }) => {
- const [cartItems, setCartItems] = useState<Record<string, number>>({});
-   const [cartData, setCartData] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<Record<string, number>>({});
+  const [cartData, setCartData] = useState<CartItem[]>([]);
 
-   useEffect(() => {
+  useEffect(() => {
     console.log("useEffect triggered");
+    console.log("customerId", customerId);
     fetchCartData();
   }, []);
-  
+
+  const Id = localStorage.getItem("userId");
 
   const handleAddToCart = async (item: Item) => {
     const data = { customerId, itemId: item.itemId, quantity: 1 }; // Correctly use item
@@ -56,7 +58,8 @@ const Categories: React.FC<CategoriesProps> = ({
         `${BASE_URL}/cart-service/cart/add_Items_ToCart`,
         data
       );
-      updateCart({ ...cart, [item.itemName]: (cart[item.itemName] || 0) + 1 });
+      // updateCart({ ...cart, [item.itemName]: (cart[item.itemName] || 0) + 1 });
+      fetchCartData();
     } catch (error) {
       console.error("Error adding to cart:", error);
     }
@@ -65,45 +68,34 @@ const Categories: React.FC<CategoriesProps> = ({
   const fetchCartData = async () => {
     try {
       const response = await axios.get(
-        `${BASE_URL}/cart-service/cart/customersCartItems?customerId=${customerId}`,
-        
+        `${BASE_URL}/cart-service/cart/customersCartItems?customerId=${Id}`,
+
       );
-      const cartItemsMap = response.data.reduce(
+
+      console.log("cartdata", response.data);
+      if(response.data.customerCartResponseList){     
+         const cartItemsMap = response.data?.customerCartResponseList.reduce(
         (acc: Record<string, number>, item: CartItem) => {
-          acc[item.itemId] = item.cartQuantity;
+          acc[item.itemId] = item.cartQuantity || 0;
           return acc;
         },
         {}
       );
-      console.log(response.data.customerCartResponseList);
-      
-      setCartData(response.data.customerCartResponseList);
       setCartItems(cartItemsMap);
+    }else{
+      setCartItems({});
+    }
+
+    
+      setCartData(response.data.customerCartResponseList);
+      
+      // console.log("cartdata", response.data.customerCartResponseList);
+
+      // console.log("cartItems", cartItemsMap);
+
+
     } catch (error) {
       console.error("Error fetching cart items:", error);
-    }
-  };
-
-  const removeCartItem = async (item: Item) => {
-    const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
-    if (!targetCartId) return;
-
-    try {
-      await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
-        data: { id: targetCartId },
-        
-      });
-      // Update the cart state after removal
-      // console.log("data",data);
-      
-      setCartItems((prevCartItems) => {
-        const newCartItems = { ...prevCartItems };
-        delete newCartItems[item.itemId];
-        return newCartItems;
-      });
-      fetchCartData();
-    } catch (error) {
-      console.error("Failed to remove cart item:", error);
     }
   };
 
@@ -113,33 +105,37 @@ const Categories: React.FC<CategoriesProps> = ({
         `${BASE_URL}/cart-service/cart/incrementCartData`,
         { customerId, itemId: item.itemId }
       );
-      updateCart({ ...cart, [item.itemName]: cart[item.itemName] + 1 });
+      // updateCart({ ...cart, [item.itemName]: cart[item.itemName] + 1 });
+      fetchCartData();
     } catch (error) {
       console.error("Error increasing quantity:", error);
     }
   };
 
   const handleDecreaseQuantity = async (item: Item) => {
+    console.log("item", cartItems[item.itemId]);
     try {
-      if (cart[item.itemName] > 1) {
+      if (cartItems[item.itemId] > 1) {
         await axios.patch(
           `${BASE_URL}/cart-service/cart/decrementCartData`,
           { customerId, itemId: item.itemId }
         );
-        updateCart({ ...cart, [item.itemName]: cart[item.itemName] - 1 });
+        // updateCart({ ...cart, [item.itemName]: cart[item.itemName] - 1 });
+        fetchCartData();
       } else {
-    const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
-     console.log(cartData,"cartData");
-     
+        const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
+        console.log(cartData, "cartData");
+
         await axios.delete(
           `${BASE_URL}/cart-service/cart/remove`,
           {
             data: { id: targetCartId },
           }
         );
-        const updatedCart = { ...cart };
-        delete updatedCart[item.itemName];
-        updateCart(updatedCart);
+        // const updatedCart = { ...cart };
+        // delete updatedCart[item.itemName];
+        // updateCart(updatedCart);
+        fetchCartData();
       }
     } catch (error) {
       console.error("Error decreasing quantity or removing item:", error);
@@ -153,11 +149,10 @@ const Categories: React.FC<CategoriesProps> = ({
           {categories.map((category, index) => (
             <div
               key={index}
-              className={`cursor-pointer bg-purple-50 border rounded-lg p-4 text-center shadow hover:shadow-md transition ${
-                activeCategory === category.categoryName
+              className={`cursor-pointer bg-purple-50 border rounded-lg p-4 text-center shadow hover:shadow-md transition ${activeCategory === category.categoryName
                   ? "border-blue-800 bg-blue-60"
                   : "border-gray-300"
-              }`}
+                }`}
               onClick={() => onCategoryClick(category.categoryName)}
             >
               <div className="w-25 h-25 bg-gray-100 rounded mb-2 flex items-center justify-center">
@@ -204,7 +199,7 @@ const Categories: React.FC<CategoriesProps> = ({
                     <p className="font-medium text-gray-700 mb-2 text-sm sm:text-base">
                       {item.itemName}
                     </p>
-                    <div className="flex items-center justify-between sm:justify-center space-x-2">
+                    {/* <div className="flex items-center justify-between sm:justify-center space-x-2">
                       {cart[item.itemName] ? (
                         <>
                           <button
@@ -231,7 +226,43 @@ const Categories: React.FC<CategoriesProps> = ({
                           Add to Cart
                         </button>
                       )}
+                    </div> */}
+
+                    <div className="flex items-center justify-between sm:justify-center space-x-2">
+                      {cartItems && cartItems[item.itemId] > 0 ? (
+                        <>
+                          {/* Decrease Quantity Button */}
+                          <button
+                            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                            onClick={() => handleDecreaseQuantity(item)}
+                          >
+                            -
+                          </button>
+
+                          {/* Current Quantity */}
+                          <span className="text-gray-800 font-bold text-sm sm:text-base">
+                            {cartItems[item.itemId]}
+                          </span>
+
+                          {/* Increase Quantity Button */}
+                          <button
+                            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                            onClick={() => handleIncreaseQuantity(item)}
+                          >
+                            +
+                          </button>
+                        </>
+                      ) : (
+                        /* Add to Cart Button */
+                        <button
+                          className="flex-1 px-2 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm sm:text-base text-center"
+                          onClick={() => handleAddToCart(item)}
+                        >
+                          Add to Cart {cartItems.cartQuantity}
+                        </button>
+                      )}
                     </div>
+
                   </div>
                 ))}
             </div>

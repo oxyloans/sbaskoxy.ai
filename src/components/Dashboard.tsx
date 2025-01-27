@@ -6,7 +6,7 @@ import axios from "axios";
 import HiringService from "./HiringService";
 import Askoxylogowhite from "../assets/img/askoxylogowhite.png";
 import buyrice from "../assets/img/buyrice.png";
-
+import BMVCOIN from "./Bmvcoin";
 import "./erice.css";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import B1 from "../assets/img/B1.jpg";
@@ -118,6 +118,7 @@ const Dasboard = () => {
   const [showMyRotaryService, setShowMyRotaryService] = useState(false);
   const [showLegalService, setShowLegalService] = useState(false);
   const [showHiringService, setShowHiringService] = useState(false);
+  const [showBMVService, setShowBMVService] = useState(false);
   const [ticketHistory, setTicketHistory] = useState(false);
   const scrollableRef = useRef<HTMLDivElement | null>(null);
   const componentRef = useRef<HTMLDivElement | null>(null);
@@ -161,6 +162,7 @@ const Dasboard = () => {
     setShowMyRotaryService(false);
     setShowLegalService(false);
     setTicketHistory(false);
+    setShowBMVService(false)  
 
     // Handle section navigation (don't store in history)
     if (section) {
@@ -191,6 +193,9 @@ const Dasboard = () => {
           break;
         case "tickethistory":
           setTicketHistory(true);
+          break;
+          case "bmvcoin":
+          setShowBMVService(true);  
           break;
       }
       // Clear messages when switching sections
@@ -233,6 +238,20 @@ const handleFreerudrakshaClick = () => {
   }, 50); // 50ms delay to ensure DOM updates first
 };
 
+const handleBmvCoin = () => {
+  navigate("/dashboard?section=bmvcoin", { replace: true });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // Force a reflow and then scroll
+  setTimeout(() => {
+    if (isMobile) {
+      componentRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, 50); // 50ms delay to ensure DOM updates first
+};
   const handletickethistory = () => {
     navigate("/dashboard?section=tickethistory", { replace: true });
 
@@ -624,6 +643,7 @@ const handleFreerudrakshaClick = () => {
     setShowLegalService(false);
     setTicketHistory(false);
     setriceTopicsshow(true);
+    setShowBMVService(false); 
 
     navigate("/dashboard"); // Navigate first
     setShowStaticBubbles(true); // Show static chat bubbles after navigation
@@ -696,93 +716,82 @@ const handleFreerudrakshaClick = () => {
   return (
     <div className="max-h-screen  fixed bg-[#351664] text-white overflow-y-auto  w-full flex flex-col">
      {/* Header */}
-<header className="flex flex-col md:flex-row items-center justify-between p-4 bg-[#351664]">
-  
-  <div className="flex items-center justify-between w-full md:w-auto">
-
-   {/* Logo and "Buy Rice" Button */}
-<div className="flex items-center space-x-6">
-  {/* Logo */}
-  <img
-    src={Askoxylogowhite}
-    className="h-16 w-auto sm:h-12 object-contain" // Responsive height, maintains aspect ratio
-    alt="AskOxyLogo"
-  />
-  {/* "Buy Rice" Button */}
-  <button
-    onClick={handleBuyRice}
-    className="flex items-center space-x-2 sm:space-x-1 p-2 sm:p-1 bg-transparent" // Compact padding for mobile
-  >
-    <img
-      src={buyrice}
-      className="h-16 w-auto sm:h-12 object-contain" // Responsive height, maintains aspect ratio
-      alt="BuyRice"
-    />
-  </button>
-</div>
+     <header className="flex items-center justify-between p-4 bg-[#351664] flex-wrap">
+      {/* Left Section: Logo and "Buy Rice" Button */}
+      <div className="flex items-center space-x-4">
+        {/* Logo */}
+        <img
+          src={Askoxylogowhite}
+          className="h-12 w-auto object-contain" // Responsive height, maintains aspect ratio
+          alt="AskOxyLogo"
+        />
+        
+        {/* "Buy Rice" Button */}
+        <button
+          onClick={handleBuyRice}
+          className="flex items-center p-2 bg-transparent"
+        >
+          <img
+            src={buyrice}
+            className="h-12 w-auto object-contain"
+            alt="BuyRice"
+          />
+        </button>
+      </div>
 
 
+      
 
-    {/* Mobile: SignOut Button (Icon) */}
-    <div className="md:hidden">
+      {/* Right Section: Profile Info and SignOut */}
+      <div className="flex items-center space-x-4">
       <button
-        onClick={() => {
-          if (localStorage.getItem("userId") && localStorage.getItem("email")) {
-            localStorage.removeItem("userId");
-            localStorage.removeItem("email");
-            navigate("/");
-          } else {
-            navigate("/");
-          }
-        }}
-        className="text-white"
+        onClick={handletickethistory}
+        className="hidden md:block text-white bg-[#04AA6D] px-4 py-2 rounded-full font-bold text-sm"
       >
-        <FaSignOutAlt className="h-6 w-6" /> {/* FontAwesome SignOut Icon */}
+        Ticket History
       </button>
-    </div>
-  </div>
 
-  {/* Right Section: Ticket History, SignOut, and Profile */}
-  <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 mt-4 md:mt-0">
-    {/* Ticket History Button */}
-    <button
-      onClick={handletickethistory}
-      className="hidden md:block text-white bg-[#04AA6D] px-4 py-2 rounded-full font-bold"
-    >
-      Ticket History
-    </button>
+        {/* SignOut Button (Icon in Mobile View) */}
+        <button
+          onClick={() => {
+            if (localStorage.getItem("userId") && localStorage.getItem("email")) {
+              localStorage.removeItem("userId");
+              localStorage.removeItem("email");
+              navigate("/");
+            } else {
+              navigate("/");
+            }
+          }}
+          className="text-white bg-[#ffa800] px-4 py-2 rounded-full font-bold text-sm hidden md:block"
+        >
+          SignOut
+        </button>
+        <button
+          onClick={() => {
+            if (localStorage.getItem("userId") && localStorage.getItem("email")) {
+              localStorage.removeItem("userId");
+              localStorage.removeItem("email");
+              navigate("/");
+            } else {
+              navigate("/");
+            }
+          }}
+          className="text-white md:hidden"
+        >
+          <FaSignOutAlt className="h-6 w-6" />
+        </button>
 
-    {/* SignOut Button */}
-    <button
-      onClick={() => {
-        if (localStorage.getItem("userId") && localStorage.getItem("email")) {
-          localStorage.removeItem("userId");
-          localStorage.removeItem("email");
-          navigate("/");
-        } else {
-          navigate("/");
-        }
-      }}
-      className="hidden md:block text-white bg-[#ffa800] px-4 py-2 rounded-full font-bold"
-    >
-      SignOut
-    </button>
-
-    {/* Profile Info Section (AuthorInfo) */}
-    <div className="flex flex-wrap items-center gap-2">
-      <AuthorInfo
-        name={`${profileData?.firstName || ""} ${
-          profileData?.lastName || ""
-        }`.trim()}
-        location={profileData?.city || ""}
-        email={profileData?.email || ""}
-        icon={<FaUserCircle />}
-        number={profileData?.mobileNumber || ""}
-      />
-    </div>
-  </div>
-</header>
-
+        {/* Profile Info */}
+        <div className="flex items-center space-x-2">
+          <FaUserCircle className="text-white h-6 w-6" />
+          <div className="text-white text-sm">
+            <p>{`${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim()}</p>
+            <p>{profileData?.city || ""}</p>
+          </div>
+        </div>
+      </div>
+    </header>
+    
       {/* <ModalComponent /> */}
       <main className="flex  flex-col flex-grow w-full overflow-y-auto p-3 md:flex-row">
         {/* Combined Left, Center, and Right Panel */}
@@ -1042,6 +1051,11 @@ const handleFreerudrakshaClick = () => {
                 <TicketHistory />
               </div>
             )}
+            {showBMVService && (
+              <div ref={componentRef}>
+                <BMVCOIN  />
+              </div>
+            )}
             {!showFreerudraksha &&
               !showHiringService &&
               !showStudyAbroad &&
@@ -1050,7 +1064,8 @@ const handleFreerudrakshaClick = () => {
               !showMachinesManufacturing &&
               !showMyRotaryService &&
               !ticketHistory &&
-              !showLegalService && (
+              !showLegalService && 
+              !showBMVService &&(
                 <>
                   {/* Static Rice Related Text */}
                   {
@@ -1074,15 +1089,34 @@ const handleFreerudrakshaClick = () => {
                     <div className="flex flex-col items-end space-y-2">
   {multichainid && (
     <>
-      <p className="fw-500 bg-[grey] px-4 py-2 text-white font-bold rounded-full w-fit">
-        BlockChain ID: {multichainid}
-      </p>
-      <p className="fw-500 bg-[grey] px-4 py-2 text-white font-bold rounded-full w-fit">
-        BMV Coins: {bmvcoin}
-      </p>
+      {/* BlockChain ID Section */}
+      <div
+        className="relative group"
+        onClick={() => (window.location.href = '/bmvcoin')} // Navigate to BMVCOIN page
+      >
+        <p className="fw-500 bg-[grey] px-4 py-2 text-white font-bold rounded-full w-fit cursor-pointer">
+          BlockChain ID: {multichainid}
+        </p>
+      </div>
+
+      {/* BMVCOINS Section */}
+      <div className="relative group">
+  {/* BMVCOINS Text with Hover Effect */}
+  <p
+    onClick={() => handleBmvCoin()} // Show BMVCOINS page inside dashboard
+    className="fw-500 bg-[grey] px-4 py-2 text-white font-bold rounded-full w-fit cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:text-white text-center"
+  >
+    {/* Change text on hover */}
+    <span className="group-hover:hidden">BMVCOINS: {bmvcoin}</span>
+    <span className="hidden group-hover:inline-block">Go to BLOCK CHAIN</span>
+  </p>
+</div>
     </>
   )}
 </div>
+
+
+
                     </div>
                   }
 

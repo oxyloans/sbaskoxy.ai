@@ -43,7 +43,7 @@ const Ricebags: React.FC = () => {
           categoryLogo: "https://via.placeholder.com/100x100",
           itemsResponseDtoList: [],
         };
-
+        
         setCategories([...response.data, manualCategory]);
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -55,6 +55,7 @@ const Ricebags: React.FC = () => {
     fetchCategories();
     const Id = localStorage.getItem("userId");
     setCustomerId(Id || "");
+    console.log({Id});
   }, []);
 
   useEffect(() => {
@@ -101,47 +102,6 @@ const Ricebags: React.FC = () => {
 
   const handleCategoryClick = (categoryName: string) => {
     setActiveCategory(categoryName);
-  };
-
-  const handleAddToCart = async (itemName: string) => {
-    try {
-      await axios.post("https://meta.oxyglobal.tech/api/cart/add", { itemName });
-      setCart((prevCart) => ({
-        ...prevCart,
-        [itemName]: (prevCart[itemName] || 0) + 1,
-      }));
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-    }
-  };
-
-  const handleIncreaseQuantity = async (itemName: string) => {
-    try {
-      await axios.post("https://meta.oxyglobal.tech/api/cart/increase", { itemName });
-      setCart((prevCart) => ({
-        ...prevCart,
-        [itemName]: prevCart[itemName] + 1,
-      }));
-    } catch (error) {
-      console.error("Error increasing quantity:", error);
-    }
-  };
-
-  const handleDecreaseQuantity = async (itemName: string) => {
-    try {
-      await axios.post("https://meta.oxyglobal.tech/api/cart/decrease", { itemName });
-      setCart((prevCart) => {
-        const updatedCart = { ...prevCart };
-        if (updatedCart[itemName] > 1) {
-          updatedCart[itemName] -= 1;
-        } else {
-          delete updatedCart[itemName];
-        }
-        return updatedCart;
-      });
-    } catch (error) {
-      console.error("Error decreasing quantity:", error);
-    }
   };
 
   const handleItemClick = (item: Item) => {

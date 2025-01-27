@@ -63,6 +63,8 @@ import AllQueries from "./Pages/AllQueries";
 import TicketHistory from "./components/TicketHistory";
 import ThankYouPage from "./components/ThankYouPage";
 import RiceSalePage from "./components/Communities";
+import BMVPDF from "./components/bmvpdf";
+import BMVCOIN from "./components/Bmvcoin";
 import Whatsappregister from "./components/Whatsappregister";
 import ItemDisplayPage from "./kart/itemsdisplay";
 import MyWalletPage from "./kart/Wallet";
@@ -95,6 +97,7 @@ const App: React.FC = () => {
             path="/allcampaignsdetails"
             element={<AllCampaignsDetails />}
           />
+          <Route path ="/bmvpdf" element={<BMVPDF />} />
           <Route path="/campaignsadd" element={<CampaignsAdd />} />{" "}
           <Route path="/universities-gpt" element={<University />} />
           <Route
@@ -115,6 +118,7 @@ const App: React.FC = () => {
           <Route path="/freerudraksha" Component={Freerudraksha} />
           <Route path="/thank-you" Component={ThankYouPage} />
           <Route path="/userqueries" Component={AllQueries} />
+          <Route path="/bmvcoin" Component={BMVCOIN} />
 
           {/* {kartpage routes} */}
           <Route path="/buyRice" element={<Ricebags />} />
