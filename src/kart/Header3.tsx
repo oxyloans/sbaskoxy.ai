@@ -29,6 +29,7 @@ const Header: React.FC = () => {
         <button className="flex items-center space-x-2 sm:space-x-1 p-2 sm:p-1 bg-transparent">
           <img
             src={buyrice}
+            onClick={() => navigate("/buyrice")}
             className="h-12 sm:h-16 w-auto object-contain"
             alt="BuyRice"
           />

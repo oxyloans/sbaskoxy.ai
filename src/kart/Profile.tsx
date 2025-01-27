@@ -78,7 +78,7 @@ const ProfilePage: React.FC = () => {
             {/* Address Section */}
             <div className="mt-6">
               <h3 className="text-xl font-semibold text-gray-600 mb-4">Addresses</h3>
-              <div className="space-y-4">
+              <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6">
                 <div className="bg-gray-100 p-4 rounded-lg flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                   <div>
                     <p>Flat No: 101, Landmark: Near Park</p>
@@ -86,7 +86,7 @@ const ProfilePage: React.FC = () => {
                     <p>Pincode: 123456</p>
                   </div>
                   <button
-                    className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
+                    className="bg-blue-600 text-white py-1 px-3 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
                     onClick={() => alert('Address Selected')}
                   >
                     Select
@@ -100,7 +100,7 @@ const ProfilePage: React.FC = () => {
                     <p>Pincode: 654321</p>
                   </div>
                   <button
-                    className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
+                    className="bg-blue-600 text-white py-1 px-3 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
                     onClick={() => alert('Address Selected')}
                   >
                     Select
@@ -108,22 +108,24 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Add New Address Button */}
-              <button
-                onClick={handleAddNewAddress}
-                className="mt-6 w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 shadow-md transition-all"
-              >
-                Add New Address
-              </button>
-            </div>
+              {/* Add New Address and Save Buttons */}
+              <div className="flex flex-row gap-4 w-1/4 sm:flex-row sm:gap-4 sm:justify-between">
+                <button
+                  onClick={handleAddNewAddress}
+                  className="mt-6 w-24 sm:w-auto font-bold bg-purple-600 word-break-all text-white py-2 px-4 rounded-lg shadow-md transition-all"
+                >
+                  Add New Address
+                </button>
 
-            {/* Save Button */}
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              Save Changes
-            </button>
+                {/* Save Button */}
+                <button
+  className="mt-6 w-24 sm:w-auto bg-green-600 font-bold word-break-all text-white py-2 px-4 rounded-lg hover:bg-green-600 shadow-md transition-all"
+>
+  Save Changes
+</button>
+
+              </div>
+            </div>
           </form>
         </main>
       </div>

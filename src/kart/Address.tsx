@@ -44,7 +44,7 @@ const ManageAddressesPage: React.FC = () => {
       <Header />
 
       {/* Main Content */}
-      <div className="p-6 flex">
+      <div className="p-6 flex flex-col md:flex-row">
         {/* Sidebar */}
         <Sidebar />
 
@@ -93,7 +93,7 @@ const ManageAddressesPage: React.FC = () => {
               )}
               <button
                 onClick={() => setShowForm(true)}
-                className="mt-6 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+                className="mt-6 w-full sm:w-auto bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
               >
                 Add New Address
               </button>
@@ -143,7 +143,7 @@ const ManageAddressesPage: React.FC = () => {
                       key={type}
                       type="button"
                       onClick={() => setFormData({ ...formData, type: type as 'Home' | 'Work' | 'Others' })}
-                      className={`px-4 py-2 rounded-lg ${
+                      className={`w-full sm:w-auto px-4 py-2 rounded-lg ${
                         formData.type === type
                           ? 'bg-orange-500 text-white'
                           : 'bg-gray-200 hover:bg-gray-300'
@@ -153,18 +153,18 @@ const ManageAddressesPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex flex-col sm:flex-row justify-between gap-4">
                   <button
                     type="button"
                     onClick={handleAddAddress}
-                    className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+                    className="w-full sm:w-auto bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
                   >
                     Submit
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+                    className="w-full sm:w-auto bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
                   >
                     Cancel
                   </button>

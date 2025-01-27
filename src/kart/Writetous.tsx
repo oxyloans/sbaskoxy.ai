@@ -18,11 +18,10 @@ const WriteToUs: React.FC = () => {
       {/* Header */}
       <Header />
 
-     {/* Main Content */}
- <div className="p-6 flex">
+      {/* Main Content */}
+      <div className="p-6 flex">
         {/* Sidebar */}
         <Sidebar />
-
 
         {/* Write to Us Section */}
         <main className="flex-1 bg-white shadow-lg rounded-lg p-6 ml-6">
@@ -65,12 +64,16 @@ const WriteToUs: React.FC = () => {
               placeholder="Enter Your Query"
               className="px-4 py-2 border rounded-lg w-full h-32"
             ></textarea>
+
+            {/* Submit Button */}
+            <div className="flex justify-end w-28 items-center mt-4">
             <button
               type="submit"
-              className="bg-purple-700 text-white px-6 py-2 rounded-lg w-full md:w-auto hover:bg-purple-800 transition-colors"
+              className="bg-purple-700 text-white px-6 py-2 rounded-lg hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               Submit
             </button>
+            </div>
           </form>
         </main>
       </div>
