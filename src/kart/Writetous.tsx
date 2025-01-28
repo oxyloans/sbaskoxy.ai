@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "./Header3";
 import Footer from "../components/Footer";
 import Sidebar from "./Sidebarrice";
+import { FaBars, FaTimes } from 'react-icons/fa';
+
 
 const WriteToUs: React.FC = () => {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   const handleFormSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -13,18 +16,30 @@ const WriteToUs: React.FC = () => {
     alert("Query submitted successfully!");
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen); // Toggle sidebar visibility
+  };
+
   return (
     <div className="flex flex-col min-h-screen font-sans bg-gray-50">
       {/* Header */}
       <Header />
+{/* Mobile Sidebar Toggle Icon */}
+<div className="block lg:hidden p-3">
+        <button onClick={toggleSidebar} className="text-gray-800 text-2xl">
+          {isSidebarOpen ? <FaTimes /> : <FaBars />} {/* Show hamburger or close icon */}
+        </button>
+      </div>
 
       {/* Main Content */}
-      <div className="p-6 flex">
+      <div className="p-3 flex">
         {/* Sidebar */}
-        <Sidebar />
+        <div className={`lg:flex ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+          <Sidebar />
+        </div>
 
         {/* Write to Us Section */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-6 ml-6">
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-bold text-purple-700">Write a Query</h1>
             <button

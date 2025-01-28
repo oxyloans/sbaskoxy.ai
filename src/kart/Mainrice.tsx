@@ -55,7 +55,6 @@ const Ricebags: React.FC = () => {
     fetchCategories();
     const Id = localStorage.getItem("userId");
     setCustomerId(Id || "");
-    console.log({Id});
   }, []);
 
   useEffect(() => {

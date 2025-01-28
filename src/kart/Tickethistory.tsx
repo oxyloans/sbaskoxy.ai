@@ -1,21 +1,41 @@
-import React from "react";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from "./Header3";
 import Footer from "../components/Footer";
 import Sidebar from "./Sidebarrice"; 
+import { FaBars, FaTimes } from 'react-icons/fa'; 
+
 
 const TicketHistoryPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen); // Toggle sidebar visibility
+  };
+
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
       <Header />
 
-      {/* Main Content */}
-      <div className="p-6 flex">
-        {/* Sidebar */}
-        <Sidebar />
+      {/* Mobile Sidebar Toggle Icon */}
+      <div className="block lg:hidden p-3">
+        <button onClick={toggleSidebar} className="text-gray-800 text-2xl">
+          {isSidebarOpen ? <FaTimes /> : <FaBars />} {/* Show hamburger or close icon */}
+        </button>
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 bg-white shadow-lg rounded-lg p-6 ml-6">
+      <div className="p-3 flex">
+        {/* Sidebar */}
+        <div className={`lg:flex ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+          <Sidebar />
+        </div>
+
+      {/* Main Content */}
+      <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
         {/* Ticket History Section */}
 
           <h1 className="text-xl md:text-2xl font-bold text-purple-700 mb-4">
@@ -54,17 +74,18 @@ const TicketHistoryPage: React.FC = () => {
                   <p className="text-xs md:text-sm">01/15/2025</p>
                 </div>
               </div>
-              <div className="flex flex-wrap justify-end space-x-2 mt-4">
-                <button className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm md:text-base hover:bg-purple-700 transition duration-300">
-                  Write a Reply
-                </button>
-                <button className="px-4 py-2 bg-gray-300 text-black rounded-md text-sm md:text-base hover:bg-gray-400 transition duration-300">
-                  Cancel
-                </button>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm md:text-base hover:bg-blue-700 transition duration-300">
-                  View Comments
-                </button>
-              </div>
+              <div className="flex flex-col md:flex-row md:justify-end md:space-x-2 mt-4 space-y-2 md:space-y-0">
+  <button className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm md:text-base hover:bg-purple-700 transition duration-300">
+    Write a Reply
+  </button>
+  <button className="px-4 py-2 bg-gray-300 text-black rounded-md text-sm md:text-base hover:bg-gray-400 transition duration-300">
+    Cancel
+  </button>
+  <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm md:text-base hover:bg-blue-700 transition duration-300">
+    View Comments
+  </button>
+</div>
+
             </div>
             {/* Additional Ticket Cards can be added here */}
           </div>

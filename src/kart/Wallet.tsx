@@ -3,21 +3,38 @@ import { useNavigate } from 'react-router-dom';
 import Header from "./Header3";
 import Footer from "../components/Footer";
 import Sidebar from "./Sidebarrice";
+import { FaBars, FaTimes } from 'react-icons/fa'; 
 
 const MyWalletPage = () => {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen); // Toggle sidebar visibility
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
       <Header />
 
-      <div className="p-6 flex">
+      {/* Mobile Sidebar Toggle Icon */}
+      <div className="block lg:hidden p-3">
+        <button onClick={toggleSidebar} className="text-gray-800 text-2xl">
+          {isSidebarOpen ? <FaTimes /> : <FaBars />} {/* Show hamburger or close icon */}
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-3 flex">
         {/* Sidebar */}
-        <Sidebar />
+        <div className={`lg:flex ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+          <Sidebar />
+        </div>
 
         {/* Main Content */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-6 ml-6">
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
           <h2 className="text-2xl font-semibold mb-4">My Wallet</h2>
 
           {/* Wallet Balance Section */}

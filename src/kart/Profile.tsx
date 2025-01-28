@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaBars, FaTimes } from 'react-icons/fa'; // Importing hamburger and close icons
 import Header from './Header3';
 import Footer from '../components/Footer';
 import Sidebar from './Sidebarrice';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   const handleAddNewAddress = () => {
     navigate('/manageaddresses'); // Redirect to the Manage Addresses page
+  };
+
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen); // Toggle sidebar visibility
   };
 
   return (
@@ -16,13 +23,22 @@ const ProfilePage: React.FC = () => {
       {/* Header */}
       <Header />
 
+      {/* Mobile Sidebar Toggle Icon */}
+      <div className="block lg:hidden p-3">
+        <button onClick={toggleSidebar} className="text-gray-800 text-2xl">
+          {isSidebarOpen ? <FaTimes /> : <FaBars />} {/* Show hamburger or close icon */}
+        </button>
+      </div>
+
       {/* Main Content */}
-      <div className="p-6 flex">
+      <div className="p-3 flex">
         {/* Sidebar */}
-        <Sidebar />
+        <div className={`lg:flex ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+          <Sidebar />
+        </div>
 
         {/* Profile Information */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-6 ml-6">
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
           <h2 className="text-2xl font-semibold text-gray-700 mb-6">Profile Information</h2>
           <form className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -119,11 +135,10 @@ const ProfilePage: React.FC = () => {
 
                 {/* Save Button */}
                 <button
-  className="mt-6 w-24 sm:w-auto bg-green-600 font-bold word-break-all text-white py-2 px-4 rounded-lg hover:bg-green-600 shadow-md transition-all"
->
-  Save Changes
-</button>
-
+                  className="mt-6 w-24 sm:w-auto bg-green-600 font-bold word-break-all text-white py-2 px-4 rounded-lg hover:bg-green-600 shadow-md transition-all"
+                >
+                  Save Changes
+                </button>
               </div>
             </div>
           </form>

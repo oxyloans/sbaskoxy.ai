@@ -34,9 +34,9 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-16 md:w-1/6 bg-white shadow p-4 flex flex-col items-center md:items-start">
+    <aside className="w-20 md:w-64 bg-white shadow-lg p-4 flex flex-col items-center md:items-start transition-all duration-200">
       <nav>
-        <ul className="space-y-4">
+        <ul className="space-y-6">
           {menuItems.map((item) => (
             <li
               key={item.label}
@@ -54,10 +54,10 @@ const Sidebar: React.FC = () => {
                   }`
                 }
               >
-                <span className="text-xl">{item.icon}</span>
-                {/* Show text only on desktop */}
+                <span className="text-2xl">{item.icon}</span>
+                {/* Show text on larger screens and when hovered */}
                 <span
-                  className={`ml-2 md:block text-sm hidden ${
+                  className={`ml-3 text-sm font-medium hidden md:block ${
                     hoveredMenu === item.label ? "block" : "hidden"
                   }`}
                 >

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header3';
+import { FaBars, FaTimes } from 'react-icons/fa'; 
 import Footer from '../components/Footer';
 import Sidebar from './Sidebarrice';
 
-
-// Define TypeScript types
 type OrderItem = {
   name: string;
   quantity: number;
@@ -58,6 +57,7 @@ const MyOrders: React.FC = () => {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(allOrders);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterOption, setFilterOption] = useState<string>('all');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true); // Mobile Sidebar state
 
   const toggleOrderDetails = (orderId: string) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
@@ -106,119 +106,125 @@ const MyOrders: React.FC = () => {
     setFilteredOrders(filtered);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   const navigate = useNavigate();
 
   return (
     <div className="flex flex-col min-h-screen">
-    {/* Header */}
-    <Header />
+      {/* Header */}
+      <Header />
+{/* Mobile Sidebar Toggle Icon */}
+<div className="block lg:hidden p-3">
+        <button onClick={toggleSidebar} className="text-gray-800 text-2xl">
+          {isSidebarOpen ? <FaTimes /> : <FaBars />} {/* Show hamburger or close icon */}
+        </button>
+      </div>
 
-    {/* Main Content */}
-    <div className="p-6 flex">
-      {/* Sidebar */}
-      <Sidebar />
-
+      {/* Main Content */}
+      <div className="p-3 flex">
+        {/* Sidebar */}
+        <div className={`lg:flex ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+          <Sidebar />
+        </div>
 
         {/* Orders Section */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-6 ml-6">
-          <div className="space-y-4">
-
-
-{/* Filters and Search Bar */}            
-<div className="flex flex-col md:flex-row justify-between mb-4">
-  {/* Search Input Section */}
-  <div className="flex items-center space-x-2 w-full md:w-1/2 mb-2 md:mb-0">
-    <div className="relative w-full">
-      {/* Search Input */}
-      <input
-        type="text"
-        placeholder="Search for orders"
-        value={searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
-        className="w-full py-2 pr-10 pl-4 border border-gray-300 rounded-full text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ease-in-out hover:border-blue-500"
-      />
-      {/* Search Icon */}
-      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500 cursor-pointer transition-all duration-200">
-        <span className="material-icons">search</span>
-      </span>
-    </div>
-  </div>
-
-  {/* Filter Dropdown Section */}
-  <div className="flex items-center space-x-2 w-full md:w-1/2 justify-end mt-2 md:mt-0">
-    {/* Filter Label for Desktop */}
-    <label className="text-sm font-semibold hidden md:block text-gray-700">Filter Orders: </label>
-    <select
-      value={filterOption}
-      onChange={(e) => setFilterOption(e.target.value)}
-      onBlur={filterOrders}
-      className="p-2 border border-gray-300 rounded-md text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full md:w-auto hover:bg-gray-100 transition-all duration-200 ease-in-out"
-    >
-      <option value="all">All Orders</option>
-      <option value="3months">Last 3 Months</option>
-      <option value="6months">Last 6 Months</option>
-      <option value="thisMonth">This Month</option>
-      <option value="thisWeek">This Week</option>
-      <option value="lastYear">Last Year</option>
-    </select>
-  </div>
-</div>
-
-            {filteredOrders.map((order) => (
-              <div
-                key={order.id}
-                className="bg-white border border-gray-300 rounded-lg p-4 shadow-md"
-              >
-                <div className="flex justify-between items-center">
-                  <p>
-                    <span className="font-bold">Order ID:</span> {order.id}
-                  </p>
-                  <span
-                    className={`text-md font-semibold px-3 py-1 rounded-full ${
-                      order.status === 'Delivered'
-                        ? 'bg-green-100 text-green-600'
-                        : order.status === 'Rejected'
-                        ? 'bg-red-100 text-red-600'
-                        : 'bg-yellow-100 text-yellow-600'
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </div>
-                <p>
-                  <span className="font-bold">Amount:</span> {order.amount}
-                </p>
-                <p>
-                  <span className="font-bold">Payment:</span> {order.payment}
-                </p>
-                <p>
-                  <span className="font-bold">Delivered On:</span>{' '}
-                  {order.deliveredDate}
-                </p>
-                <div className="text-right">
-                  <button
-                    className="text-sm text-blue-500 hover:underline"
-                    onClick={() => toggleOrderDetails(order.id)}
-                  >
-                    {expandedOrder === order.id ? 'Hide Details' : 'View More'}
-                  </button>
-                </div>
-                {expandedOrder === order.id && (
-                  <div className="mt-4 space-y-2">
-                    <h4 className="font-bold text-lg">Order Items:</h4>
-                    {order.items.map((item, idx) => (
-                      <p key={idx}>
-                        {item.name} - {item.quantity} pcs
-                      </p>
-                    ))}
-                  </div>
-                )}
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
+          <div className="space-y-6">
+            {/* Filters and Search Bar */}
+            <div className="flex flex-col md:flex-row justify-between mb-4">
+              {/* Search Input Section */}
+              <div className="flex items-center space-x-2 w-full md:w-1/2 mb-2 md:mb-0">
+                <input
+                  type="text"
+                  placeholder="Search for orders"
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full py-2 pr-10 pl-4 border border-gray-300 rounded-full text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ease-in-out hover:border-blue-500"
+                />
               </div>
-            ))}
+
+              {/* Filter Dropdown Section */}
+              <div className="flex items-center space-x-2 w-full md:w-1/2 justify-end mt-2 md:mt-0">
+                <label className="text-sm font-semibold text-gray-700 hidden md:block">Filter Orders:</label>
+                <select
+                  value={filterOption}
+                  onChange={(e) => setFilterOption(e.target.value)}
+                  onBlur={filterOrders}
+                  className="p-2 border border-gray-300 rounded-md text-gray-700 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full md:w-auto hover:bg-gray-100 transition-all duration-200 ease-in-out"
+                >
+                  <option value="all">All Orders</option>
+                  <option value="3months">Last 3 Months</option>
+                  <option value="6months">Last 6 Months</option>
+                  <option value="thisMonth">This Month</option>
+                  <option value="thisWeek">This Week</option>
+                  <option value="lastYear">Last Year</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Order List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="bg-white border border-gray-300 rounded-lg p-4 shadow-md flex flex-col"
+                >
+                  <div className="flex justify-between items-center">
+                    <p>
+                      <span className="font-semibold">Order ID:</span> {order.id}
+                    </p>
+                    <span
+                      className={`text-md font-semibold px-3 py-1 rounded-full ${
+                        order.status === 'Delivered'
+                          ? 'bg-green-100 text-green-600'
+                          : order.status === 'Rejected'
+                          ? 'bg-red-100 text-red-600'
+                          : 'bg-yellow-100 text-yellow-600'
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                  </div>
+                  <p>
+                    <span className="font-semibold">Amount:</span> {order.amount}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Payment:</span> {order.payment}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Delivered On:</span>{' '}
+                    {order.deliveredDate}
+                  </p>
+                  <div className="text-right">
+                    <button
+                      className="text-sm text-blue-500 hover:underline"
+                      onClick={() => toggleOrderDetails(order.id)}
+                    >
+                      {expandedOrder === order.id ? 'Hide Details' : 'View More'}
+                    </button>
+                  </div>
+                  {expandedOrder === order.id && (
+                    <div className="mt-4 space-y-2">
+                      <h4 className="font-semibold text-lg">Order Items:</h4>
+                      {order.items.map((item, idx) => (
+                        <p key={idx}>
+                          {item.name} - {item.quantity} pcs
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </main>
       </div>
-      <Footer/>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

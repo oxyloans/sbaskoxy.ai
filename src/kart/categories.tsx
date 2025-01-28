@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { log } from "node:console";
+import { Alert } from "antd";
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Item {
@@ -44,8 +45,6 @@ const Categories: React.FC<CategoriesProps> = ({
   const [cartData, setCartData] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    console.log("useEffect triggered");
-    console.log("customerId", customerId);
     fetchCartData();
   }, []);
 
@@ -60,6 +59,7 @@ const Categories: React.FC<CategoriesProps> = ({
       );
       // updateCart({ ...cart, [item.itemName]: (cart[item.itemName] || 0) + 1 });
       fetchCartData();
+      alert("Item added to cart successfully");
     } catch (error) {
       console.error("Error adding to cart:", error);
     }
@@ -107,8 +107,9 @@ const Categories: React.FC<CategoriesProps> = ({
       );
       // updateCart({ ...cart, [item.itemName]: cart[item.itemName] + 1 });
       fetchCartData();
+      alert("Item increased in cart successfully.");
     } catch (error) {
-      console.error("Error increasing quantity:", error);
+      console.error("Error increasing item in cart:", error);
     }
   };
 
@@ -122,6 +123,7 @@ const Categories: React.FC<CategoriesProps> = ({
         );
         // updateCart({ ...cart, [item.itemName]: cart[item.itemName] - 1 });
         fetchCartData();
+        alert("Item decreased in cart successfully.");
       } else {
         const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
         console.log(cartData, "cartData");
@@ -136,6 +138,7 @@ const Categories: React.FC<CategoriesProps> = ({
         // delete updatedCart[item.itemName];
         // updateCart(updatedCart);
         fetchCartData();
+        alert("Item removed from cart successfully.");
       }
     } catch (error) {
       console.error("Error decreasing quantity or removing item:", error);
@@ -236,7 +239,7 @@ const Categories: React.FC<CategoriesProps> = ({
                             className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
                             onClick={() => handleDecreaseQuantity(item)}
                           >
-                            -
+                          -   
                           </button>
 
                           {/* Current Quantity */}
@@ -268,7 +271,7 @@ const Categories: React.FC<CategoriesProps> = ({
             </div>
           </>
         ) : (
-          <p className="text-center text-gray-500 text-sm sm:text-base">
+          <p className="text-center pt-4 text-gray-500 text-sm sm:text-base">
             Please select a category.
           </p>
         )}

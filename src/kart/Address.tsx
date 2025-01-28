@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Header from "./Header3";
 import Footer from "../components/Footer";
 import Sidebar from "./Sidebarrice";
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 interface Address {
   flat: string;
@@ -21,6 +22,8 @@ const ManageAddressesPage: React.FC = () => {
     type: 'Home',
   });
   const [showForm, setShowForm] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -38,18 +41,32 @@ const ManageAddressesPage: React.FC = () => {
     setShowForm(false);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen); // Toggle sidebar visibility
+  };
+
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
       <Header />
 
+       {/* Mobile Sidebar Toggle Icon */}
+       <div className="block lg:hidden p-3">
+        <button onClick={toggleSidebar} className="text-gray-800 text-2xl">
+          {isSidebarOpen ? <FaTimes /> : <FaBars />} {/* Show hamburger or close icon */}
+        </button>
+      </div>
+
       {/* Main Content */}
-      <div className="p-6 flex flex-col md:flex-row">
+      <div className="p-3 flex">
         {/* Sidebar */}
-        <Sidebar />
+        <div className={`lg:flex ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+          <Sidebar />
+        </div>
 
         {/* Main Section */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-6 ml-6">
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
           <h2 className="text-2xl font-semibold text-purple-700 text-gray-700 mb-4">Manage Addresses</h2>
 
           {/* Address List */}
