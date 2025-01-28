@@ -88,7 +88,7 @@ const Dasboard = () => {
 
   const [showSendButton, setShowSendButton] = useState(false);
   const [riceTopicsshow, setriceTopicsshow] = useState(true);
-  const [showStaticBubbles, setShowStaticBubbles] = useState(true);
+  const [showStaticBubbles, setShowStaticBubbles] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isReading, setIsReading] = useState(false);
   const histary = useNavigate();
@@ -98,6 +98,8 @@ const Dasboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [multichainid, setmultichainid] = useState("");
   const [bmvcoin, setbmvcoin] = useState();
+  const [showBlockchainText, setShowBlockchainText] = useState(false);
+
 
   // New State for History
   const [history, setHistory] = useState<string[]>([]);
@@ -133,20 +135,10 @@ const Dasboard = () => {
     handleResize(); // Initial check
     window.addEventListener("resize", handleResize);
 
-    const handleMultichainID=() => {
-      axios.get(`http://182.18.139.138:9024/api/user-service/getProfile/${localStorage.getItem("userId")}`)
-      .then((response) => {
-        console.log(response.data);
-        setmultichainid(response.data.multiChainId);
-        setbmvcoin(response.data.coinAllocated);
-      })
-      .catch((error) => {
-        console.error("There was an error making the request:", error);
-      });
-    }
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const section = params.get("section");
@@ -162,7 +154,7 @@ const Dasboard = () => {
     setShowMyRotaryService(false);
     setShowLegalService(false);
     setTicketHistory(false);
-    setShowBMVService(false)  
+    setShowBMVService(false)
 
     // Handle section navigation (don't store in history)
     if (section) {
@@ -194,8 +186,8 @@ const Dasboard = () => {
         case "tickethistory":
           setTicketHistory(true);
           break;
-          case "bmvcoin":
-          setShowBMVService(true);  
+        case "bmvcoin":
+          setShowBMVService(true);
           break;
       }
       // Clear messages when switching sections
@@ -223,47 +215,47 @@ const Dasboard = () => {
     // }
   }, [location.search, isMobile]);
 
-const handleFreerudrakshaClick = () => {
-  navigate("/dashboard?section=freerudraksha", { replace: true });
+  const handleFreerudrakshaClick = () => {
+    navigate("/dashboard?section=freerudraksha", { replace: true });
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // Force a reflow and then scroll
-  setTimeout(() => {
-    if (isMobile) {
-      componentRef.current?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, 50); // 50ms delay to ensure DOM updates first
-};
+    // Force a reflow and then scroll
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50); // 50ms delay to ensure DOM updates first
+  };
 
-const handleBmvCoin = () => {
-  navigate("/dashboard?section=bmvcoin", { replace: true });
+  const handleBmvCoin = () => {
+    navigate("/dashboard?section=bmvcoin", { replace: true });
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // Force a reflow and then scroll
-  setTimeout(() => {
-    if (isMobile) {
-      componentRef.current?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, 50); // 50ms delay to ensure DOM updates first
-};
+    // Force a reflow and then scroll
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50); // 50ms delay to ensure DOM updates first
+  };
   const handletickethistory = () => {
     navigate("/dashboard?section=tickethistory", { replace: true });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-  setTimeout(() => {
-    if (isMobile) {
-      componentRef.current?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, 50);
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const handleStudyAbroadClick = () => {
@@ -271,13 +263,13 @@ const handleBmvCoin = () => {
 
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-   setTimeout(() => {
-     if (isMobile) {
-       componentRef.current?.scrollIntoView({ behavior: "smooth" });
-     } else {
-       scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-     }
-   }, 50);
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const handleFreeSampleClick = () => {
@@ -336,26 +328,26 @@ const handleBmvCoin = () => {
   const handleMyRotaryClick = () => {
     navigate("/dashboard?section=my-rotary", { replace: true });
     window.scrollTo({ top: 0, behavior: "smooth" });
-   setTimeout(() => {
-     if (isMobile) {
-       componentRef.current?.scrollIntoView({ behavior: "smooth" });
-     } else {
-       scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-     }
-   }, 50);
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const handledLegalServiceClick = () => {
     navigate("/dashboard?section=legal-service", { replace: true });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
-   setTimeout(() => {
-     if (isMobile) {
-       componentRef.current?.scrollIntoView({ behavior: "smooth" });
-     } else {
-       scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-     }
-   }, 50);
+    setTimeout(() => {
+      if (isMobile) {
+        componentRef.current?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        scrollableRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   useEffect(() => {
@@ -540,11 +532,11 @@ const handleBmvCoin = () => {
     const apiurl =
       userId !== null
         ? `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
-            queryInput
-          )}&userId=${userId}`
+          queryInput
+        )}&userId=${userId}`
         : `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
-            queryInput
-          )}`;
+          queryInput
+        )}`;
 
     try {
       const response = await axios.post(apiurl);
@@ -643,7 +635,7 @@ const handleBmvCoin = () => {
     setShowLegalService(false);
     setTicketHistory(false);
     setriceTopicsshow(true);
-    setShowBMVService(false); 
+    setShowBMVService(false);
 
     navigate("/dashboard"); // Navigate first
     setShowStaticBubbles(true); // Show static chat bubbles after navigation
@@ -682,6 +674,14 @@ const handleBmvCoin = () => {
     navigate("/buyRice");
   }
 
+  const handleTouchStart = () => {
+    setShowBlockchainText(true); // Proper function call
+  };
+
+  const handleTouchEnd = () => {
+    setShowBlockchainText(false); // Proper function call
+  };
+
   const truncateText = (
     text: string | null | undefined,
     length: number
@@ -700,98 +700,98 @@ const handleBmvCoin = () => {
     setIsHistoryVisible(!isHistoryVisible); // Toggle the drawer visibility
   };
 
-  const handleMultichainID=() => {
+  const handleMultichainID = () => {
     axios.get(`https://meta.oxyglobal.tech/api/user-service/getProfile/${localStorage.getItem("userId")}`)
-    .then((response) => {
-      console.log(response.data);
-      setmultichainid(response.data.multiChainId);
-      setbmvcoin(response.data.coinAllocated);
-    })
-    .catch((error) => {
-      console.error("There was an error making the request:", error);
-    });
+      .then((response) => {
+        console.log(response.data);
+        setmultichainid(response.data.multiChainId);
+        setbmvcoin(response.data.coinAllocated);
+      })
+      .catch((error) => {
+        console.error("There was an error making the request:", error);
+      });
   }
-  
+
 
   return (
     <div className="max-h-screen  fixed bg-[#351664] text-white overflow-y-auto  w-full flex flex-col">
-     {/* Header */}
-     <header className="flex items-center justify-between p-4 bg-[#351664] flex-wrap">
-      {/* Left Section: Logo and "Buy Rice" Button */}
-      <div className="flex items-center space-x-4">
-        {/* Logo */}
-        <img
-          src={Askoxylogowhite}
-          className="h-12 w-auto object-contain" // Responsive height, maintains aspect ratio
-          alt="AskOxyLogo"
-        />
-        
-        {/* "Buy Rice" Button */}
-        <button
-          onClick={handleBuyRice}
-          className="flex items-center p-2 bg-transparent"
-        >
+      {/* Header */}
+      <header className="flex items-center justify-between p-4 bg-[#351664] flex-wrap">
+        {/* Left Section: Logo and "Buy Rice" Button */}
+        <div className="flex items-center space-x-4">
+          {/* Logo */}
           <img
-            src={buyrice}
-            className="h-12 w-auto object-contain"
-            alt="BuyRice"
+            src={Askoxylogowhite}
+            className="h-12 w-auto object-contain" // Responsive height, maintains aspect ratio
+            alt="AskOxyLogo"
           />
-        </button>
-      </div>
+
+          {/* "Buy Rice" Button */}
+          <button
+            onClick={handleBuyRice}
+            className="flex items-center p-2 bg-transparent"
+          >
+            <img
+              src={buyrice}
+              className="h-12 w-auto object-contain"
+              alt="BuyRice"
+            />
+          </button>
+        </div>
 
 
-      
 
-      {/* Right Section: Profile Info and SignOut */}
-      <div className="flex items-center space-x-4">
-      <button
-        onClick={handletickethistory}
-        className="hidden md:block text-white bg-[#04AA6D] px-4 py-2 rounded-full font-bold text-sm"
-      >
-        Ticket History
-      </button>
 
-        {/* SignOut Button (Icon in Mobile View) */}
-        <button
-          onClick={() => {
-            if (localStorage.getItem("userId") && localStorage.getItem("email")) {
-              localStorage.removeItem("userId");
-              localStorage.removeItem("email");
-              navigate("/");
-            } else {
-              navigate("/");
-            }
-          }}
-          className="text-white bg-[#ffa800] px-4 py-2 rounded-full font-bold text-sm hidden md:block"
-        >
-          SignOut
-        </button>
-        <button
-          onClick={() => {
-            if (localStorage.getItem("userId") && localStorage.getItem("email")) {
-              localStorage.removeItem("userId");
-              localStorage.removeItem("email");
-              navigate("/");
-            } else {
-              navigate("/");
-            }
-          }}
-          className="text-white md:hidden"
-        >
-          <FaSignOutAlt className="h-6 w-6" />
-        </button>
+        {/* Right Section: Profile Info and SignOut */}
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handletickethistory}
+            className="hidden md:block text-white bg-[#04AA6D] px-4 py-2 rounded-full font-bold text-sm"
+          >
+            Ticket History
+          </button>
 
-        {/* Profile Info */}
-        <div className="flex items-center space-x-2">
-          <FaUserCircle className="text-white h-6 w-6" />
-          <div className="text-white text-sm">
-            <p>{`${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim()}</p>
-            <p>{profileData?.city || ""}</p>
+          {/* SignOut Button (Icon in Mobile View) */}
+          <button
+            onClick={() => {
+              if (localStorage.getItem("userId") && localStorage.getItem("email")) {
+                localStorage.removeItem("userId");
+                localStorage.removeItem("email");
+                navigate("/");
+              } else {
+                navigate("/");
+              }
+            }}
+            className="text-white bg-[#ffa800] px-4 py-2 rounded-full font-bold text-sm hidden md:block"
+          >
+            SignOut
+          </button>
+          <button
+            onClick={() => {
+              if (localStorage.getItem("userId") && localStorage.getItem("email")) {
+                localStorage.removeItem("userId");
+                localStorage.removeItem("email");
+                navigate("/");
+              } else {
+                navigate("/");
+              }
+            }}
+            className="text-white md:hidden"
+          >
+            <FaSignOutAlt className="h-6 w-6" />
+          </button>
+
+          {/* Profile Info */}
+          <div className="flex items-center space-x-2">
+            <FaUserCircle className="text-white h-6 w-6" />
+            <div className="text-white text-sm">
+              <p>{`${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim()}</p>
+              <p>{profileData?.city || ""}</p>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
-    
+      </header>
+
       {/* <ModalComponent /> */}
       <main className="flex  flex-col flex-grow w-full overflow-y-auto p-3 md:flex-row">
         {/* Combined Left, Center, and Right Panel */}
@@ -971,9 +971,8 @@ const handleBmvCoin = () => {
             )}
 
             <div
-              className={`mt-2 h-80 border-gray-300 pt-2 transition-all duration-300 ${
-                isHistoryVisible ? "block" : "hidden"
-              }`}
+              className={`mt-2 h-80 border-gray-300 pt-2 transition-all duration-300 ${isHistoryVisible ? "block" : "hidden"
+                }`}
             >
               <div className="flex mt-3 mb-2 ml-2 text-[#3c1973] text-md">
                 Previous History
@@ -1053,9 +1052,11 @@ const handleBmvCoin = () => {
             )}
             {showBMVService && (
               <div ref={componentRef}>
-                <BMVCOIN  />
+                <BMVCOIN />
               </div>
             )}
+            {/* Static Rice Related Text */}
+
             {!showFreerudraksha &&
               !showHiringService &&
               !showStudyAbroad &&
@@ -1064,99 +1065,88 @@ const handleBmvCoin = () => {
               !showMachinesManufacturing &&
               !showMyRotaryService &&
               !ticketHistory &&
-              !showLegalService && 
-              !showBMVService &&(
+              !showLegalService &&
+              !showBMVService && (
                 <>
-                  {/* Static Rice Related Text */}
+
                   {
-                    <div className="flex items-center justify-between p-2">
-                      {/* Left side: Welcome Text */}
-                      <h2
-                        className="fw-500"
-                        style={{
-                          zIndex: "10",
-                          color: "black",
-                          fontWeight: "700",
-                        }}
-                      >
-                        Welcome{" "}
-                        {profileData
-                          ? `    ${profileData.firstName} ${profileData.lastName}`
-                          : "Guest"}
-                      </h2>
 
-                    {/* Right side: Multi Chain ID and Information */}
-                    <div className="flex flex-col items-end space-y-2">
-  {multichainid && (
-    <>
-      {/* BlockChain ID Section */}
-      <div
-        className="relative group"
-        onClick={() => (window.location.href = '/bmvcoin')} // Navigate to BMVCOIN page
-      >
-        <p className="fw-500 bg-[grey] px-4 py-2 text-white font-bold rounded-full w-fit cursor-pointer">
-          BlockChain ID: {multichainid}
-        </p>
-      </div>
+                    <div >
 
-      {/* BMVCOINS Section */}
-      <div className="relative group">
-  {/* BMVCOINS Text with Hover Effect */}
-  <p
-    onClick={() => handleBmvCoin()} // Show BMVCOINS page inside dashboard
-    className="fw-500 bg-[grey] px-4 py-2 text-white font-bold rounded-full w-fit cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:text-white text-center"
-  >
-    {/* Change text on hover */}
-    <span className="group-hover:hidden">BMVCOINS: {bmvcoin}</span>
-    <span className="hidden group-hover:inline-block">Go to BLOCK CHAIN</span>
-  </p>
-</div>
-    </>
-  )}
-</div>
+                              {/* Bottom Section: Multi Chain ID and BMVCOINS */}
 
+                      {!showStaticBubbles && (
+                        <>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-0">
+                          Welcome{" "}
+                          {profileData
+                            ? `${profileData.firstName} ${profileData.lastName}`
+                            : "Guest"}
+                        </h2>
+                      </div>
 
+                           <div className="flex flex-wrap items-center justify-center sm:justify-between gap-4 mt-4">
+                        {/* Blockchain ID */}
+                        {multichainid && (
+                          <div className="bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md text-center w-full sm:w-fit">
+                            <p className="text-sm sm:text-base font-semibold">
+                              Blockchain ID: {multichainid}
+                            </p>
+                          </div>
+                        )}
 
+                        {/* BMVCOINS Section */}
+                        <div className="w-full sm:w-fit">
+                          <button
+                            onClick={() => handleBmvCoin()}
+                            className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md text-sm sm:text-base font-semibold transition-all hover:bg-blue-700"
+                          >
+                            {showBlockchainText ? "Go to BLOCK CHAIN" : `BMVCOINS: ${bmvcoin}`}
+                          </button>
+                        </div>
+                      </div>
+                      </>
+                      )}
+                     
                     </div>
+
+
                   }
 
                   {showStaticBubbles && (
                     <>
-                      <div className="absolute inset-0 flex items-center justify-center p-2">
-                        <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-70">
-                          {" "}
-                          {/* Add max-height and overflow */}
+                      <div className="flex items-center justify-center p-12">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4 max-h-[70vh] w-full max-w-4xl overflow-y-auto">
+                          {/* Conditionally show rice topics */}
                           {riceTopicsshow && (
                             <>
                               {riceTopics.map((topic) => (
                                 <div
                                   key={topic.id}
-                                  className="flex items-center justify-center max-w-xs p-3 text-black transition duration-200 bg-gray-200 rounded-lg chat-bubble hover:bg-gray-300"
-                                  style={{
-                                    wordWrap: "break-word",
-                                    zIndex: "10",
-                                  }}
+                                  className="flex items-center justify-center p-4 bg-gray-200 text-black rounded-lg shadow-md hover:bg-gray-300 transition duration-200 cursor-pointer"
+                                  style={{ wordWrap: "break-word" }}
                                   onClick={() => {
                                     handleBubbleClick(topic.title);
                                     setInput(topic.title);
                                   }}
                                 >
-                                  <ReactMarkdown className="text-center">
-                                    {topic.title}
-                                  </ReactMarkdown>
+                                  <ReactMarkdown className="text-center">{topic.title}</ReactMarkdown>
                                 </div>
                               ))}
                             </>
                           )}
                         </div>
                       </div>
+
+
                     </>
                   )}
 
                   {/* Chat messages */}
                   <div
-                    className="relative flex-grow p-4  chat-container"
-                    // style={{ maxHeight: "calc(100vh - 12rem)" }}
+                    className="relative flex-grow p-4"
+                  // style={{ maxHeight: "calc(100vh - 12rem)" }}
                   >
                     <div>
                       {isLoading ? (
@@ -1169,11 +1159,10 @@ const handleBmvCoin = () => {
                           {messages.map((message, index) => (
                             <div
                               key={index}
-                              className={`col-span-8 mb-6 p-3 rounded-md ${
-                                message.type === "question"
-                                  ? "bg-blue-200 col-span-3 text-black"
-                                  : "bg-green-200 col-span-5 text-black"
-                              }`}
+                              className={`col-span-8 mb-6 p-3 rounded-md ${message.type === "question"
+                                ? "bg-blue-200 col-span-3 text-black"
+                                : "bg-green-200 col-span-5 text-black"
+                                }`}
                             >
                               <ReactMarkdown>{message.content}</ReactMarkdown>
                               <div className="flex mt-2 space-x-1">
@@ -1240,9 +1229,8 @@ const handleBmvCoin = () => {
                     {showSendButton && (
                       <button
                         onClick={() => handleSend(input)}
-                        className={`ml-2 bg-[#ffa800] text-white px-3 py-1 md:px-4 md:py-2 rounded-full shadow-md ${
-                          isLoading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className={`ml-2 bg-[#ffa800] text-white px-3 py-1 md:px-4 md:py-2 rounded-full shadow-md ${isLoading ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         disabled={isLoading}
                       >
                         {isLoading ? "Sending..." : "Send"}
