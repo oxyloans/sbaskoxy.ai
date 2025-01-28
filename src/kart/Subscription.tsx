@@ -82,7 +82,7 @@ const Subscription: React.FC = () => {
         </div>
 
         {/* Orders Section */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 md:p-6 ml-0 md:ml-6">
           <div className="space-y-4">
             {/* Page Header */}
             <header className="bg-white shadow-md p-4 rounded-lg mb-6">

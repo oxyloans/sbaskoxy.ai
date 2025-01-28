@@ -39,7 +39,7 @@ const WriteToUs: React.FC = () => {
         </div>
 
         {/* Write to Us Section */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 md:p-6 ml-0 md:ml-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-bold text-purple-700">Write a Query</h1>
             <button

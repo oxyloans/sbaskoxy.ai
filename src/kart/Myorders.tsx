@@ -57,7 +57,7 @@ const MyOrders: React.FC = () => {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(allOrders);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterOption, setFilterOption] = useState<string>('all');
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true); // Mobile Sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false); // Mobile Sidebar state
 
   const toggleOrderDetails = (orderId: string) => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
@@ -107,10 +107,9 @@ const MyOrders: React.FC = () => {
   };
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setIsSidebarOpen(!isSidebarOpen); // Toggle sidebar visibility
   };
 
-  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -131,7 +130,7 @@ const MyOrders: React.FC = () => {
         </div>
 
         {/* Orders Section */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 md:p-6 ml-0 md:ml-6">
           <div className="space-y-6">
             {/* Filters and Search Bar */}
             <div className="flex flex-col md:flex-row justify-between mb-4">

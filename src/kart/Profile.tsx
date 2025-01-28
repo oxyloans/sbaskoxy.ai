@@ -38,7 +38,7 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Profile Information */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 ml-6">
+        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 md:p-6 ml-0 md:ml-6">
           <h2 className="text-2xl font-semibold text-gray-700 mb-6">Profile Information</h2>
           <form className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

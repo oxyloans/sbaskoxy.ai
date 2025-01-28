@@ -33,7 +33,7 @@ const BMVCOIN = () => {
   <div className="flex items-center space-x-2 w-full sm:w-auto">
     <p className="text-sm sm:text-base font-medium text-gray-600">
       <span className="font-bold text-gray-800">Blockchain ID:</span>{" "}
-      {multichainid || "Loading..."}
+      {multichainid}
     </p>
   </div>
 
@@ -41,7 +41,7 @@ const BMVCOIN = () => {
   <div className="flex items-center space-x-2 w-full sm:w-auto">
     <p className="text-sm sm:text-base font-medium text-gray-600">
       <span className="font-bold text-gray-800">BMVCOINS:</span>{" "}
-      {bmvcoin || "Loading..."}
+      {bmvcoin}
     </p>
   </div>
 </div>
