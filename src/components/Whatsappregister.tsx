@@ -108,7 +108,6 @@ const Whatsappregister: React.FC = () => {
           salt: localStorage.getItem("salt"),
           whatsappNumber: phoneNumber,
           userType:"Register",
-          primaryType: "ASKOXY",
         }
       );
       if (response.data) {

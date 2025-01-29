@@ -108,7 +108,6 @@ const Whatapplogin: React.FC = () => {
           salt: localStorage.getItem("salt"),
           whatsappNumber: phoneNumber,
           userType:"Login",
-          primaryType: "ASKOXY",
         }
       );
       if (response.data) {
