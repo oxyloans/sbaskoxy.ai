@@ -265,7 +265,7 @@ const CartPage: React.FC = () => {
       return;  
      }
     console.log(selectedAddress);
-    navigate("/checkout")
+    navigate("/checkout", { state: {selectedAddress} })
   }
 
   return (
@@ -283,7 +283,7 @@ const CartPage: React.FC = () => {
     <Sidebar />
   </div>
 
-  <main className="flex-1 bg-white shadow-lg rounded-lg p-4 md:p-6 ml-0 md:ml-6">
+  <main className="flex-1 bg-white shadow-lg  rounded-lg p-8 mb-4 md:p-6 ml-0  md:ml-6">
     {(!cartData || cartData.length === 0) ? (
       <div className="flex flex-col items-center justify-center h-full">
         <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
@@ -353,111 +353,113 @@ const CartPage: React.FC = () => {
     )}
   </main>
 
-  <div className="bg-white shadow-lg rounded-lg p-4 md:p-6 ml-0 md:ml-6 mt-4 lg:mt-0">
-    <h2 className="text-xl font-bold mb-4 text-gray-800">Cart Summary</h2>
+  <div className="w-full lg:w-1/4 bg-white shadow-lg rounded-lg p-4 md:p-6 mb-4 lg:mb-0 lg:ml-6">
+ <h2 className="text-xl font-bold mb-4 text-gray-800">Cart Summary</h2>
+ 
+ <div className="mb-4">
+   <label className="block text-gray-700 font-medium mb-1">Select Address</label>
+   <select
+     value={selectedAddress?.address || ""}
+     onChange={(e) => {
+       const selected = addresses.find((addr) => addr.address === e.target.value);
+       setSelectedAddress(selected || null);
+     }}
+     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+   >
+     <option value="">Choose an Address</option>
+     {addresses.map((address, index) => (
+       <option key={index} value={address.address}>
+         {address.flatNo}, {address.address}, {address.landmark},{address.pincode}
+       </option>
+     ))}
+   </select>
+   <button
+     onClick={() => setShowAddressForm(true)}
+     className="mt-3 w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
+   >
+     + Add New Address
+   </button>
+ </div>
 
-    <div className="mb-4">
-      <label className="block text-gray-700 font-medium mb-1">Select Address</label>
-      <select
-        value={selectedAddress?.address || ""}
-        onChange={(e) => {
-          const selected = addresses.find((addr) => addr.address === e.target.value);
-          setSelectedAddress(selected || null);
-        }}
-        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      >
-        <option value="">Choose an Address</option>
-        {addresses.map((address, index) => (
-          <option key={index} value={address.address}>
-            {address.flatNo}, {address.address}, {address.landmark},{address.pincode}
-          </option>
-        ))}
-      </select>
-      <button
-        onClick={() => setShowAddressForm(true)}
-        className="mt-3 w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
-      >
-        + Add New Address
-      </button>
-    </div>
+ {showAddressForm && (
+   <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+     <div className="bg-white p-6 rounded-lg w-full max-w-md">
+       <h3 className="text-lg font-semibold text-gray-700 mb-3">Add New Address</h3>
+       <input
+         type="text"
+         placeholder="Flat No"
+         name="flatNo"
+         value={formData.flatNo}
+         onChange={handleInputChange}
+         className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+       />
+       <input
+         type="text"
+         placeholder="Landmark"
+         name="landmark"
+         value={formData.landMark}
+         onChange={handleInputChange}
+         className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+       />
+       <input
+         type="text"
+         placeholder="Address"
+         name="address"
+         value={formData.address}
+         onChange={handleInputChange}
+         className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+       />
+       <input
+         type="text"
+         placeholder="Pincode"
+         name="pincode"
+         value={formData.pincode}
+         onChange={handleInputChange}
+         className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+       />
+       <div className="flex flex-col sm:flex-row gap-2 justify-end">
+         <button
+           onClick={handleAddAddress}
+           className="w-full sm:w-auto bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
+         >
+           Save Address
+         </button>
+         <button
+           onClick={() => setShowAddressForm(false)}
+           className="w-full sm:w-auto bg-gray-400 text-white py-2 px-4 rounded-lg hover:bg-gray-500 transition"
+         >
+           Cancel
+         </button>
+       </div>
+     </div>
+   </div>
+ )}
 
-    {showAddressForm && (
-      <div className="bg-gray-100 p-4 rounded-lg mt-4">
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">Add New Address</h3>
-        <input
-          type="text"
-          placeholder="Flat No"
-          name="flatNo"
-          value={formData.flatNo}
-          onChange={handleInputChange}
-          className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-        />
-        <input
-          type="text"
-          placeholder="Landmark"
-          name="landmark"
-          value={formData.landMark}
-          onChange={handleInputChange}
-          className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-        />
-        <input
-          type="text"
-          placeholder="Address"
-          name="address"
-          value={formData.address}
-          onChange={handleInputChange}
-          className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-        />
-        <input
-          type="text"
-          placeholder="Pincode"
-          name="pincode"
-          value={formData.pincode}
-          onChange={handleInputChange}
-          className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-        />
-        <div className="flex justify-between">
-          <button
-            onClick={handleAddAddress}
-            className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
-          >
-            Save Address
-          </button>
-          <button
-            onClick={() => setShowAddressForm(false)}
-            className="bg-gray-400 text-white py-2 px-4 rounded-lg hover:bg-gray-500 transition"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    )}
-
-    <div className="border-t border-gray-200 mt-4 pt-4">
-      <div className="flex justify-between mb-2 text-gray-700">
-        <span>Subtotal</span>
-        <span className="font-semibold">
-          ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
-        </span>
-      </div>
-      <div className="flex justify-between mb-2 text-gray-700">
-        <span>Shipping</span>
-        <span className="font-semibold">₹0.00</span>
-      </div>
-      <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
-        <span>Total</span>
-        <span>
-          ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
-        </span>
-      </div>
-      <button
-        className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition"
-        onClick={() => handleToProcess()}
-      >
-        Proceed to Checkout
-      </button>
-    </div>
-  </div>
+ <div className="border-t border-gray-200 mt-4 pt-4">
+   <div className="flex justify-between mb-2 text-gray-700">
+     <span>Subtotal</span>
+     <span className="font-semibold">
+       ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
+     </span>
+   </div>
+   <div className="flex justify-between mb-2 text-gray-700">
+     <span>Shipping</span>
+     <span className="font-semibold">₹0.00</span>
+   </div>
+   <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
+     <span>Total</span>
+     <span>
+       ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
+     </span>
+   </div>
+   <button
+     className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition"
+     onClick={() => handleToProcess()}
+   >
+     Proceed to Checkout
+   </button>
+ </div>
+</div>
 </div>
 
 

@@ -9,13 +9,25 @@ import { AiOutlinePlusCircle, AiOutlineMinusCircle } from "react-icons/ai";
 import axios from "axios";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api/";
-const customerId = "834ce0d7-125c-4819-ba6d-625eff13c426";
+const customerId = localStorage.getItem("userId");
 const API_URL = `${BASE_URL}order-service/getAllOrders_customerId`;
-type OrderItem = {
-  name: string;
-  quantity: number;
+
+interface OrderItem {
+  itemName: string;
+  quantity: number | null;
   price: number;
-};
+}
+
+interface OrderHistory {
+  status: string;
+  createdAt: string;
+}
+
+interface OrderData {
+  orderItems: OrderItem[];
+  orderHistory: OrderHistory[];
+}
+
 
 interface Order {
   newOrderId: string;
@@ -25,15 +37,7 @@ interface Order {
   orderStatus: string;
   deliveredDate: string;
   orderDate: string;
-  items: OrderItem[]; // for items
-  orderItems: { // for the detailed order items structure
-    itemName: string;
-    quantity: number | null;
-    price: number;
-    totalPrice: number | null;
-    itemId: string;
-    mrp: number | null;
-  }[];
+  items: OrderItem[]; 
   orderHistory: { // for order history
     status: string;
     createdAt: string;
@@ -43,7 +47,7 @@ interface Order {
 const MyOrders: React.FC = () => {
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-  const [orderData, setOrderData] = useState<any>(null);
+  const [orderData, setOrderData] = useState<OrderData[]>([]);
   const [allOrders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(allOrders);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -69,7 +73,7 @@ const MyOrders: React.FC = () => {
 const getOrdersByOrderId = async (orderId: string) => {
   try {
     const token = localStorage.getItem("token"); // Fetch auth token if needed
-    const response = await axios.get(BASE_URL+`/order-service/getOrdersByOrderId/${orderId}`, {
+    const response = await axios.get(BASE_URL+`order-service/getOrdersByOrderId/${orderId}`, {
       headers: {
         Authorization: `Bearer ${token}`, // Include auth header if required
         "Content-Type": "application/json",
@@ -89,14 +93,19 @@ const getOrdersByOrderId = async (orderId: string) => {
 
 
 // Function to handle toggling order details and fetching data
-const toggleOrderDetails = async (orderId: string) => {
-  if (expandedOrder === orderId) {
-    setExpandedOrder(expandedOrder === orderId ? null : orderId);
-    setOrderData(null); // Reset order details when collapsing
+const toggleOrderDetails = async (orderId: string,newOrderId:string) => {
+  console.log({orderId});
+  
+  if (expandedOrder === newOrderId) {
+    console.log({newOrderId});
+    
+    setExpandedOrder(expandedOrder === newOrderId ? null : newOrderId);
+    setOrderData([]); // Reset order details when collapsing
   } else {
     const orderDetails = await getOrdersByOrderId(orderId);
+    console.log({orderDetails});
     if (orderDetails) {
-      setExpandedOrder(orderId);
+      setExpandedOrder(newOrderId);
       setOrderData(orderDetails); // Store order details in state
     }
   }
@@ -145,7 +154,7 @@ const toggleOrderDetails = async (orderId: string) => {
     if (searchQuery) {
       result = result.filter((order) =>
         order.items.some((item) => 
-          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           order.newOrderId.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
@@ -303,7 +312,7 @@ const toggleOrderDetails = async (orderId: string) => {
                     {/* Expand/Collapse Button */}
                     <button
                       className="w-full flex justify-between items-center px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      onClick={() => toggleOrderDetails(order.orderId)} // Ensure orderId is correctly used
+                      onClick={() => toggleOrderDetails(order.orderId,order.newOrderId)} // Ensure orderId is correctly used
                     >
                       <span>Order Details</span>
                       {expandedOrder === order.orderId ? (
@@ -315,26 +324,32 @@ const toggleOrderDetails = async (orderId: string) => {
 
 
                     {/* Expanded Content */}
-                    {expandedOrder === order.newOrderId && (
+{expandedOrder === order.newOrderId && (
   <div className="mt-4 space-y-3 border-t pt-4">
     <h4 className="font-medium">Order Items</h4>
-    {order.orderItems.map((item, idx: number) => (
+    {orderData.length > 0 && orderData[0].orderItems && orderData[0].orderItems.map((item, idx) => (
       <div key={idx} className="flex justify-between items-center py-2 border-b last:border-0">
         <div>
-          <p className="font-medium">{item.itemName}</p>
+          <p className="font-medium">{item.itemName ?? 'N/A'}</p>
           <p className="text-sm text-gray-500">Qty: {item.quantity ?? 'N/A'}</p>
         </div>
-        <p className="font-medium">₹{item.price.toFixed(2)}</p>
+        <p className="font-medium">
+          ₹{item.price ? item.price.toFixed(2) : 'N/A'}
+        </p>
       </div>
     ))}
 
     {/* Order History */}
     <h4 className="font-medium mt-4">Order History</h4>
-    {order.orderHistory.map((history: { status: string, createdAt: string }, idx: number) => (
-      <div key={idx} className="text-sm text-gray-500">
-        Status: {history.status} - {new Date(history.createdAt).toLocaleString()}
-      </div>
-    ))}
+    {orderData[0].orderHistory && orderData[0].orderHistory.length > 0 ? (
+      orderData[0].orderHistory.map((history, idx) => (
+        <div key={idx} className="text-sm text-gray-500">
+          Status: {getOrderStatusText(history.status)} - {new Date(history.createdAt).toLocaleString()}
+        </div>
+      ))
+    ) : (
+      <p className="text-sm text-gray-500">No order history available</p>
+    )}
   </div>
 )}
 

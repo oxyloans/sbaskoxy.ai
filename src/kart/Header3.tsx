@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { 
-  AiOutlineShoppingCart, 
-  AiOutlineUser
-} from "react-icons/ai";
+import { ShoppingCart, UserCircle } from 'lucide-react';
 import { 
   FaSearch, 
   FaTimes,
@@ -31,6 +28,10 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
     "Brown Rice",
     "HMT Rice"
   ];
+
+  const handleNavigation = (path:any) => {
+    navigate(path);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -150,56 +151,50 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
             {renderSearchBar()}
           </div>
 
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <button
-              onClick={() => navigate("/profile")}
-              onMouseDown={() => setActiveButton('profile')}
-              onMouseUp={() => setActiveButton(null)}
-              onMouseLeave={() => setActiveButton(null)}
-              className={`flex items-center space-x-1 text-gray-700 
-    hover:bg-gray-50 rounded-full px-2 py-1
-    hover:text-green-600 transition-all duration-300 
-    hover:scale-105 active:scale-95 group
-    ${location.pathname === '/profile' ? 'bg-green-50 text-green-600' : ''}`}
-            >
-              {location.pathname === '/profile' ? (
-                <FaUserCircle className="text-xl text-green-600" />
-              ) : activeButton === 'profile' ? (
-                <FaUserCircle className="text-xl text-green-500" />
-              ) : (
-                <AiOutlineUser className="text-xl" />
-              )}
-              <span className="hidden sm:inline">Profile</span>
-            </button>
+          <div className="flex space-x-4">
+      <button
+        onClick={() => handleNavigation('/profile')}
+        onMouseDown={() => setActiveButton('profile')}
+        onMouseUp={() => setActiveButton(null)}
+        onMouseLeave={() => setActiveButton(null)}
+        className={`flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full px-2 py-1 
+          hover:text-green-600 transition-all duration-300 hover:scale-105 active:scale-95 
+          ${location.pathname === '/profile' ? 'bg-green-50 text-green-600' : ''} 
+          touch-manipulation`}
+      >
+        <UserCircle 
+          size={24}
+          className={`transition-colors duration-300 
+            ${location.pathname === '/profile' ? 'text-green-600' : 
+            activeButton === 'profile' ? 'text-green-500' : 'text-gray-700'}`}
+        />
+        <span className="hidden sm:inline">Profile</span>
+      </button>
 
-            <button
-              onClick={() => navigate("/mycart")}
-              onMouseDown={() => setActiveButton('cart')}
-              onMouseUp={() => setActiveButton(null)}
-              onMouseLeave={() => setActiveButton(null)}
-              className={`relative flex items-center space-x-1 text-gray-700 
-    hover:bg-gray-50 rounded-full px-2 py-1
-    hover:text-blue-600 transition-all duration-300 
-    hover:scale-105 active:scale-95 group
-    ${location.pathname === '/mycart' ? 'bg-blue-50 text-blue-600' : ''}`}
-            >
-              {location.pathname === '/mycart' ? (
-                <FaShoppingCart className="text-xl text-blue-600" />
-              ) : activeButton === 'cart' ? (
-                <FaShoppingCart className="text-xl text-blue-500" />
-              ) : (
-                <AiOutlineShoppingCart className="text-xl" />
-              )}
-              <span className="hidden sm:inline">Cart</span>
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs
-      font-bold rounded-full w-5 h-5 flex items-center justify-center
-      group-hover:bg-red-600 transition-colors">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
+      <button
+        onClick={() => handleNavigation('/mycart')}
+        onMouseDown={() => setActiveButton('cart')}
+        onMouseUp={() => setActiveButton(null)}
+        onMouseLeave={() => setActiveButton(null)}
+        className={`relative flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full px-2 py-1 
+          hover:text-blue-600 transition-all duration-300 hover:scale-105 active:scale-95 
+          ${location.pathname === '/mycart' ? 'bg-blue-50 text-blue-600' : ''} 
+          touch-manipulation`}
+      >
+        <ShoppingCart 
+          size={24}
+          className={`transition-colors duration-300 
+            ${location.pathname === '/mycart' ? 'text-blue-600' : 
+            activeButton === 'cart' ? 'text-blue-500' : 'text-gray-700'}`}
+        />
+        <span className="hidden sm:inline">Cart</span>
+        {cartCount > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            {cartCount}
+          </span>
+        )}
+      </button>
+    </div>
         </div>
       </div>
     </header>
