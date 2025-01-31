@@ -4,84 +4,141 @@ import Header from './Header3';
 import { Menu, X, Filter, Search, ChevronDown, ChevronUp, Calendar, Package2, CreditCard } from 'lucide-react';
 import Footer from '../components/Footer';
 import Sidebar from './Sidebarrice';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes,  FaPlusCircle, FaMinusCircle } from 'react-icons/fa';
+import { AiOutlinePlusCircle, AiOutlineMinusCircle } from "react-icons/ai";
+import axios from "axios";
 
+const BASE_URL = "https://meta.oxyglobal.tech/api/";
+const customerId = "834ce0d7-125c-4819-ba6d-625eff13c426";
+const API_URL = `${BASE_URL}order-service/getAllOrders_customerId`;
 type OrderItem = {
   name: string;
   quantity: number;
   price: number;
 };
 
-type Order = {
-  id: string;
-  amount: string;
-  payment: string;
-  status: 'Placed' | 'Delivered' | 'Rejected' | 'Processing';
+interface Order {
+  newOrderId: string;
+  orderId: string;
+  grandTotal: string;
+  paymentType: string;
+  orderStatus: string;
   deliveredDate: string;
-  items: OrderItem[];
   orderDate: string;
-};
+  items: OrderItem[]; // for items
+  orderItems: { // for the detailed order items structure
+    itemName: string;
+    quantity: number | null;
+    price: number;
+    totalPrice: number | null;
+    itemId: string;
+    mrp: number | null;
+  }[];
+  orderHistory: { // for order history
+    status: string;
+    createdAt: string;
+  }[];
+}
 
 const MyOrders: React.FC = () => {
-  const allOrders: Order[] = [
-    {
-      id: 'ac45ggyyjmhg',
-      amount: '₹1400.00',
-      payment: 'COD',
-      status: 'Placed',
-      deliveredDate: '2025-01-05',
-      orderDate: '2025-01-03',
-      items: [
-        { name: 'Rice Bag 10kg', quantity: 2, price: 600 },
-        { name: 'Dal 1kg', quantity: 1, price: 200 },
-      ],
-    },
-    {
-      id: 'bc57klzzpqnw',
-      amount: '₹2500.00',
-      payment: 'Online',
-      status: 'Delivered',
-      deliveredDate: '2024-12-15',
-      orderDate: '2024-12-13',
-      items: [
-        { name: 'Wheat Bag 5kg', quantity: 3, price: 750 },
-        { name: 'Sugar 2kg', quantity: 1, price: 250 },
-      ],
-    },
-    {
-      id: 'cd78ppyyjhkg',
-      amount: '₹1800.00',
-      payment: 'COD',
-      status: 'Rejected',
-      deliveredDate: 'N/A',
-      orderDate: '2024-12-20',
-      items: [{ name: 'Cooking Oil 1L', quantity: 2, price: 900 }],
-    },
-  ];
 
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [orderData, setOrderData] = useState<any>(null);
+  const [allOrders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>(allOrders);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterOption, setFilterOption] = useState<string>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [cartCount, setCartCount] = useState(3);
+  const [cartCount, setCartCount] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortOption, setSortOption] = useState<string>('newest');
 
-  const toggleOrderDetails = (orderId: string) => {
-    setExpandedOrder(expandedOrder === orderId ? null : orderId);
-  };
-
-  const getStatusColor = (status: Order['status']) => {
-    const colors = {
-      Delivered: 'bg-green-100 text-green-600',
-      Rejected: 'bg-red-100 text-red-600',
-      Placed: 'bg-yellow-100 text-yellow-600',
-      Processing: 'bg-blue-100 text-blue-600'
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.post(`${API_URL}`,{customerId});
+        setOrders(response.data || []);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
     };
-    return colors[status] || 'bg-gray-100 text-gray-600';
-  };
+    fetchOrders();
+  }, []);
 
+
+const getOrdersByOrderId = async (orderId: string) => {
+  try {
+    const token = localStorage.getItem("token"); // Fetch auth token if needed
+    const response = await axios.get(BASE_URL+`/order-service/getOrdersByOrderId/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Include auth header if required
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 200) {
+      return response.data; // Return order details
+    } else {
+      throw new Error("Failed to fetch order details.");
+    }
+  } catch (error) {
+    console.error("Error fetching order details:", error);
+    return null;
+  }
+}
+
+
+// Function to handle toggling order details and fetching data
+const toggleOrderDetails = async (orderId: string) => {
+  if (expandedOrder === orderId) {
+    setExpandedOrder(expandedOrder === orderId ? null : orderId);
+    setOrderData(null); // Reset order details when collapsing
+  } else {
+    const orderDetails = await getOrdersByOrderId(orderId);
+    if (orderDetails) {
+      setExpandedOrder(orderId);
+      setOrderData(orderDetails); // Store order details in state
+    }
+  }
+};
+
+
+  
+  const getStatusColor = (orderStatus: number | string): string => {
+    const statusNumber = Number(orderStatus);
+    const colors: Record<number, string> = {
+      0: "bg-gray-100 text-gray-600", // Incomplete
+      1: "bg-yellow-100 text-yellow-600", // Placed
+      2: "bg-blue-100 text-blue-600", // Accepted
+      3: "bg-purple-100 text-purple-600", // Assigned
+      4: "bg-green-100 text-green-600", // Delivered
+      5: "bg-red-100 text-red-600", // Rejected
+      6: "bg-orange-100 text-orange-600", // Cancelled
+    };
+    return colors[statusNumber] || "bg-gray-100 text-gray-600";
+  };
+  const getOrderStatusText = (orderStatus: number | string): string => {
+    const statusNumber = Number(orderStatus);
+    switch (statusNumber) {
+      case 0:
+        return "Incomplete";
+      case 1:
+        return "Placed";
+      case 2:
+        return "Accepted";
+      case 3:
+        return "Assigned";
+      case 4:
+        return "Delivered";
+      case 5:
+        return "Rejected";
+      case 6:
+        return "Cancelled";
+      default:
+        return "Unknown";
+    }
+  };
+  
   const processedOrders = useMemo(() => {
     let result = [...allOrders];
 
@@ -89,14 +146,14 @@ const MyOrders: React.FC = () => {
       result = result.filter((order) =>
         order.items.some((item) => 
           item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.id.toLowerCase().includes(searchQuery.toLowerCase())
+          order.newOrderId.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
     }
 
     if (statusFilter !== 'all') {
       result = result.filter((order) => 
-        order.status.toLowerCase() === statusFilter.toLowerCase()
+        order.orderStatus.toLowerCase() === statusFilter.toLowerCase()
       );
     }
 
@@ -119,9 +176,9 @@ const MyOrders: React.FC = () => {
         case 'oldest':
           return new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime();
         case 'highestAmount':
-          return parseFloat(b.amount.replace('₹', '')) - parseFloat(a.amount.replace('₹', ''));
+          return parseFloat(b.grandTotal.replace('₹', '')) - parseFloat(a.grandTotal.replace('₹', ''));
         case 'lowestAmount':
-          return parseFloat(a.amount.replace('₹', '')) - parseFloat(b.amount.replace('₹', ''));
+          return parseFloat(a.grandTotal.replace('₹', '')) - parseFloat(b.grandTotal.replace('₹', ''));
         default:
           return 0;
       }
@@ -178,6 +235,7 @@ const MyOrders: React.FC = () => {
                       />
                       <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
                     </div>
+
                 </div>
                 <div className="flex gap-2">
                   <select
@@ -207,16 +265,18 @@ const MyOrders: React.FC = () => {
             {/* Orders Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredOrders.map((order) => (
-                <div key={order.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                <div key={order.newOrderId} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4 space-y-3">
                     {/* Order Header */}
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-sm text-gray-500">Order ID</p>
-                        <p className="font-medium">{order.id}</p>
+                        <p className="font-medium">{order.newOrderId}</p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                        {order.status}
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.orderStatus)}`}
+                      >
+                        {getOrderStatusText(order.orderStatus)}
                       </span>
                     </div>
 
@@ -224,46 +284,61 @@ const MyOrders: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4 py-2">
                       <div>
                         <p className="text-sm text-gray-500">Amount</p>
-                        <p className="font-medium">{order.amount}</p>
+                        <p className="font-medium">{order.grandTotal}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Payment</p>
-                        <p className="font-medium">{order.payment}</p>
+                        <p className="font-medium">{order.paymentType=="1"?"COD":"Online"}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Order Date</p>
                         <p className="font-medium">{formatDate(order.orderDate)}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Delivery Date</p>
-                        <p className="font-medium">{formatDate(order.deliveredDate)}</p>
+                        {/* <p className="text-sm text-gray-500">Delivery Date</p>
+                        <p className="font-medium">{formatDate(order.deliveredDate)}</p> */}
                       </div>
                     </div>
 
                     {/* Expand/Collapse Button */}
                     <button
                       className="w-full flex justify-between items-center px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      onClick={() => toggleOrderDetails(order.id)}
+                      onClick={() => toggleOrderDetails(order.orderId)} // Ensure orderId is correctly used
                     >
                       <span>Order Details</span>
-                      {expandedOrder === order.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      {expandedOrder === order.orderId ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
                     </button>
 
+
                     {/* Expanded Content */}
-                    {expandedOrder === order.id && (
-                      <div className="mt-4 space-y-3 border-t pt-4">
-                        <h4 className="font-medium">Order Items</h4>
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center py-2 border-b last:border-0">
-                            <div>
-                              <p className="font-medium">{item.name}</p>
-                              <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                            </div>
-                            <p className="font-medium">₹{item.price}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {expandedOrder === order.newOrderId && (
+  <div className="mt-4 space-y-3 border-t pt-4">
+    <h4 className="font-medium">Order Items</h4>
+    {order.orderItems.map((item, idx: number) => (
+      <div key={idx} className="flex justify-between items-center py-2 border-b last:border-0">
+        <div>
+          <p className="font-medium">{item.itemName}</p>
+          <p className="text-sm text-gray-500">Qty: {item.quantity ?? 'N/A'}</p>
+        </div>
+        <p className="font-medium">₹{item.price.toFixed(2)}</p>
+      </div>
+    ))}
+
+    {/* Order History */}
+    <h4 className="font-medium mt-4">Order History</h4>
+    {order.orderHistory.map((history: { status: string, createdAt: string }, idx: number) => (
+      <div key={idx} className="text-sm text-gray-500">
+        Status: {history.status} - {new Date(history.createdAt).toLocaleString()}
+      </div>
+    ))}
+  </div>
+)}
+
+
                   </div>
                 </div>
               ))}

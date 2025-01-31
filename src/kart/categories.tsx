@@ -27,7 +27,8 @@ interface CategoriesProps {
   cart: { [key: string]: number };
   onItemClick: (item: Item) => void;
   updateCart: (cart: { [key: string]: number }) => void;
-  customerId: string; // Added customerId as a prop
+  customerId: string; // Added customerId as a prop;
+  updateCartCount: (count: number) => void;
 }
 
 interface CartItem {
@@ -44,7 +45,8 @@ const Categories: React.FC<CategoriesProps> = ({
   cart,
   onItemClick,
   updateCart,
-  customerId, // Retrieve customerId from props
+  customerId, // Retrieve customerId from props,
+  updateCartCount
 }) => {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
@@ -67,6 +69,7 @@ const Categories: React.FC<CategoriesProps> = ({
         );
         localStorage.setItem("cartCount", response.data?.customerCartResponseList.length.toString());
         setCartItems(cartItemsMap);
+        updateCartCount(response.data?.customerCartResponseList.length);
       } else {
         setCartItems({});
         localStorage.setItem("cartCount","0");

@@ -754,13 +754,16 @@ const Dasboard = () => {
           {/* SignOut Button (Icon in Mobile View) */}
           <button
             onClick={() => {
-              if (localStorage.getItem("userId") && localStorage.getItem("email")) {
-                localStorage.removeItem("userId");
-                localStorage.removeItem("email");
-                navigate("/");
-              } else {
-                navigate("/");
-              }
+              // if (localStorage.getItem("userId") && localStorage.getItem("email")) {
+              //   localStorage.removeItem("userId");
+              //   localStorage.removeItem("email");
+              //   navigate("/");
+              // } else {
+              //   navigate("/");
+              // }
+              localStorage.clear();
+              // window.location.reload();
+              navigate("/");
             }}
             className="text-white bg-[#ffa800] px-4 py-2 rounded-full font-bold text-sm hidden md:block"
           >
@@ -782,9 +785,10 @@ const Dasboard = () => {
           </button>
 
           {/* Profile Info */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 cursor-pointer" onClick={()=>navigate('/profile')}>
             <FaUserCircle className="text-white h-6 w-6" />
-            <div className="text-white text-sm">
+            <div className="text-white text-sm ">
+              
               <p>{`${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim()}</p>
               <p>{profileData?.city || ""}</p>
             </div>

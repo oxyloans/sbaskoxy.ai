@@ -28,7 +28,7 @@ interface ProfileFormData {
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [cartCount, setCartCount] = useState(3);
+  const [cartCount, setCartCount] = useState(0);
   const [activeTab, setActiveTab] = useState('personal');
 
   const [formData, setFormData] = useState<ProfileFormData>({
@@ -40,9 +40,12 @@ const ProfilePage: React.FC = () => {
     whatsappNumber: '',
   });
 
+  const customerId = localStorage.getItem("userId") || "";
+  const token = localStorage.getItem("token") || "";
+
+  const [isLoading,setIsLoading] = useState<boolean>(false)
+
   const [addresses, setAddresses] = useState<Address[]>([
-    { flatNo: '101', landmark: 'Near Park', address: '123 Street, City', pincode: '123456' },
-    { flatNo: '202', landmark: 'Near Mall', address: '456 Avenue, City', pincode: '654321' },
   ]);
 
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
@@ -77,9 +80,23 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const fetchAddresses = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${BASE_URL}/user-service/getAllAdd?customerId=${customerId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAddresses(response.data);
+      // setError('');
+    } catch (error) {
+      console.error("Error fetching addresses:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchProfileData = async () => {
-      const customerId = '91f4a30b-baf0-48ff-aed5-1ce0521c36fc';
       try {
         const response = await axios.get(`${BASE_URL}/user-service/customerProfileDetails`, {
           params: { customerId },
@@ -98,6 +115,7 @@ const ProfilePage: React.FC = () => {
       }
     };
     fetchProfileData();
+    fetchAddresses();
   }, []);
 
   return (

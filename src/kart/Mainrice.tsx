@@ -25,21 +25,20 @@ interface Category {
   items: Item[];
 }
 
+
 const Ricebags: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [cart, setCart] = useState<{ [key: string]: number }>({});
   const [customerId, setCustomerId] = useState<string>("");
-  const [cartCount, setCartCount] = useState(3);
+  const [cartCount, setCartCount] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [currentImage, setCurrentImage] = useState<number>(0);
   const navigate = useNavigate();
   const isMobile = window.innerWidth <= 768;
 
   useEffect(() => {
-    const count = localStorage.getItem("cartCount");
-    setCartCount(count ? parseInt(count, 10) : 0);
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
@@ -134,6 +133,7 @@ const Ricebags: React.FC = () => {
     };
   }, [isMobile]);
 
+
   const handleCategoryClick = (categoryName: string) => {
     setActiveCategory(categoryName);
   };
@@ -191,6 +191,7 @@ const Ricebags: React.FC = () => {
           onItemClick={handleItemClick}
           updateCart={setCart}
           customerId={customerId}
+          updateCartCount={setCartCount}
         />
       </div>
 

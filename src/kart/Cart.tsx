@@ -6,6 +6,7 @@ import Header from './Header3';
 import Footer from '../components/Footer';
 import Sidebar from './Sidebarrice';
 import { message } from 'antd';
+import {isWithinRadius} from "./LocationCheck";
 
 interface Address {
   id?: string;
@@ -31,7 +32,7 @@ interface CartItem {
 
 interface AddressFormData {
   flatNo: string;
-  landmark: string;
+  landMark: string;
   address: string;
   pincode: string;
   addressType: 'Home' | 'Work' | 'Others';
@@ -49,7 +50,7 @@ const CartPage: React.FC = () => {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [formData, setFormData] = useState<AddressFormData>({
     flatNo: '',
-    landmark: '',
+    landMark: '',
     address: '',
     pincode: '',
     addressType: 'Home',
@@ -67,12 +68,16 @@ const CartPage: React.FC = () => {
 
   const fetchAddresses = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/user-service/getAddresses?userId=${customerId}`, {
+      // setIsLoading(true);
+      const response = await axios.get(`${BASE_URL}/user-service/getAllAdd?customerId=${customerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAddresses(response.data);
+      // setError('');
     } catch (error) {
-      console.error('Error fetching addresses:', error);
+      console.error("Error fetching addresses:", error);
+    } finally {
+      // setIsLoading(false);
     }
   };
 
@@ -113,36 +118,63 @@ const CartPage: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleAddAddress = async () => {
-    if (!formData.flatNo || !formData.address || !formData.pincode) {
-      message.error('Please fill all required fields.');
-      return;
-    }
-
+  const getCoordinates = async (address: string) => {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/user-service/addAddress`,
-        { userId: customerId, ...formData },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      setAddresses([...addresses, { ...formData, id: response.data.id }]);
-      setShowAddressForm(false);
-      setFormData({
-        flatNo: '',
-        landmark: '',
-        address: '',
-        pincode: '',
-        addressType: 'Home',
-      });
-      message.success('Address added successfully');
+      const API_KEY = "AIzaSyAM29otTWBIAefQe6mb7f617BbnXTHtN0M";
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`;
+      const response = await axios.get(url);
+      return response.data.results[0]?.geometry.location;
     } catch (error) {
-      console.error('Error saving address:', error);
-      message.error('Failed to add address');
+      console.error("Error fetching coordinates:", error);
+      return null;
     }
   };
+
+    
+
+  const handleAddAddress = async () => {
+    try {
+      // setIsLoading(true);
+       const fullAddress = formData.flatNo + ',' + formData.landMark + ', ' + formData.address + ', ' + formData.pincode;
+            const coordinates = await getCoordinates(fullAddress);
+      
+            if (!coordinates) {
+              // setError('Unable to find location coordinates. Please check the address.');
+              return;
+            }
+            const WithinRadius = await isWithinRadius(coordinates);
+            console.log(WithinRadius);
+            if(!WithinRadius){
+              // setError('Sorry, we do not deliver to this location');
+              return;
+            }
+      
+      const { lat, lng } = coordinates;
+      const data = {
+        userId: customerId,
+        flatNo: formData.flatNo,
+        landMark: formData.landMark,
+        address: formData.address,
+        pincode: formData.pincode,
+        addressType: formData.addressType,
+        latitude: lat.toString(),
+        longitude: lng.toString(),
+      };
+
+      const response = await axios.post(`${BASE_URL}/user-service/addAddress`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data) {
+        await fetchAddresses(); // Refresh the addresses list
+        setShowAddressForm(false)
+      }
+    } catch (error) {
+      // setError('Failed to add address. Please try again.');
+      console.error("Error adding address:", error);
+    } finally {
+    }
+  }
 
   const handleIncrease = async (item: CartItem) => {
     setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
@@ -226,6 +258,15 @@ const CartPage: React.FC = () => {
       message.error('Failed to remove item');
     }
   };
+
+  const handleToProcess = () =>{
+    if(!selectedAddress){
+      message.error("Please select an address");
+      return;  
+     }
+    console.log(selectedAddress);
+    navigate("/checkout")
+  }
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-gray-50">
@@ -328,7 +369,7 @@ const CartPage: React.FC = () => {
         <option value="">Choose an Address</option>
         {addresses.map((address, index) => (
           <option key={index} value={address.address}>
-            {address.flatNo}, {address.landmark}, {address.pincode}
+            {address.flatNo}, {address.address}, {address.landmark},{address.pincode}
           </option>
         ))}
       </select>
@@ -355,7 +396,7 @@ const CartPage: React.FC = () => {
           type="text"
           placeholder="Landmark"
           name="landmark"
-          value={formData.landmark}
+          value={formData.landMark}
           onChange={handleInputChange}
           className="w-full p-2 mb-2 border border-gray-300 rounded-md"
         />
@@ -411,7 +452,7 @@ const CartPage: React.FC = () => {
       </div>
       <button
         className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition"
-        onClick={() => navigate("/checkout")}
+        onClick={() => handleToProcess()}
       >
         Proceed to Checkout
       </button>

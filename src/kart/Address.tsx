@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import Sidebar from "./Sidebarrice";
 import { FaBars, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
+import {isWithinRadius} from "./LocationCheck";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
@@ -36,13 +37,25 @@ const ManageAddressesPage: React.FC = () => {
 
   useEffect(() => {
     fetchAddresses();
-    fetchCartCount();
+    const count = parseInt(localStorage.getItem("cartCount") || "0" )
+    setCartCount(count)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log("Latitude:", position.coords.latitude);
+        console.log("Longitude:", position.coords.longitude);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        alert("Error getting location: " + error.message)
+      }
+    );
   }, []);
 
   const fetchAddresses = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BASE_URL}/user-service/getAddresses?userId=${customerId}`, {
+      const response = await axios.get(`${BASE_URL}/user-service/getAllAdd?customerId=${customerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAddresses(response.data);
@@ -54,16 +67,6 @@ const ManageAddressesPage: React.FC = () => {
     }
   };
 
-  const fetchCartCount = async () => {
-    try {
-      const response = await axios.get(`${BASE_URL}/cart/count`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCartCount(response.data.count);
-    } catch (error) {
-      console.error("Error fetching cart count:", error);
-    }
-  };
 
   const getCoordinates = async (address: string) => {
     try {
@@ -80,12 +83,21 @@ const ManageAddressesPage: React.FC = () => {
   const handleAddAddress = async () => {
     try {
       setIsLoading(true);
-      const coordinates = await getCoordinates(formData.address);
+      const fullAddress = formData.flatNo + ',' + formData.landmark + ', ' + formData.address + ', ' + formData.pincode;
+      const coordinates = await getCoordinates(fullAddress);
 
       if (!coordinates) {
         setError('Unable to find location coordinates. Please check the address.');
         return;
       }
+      const WithinRadius = await isWithinRadius(coordinates);
+      console.log(WithinRadius);
+      if(!WithinRadius){
+        setError('Sorry, we do not deliver to this location');
+        return;
+      }
+
+      
 
       const { lat, lng } = coordinates;
       const data = {
@@ -194,7 +206,7 @@ const ManageAddressesPage: React.FC = () => {
                       {addresses.map((address) => (
                         <div
                           key={address.id}
-                          className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                          className="w-1/2 bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                         >
                           <div className="flex flex-col sm:flex-row justify-between gap-4">
                             <div>

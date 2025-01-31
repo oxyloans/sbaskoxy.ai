@@ -35,7 +35,7 @@ const ItemDisplayPage = () => {
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
-  const [cartCount, setCartCount] = useState(3);
+  const [cartCount, setCartCount] = useState(0);
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
   const customerId = localStorage.getItem("userId"); // Replace with actual customer ID
   const token = localStorage.getItem("accessToken"); // Replace with actual token
@@ -74,15 +74,23 @@ const ItemDisplayPage = () => {
           },
         }
       );
-      const cartItemsMap = response.data?.customerCartResponseList.reduce(
-        (acc: Record<string, number>, item: CartItem) => {
-          acc[item.itemId] = item.cartQuantity;
-          return acc;
-        },
-        {}
-      );
-      setCartData(response.data?.customerCartResponseList);
-      setCartItems(cartItemsMap);
+      if (response.data.customerCartResponseList) {
+        const cartItemsMap = response.data?.customerCartResponseList.reduce(
+          (acc: Record<string, number>, item: CartItem) => {
+            acc[item.itemId] = item.cartQuantity || 0;
+            return acc;
+          },
+          {}
+        );
+        localStorage.setItem("cartCount", response.data?.customerCartResponseList.length.toString());
+        setCartCount(response.data?.customerCartResponseList.length);
+        setCartItems(cartItemsMap);
+      } else {
+        setCartItems({});
+        setCartCount(0);
+        localStorage.setItem("cartCount","0");
+      }
+      setCartData(response.data.customerCartResponseList);
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }

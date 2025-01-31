@@ -35,6 +35,7 @@ import AllQueriesforAdmin from "./components/UserQueries";
 import Admin from "./Pages/Admin";
 import AuthorInfo from "./components/AuthorInfo";
 import Ricebags   from "./kart/Mainrice";
+import CheckoutPage from "./kart/Checkout";
 
 import Courses from "./components/GPT/Courses";
 import Accomidation from "./components/GPT/Accomidation";
@@ -131,7 +132,7 @@ const App: React.FC = () => {
           <Route path="/writetous" element={<WriteToUs/>} />
           <Route path="/tickethistory" element={<TicketHistoryPage/>} />
           <Route path="/manageaddresses" element={<ManageAddressesPage/>} />
-
+          <Route path="/checkout" element={<CheckoutPage />} />
 
 
 
