@@ -60,6 +60,7 @@ const Whatsappregister: React.FC = () => {
           response.data.mobileOtpSession
         );
         localStorage.setItem("salt", response.data.salt);
+        localStorage.setItem("expiryTime", response.data.otpGeneratedTime);
 
         if (response.data.mobileOtpSession === null) {
           setShowSuccessPopup(true);
@@ -108,6 +109,7 @@ const Whatsappregister: React.FC = () => {
           salt: localStorage.getItem("salt"),
           whatsappNumber: phoneNumber,
           userType:"Register",
+          expiryTime: localStorage.getItem("expiryTime"),
         }
       );
       if (response.data) {

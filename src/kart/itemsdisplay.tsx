@@ -3,6 +3,8 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Footer from "../components/Footer";
 import Header from "./Header3";
+import {message} from 'antd'
+
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
@@ -24,6 +26,7 @@ interface CartItem {
   cartId: string;
 }
 
+
 const ItemDisplayPage = () => {
   const { itemId } = useParams<{ itemId: string }>();
   const { state } = useLocation();
@@ -32,6 +35,7 @@ const ItemDisplayPage = () => {
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
+  const [cartCount, setCartCount] = useState(3);
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
   const customerId = localStorage.getItem("userId"); // Replace with actual customer ID
   const token = localStorage.getItem("accessToken"); // Replace with actual token
@@ -70,14 +74,14 @@ const ItemDisplayPage = () => {
           },
         }
       );
-      const cartItemsMap = response.data.customerCartResponseList.reduce(
+      const cartItemsMap = response.data?.customerCartResponseList.reduce(
         (acc: Record<string, number>, item: CartItem) => {
           acc[item.itemId] = item.cartQuantity;
           return acc;
         },
         {}
       );
-      setCartData(response.data.customerCartResponseList);
+      setCartData(response.data?.customerCartResponseList);
       setCartItems(cartItemsMap);
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -94,10 +98,11 @@ const ItemDisplayPage = () => {
         ...prevCartItems,
         [item.itemId]: 1,
       }));
-      
+      message.success("Item added to cart successfully");
       fetchCartData();
     } catch (error) {
       console.error("Error adding item to cart:", error);
+      message.error("Error adding item to cart");
     }
   };
 
@@ -123,9 +128,11 @@ const ItemDisplayPage = () => {
         ...prevCartItems,
         [item.itemId]: newQuantity,
       }));
+      // message.success("Item quantity increased successfully");
       fetchCartData();
     } catch (error) {
       console.error("Failed to increase cart item:", error);
+      message.error("Error increasing item quantity");
     }
   };
 
@@ -155,10 +162,12 @@ const ItemDisplayPage = () => {
           ...prevCartItems,
           [item.itemId]: newQuantity,
         }));
+        // message.success("Item quantity decreased successfully");
         fetchCartData();
       }
     } catch (error) {
       console.error("Failed to decrease cart item:", error);
+      message.error("Error decreasing item quantity");
     }
   };
 
@@ -181,9 +190,11 @@ const ItemDisplayPage = () => {
         delete newCartItems[item.itemId];
         return newCartItems;
       });
+      message.success("Item removed from cart successfully.");
       fetchCartData();
     } catch (error) {
       console.error("Failed to remove cart item:", error);
+      message.error("Error removing item from cart.");
     }
   };
 
@@ -239,12 +250,13 @@ const ItemDisplayPage = () => {
       >
         Add to Cart
       </button>
+      
     );
   };
 
   return (
     <div>
-      <Header />
+      <Header cartCount={cartCount} />
       <div className="my-8">
         {/* Breadcrumb */}
         <nav className="text-sm mb-2 text-gray-500 pl-14">
@@ -314,7 +326,14 @@ const ItemDisplayPage = () => {
             </div>
           ))}
         </div>
+        {/* {Show==true<>
+        <Alert severity="success">Item is increased successfully.</Alert>
+        </>:null} */}
+      {/* <Alert severity="success">Item is increased successfully.</Alert> */}
       </div>
+      {/* {Show && <Toast message="Item added to cart" onClose={() => setShow(false)} />} */}
+     
+
       <Footer />
     </div>
   );

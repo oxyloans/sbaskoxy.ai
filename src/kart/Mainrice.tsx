@@ -1,23 +1,28 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import Header from "./Header3";
 import Footer from "../components/Footer";
 import Categories from "./categories";
 import rice1 from "../assets/img/ricecard1.png";
 import rice2 from "../assets/img/ricecard2.png";
 import rice3 from "../assets/img/ricecard3.png";
-import { useNavigate } from "react-router-dom";
+import { message, notification } from "antd"
 
+// Define Types for API Data
 interface Item {
-  itemId: string;
   itemName: string;
-  itemImage: string;
+  itemId: string;
+  itemImage: null;
+  weightUnit: string;
+  itemPrice: number;
+  itemMrp: number | string;
 }
 
 interface Category {
   categoryName: string;
-  categoryLogo: string;
-  itemsResponseDtoList: Item[];
+  categoryImage: String | null;
+  items: Item[];
 }
 
 const Ricebags: React.FC = () => {
@@ -25,56 +30,86 @@ const Ricebags: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [cart, setCart] = useState<{ [key: string]: number }>({});
-  const [customerId, setCustomerId] = useState<string>(""); // Example customer ID
+  const [customerId, setCustomerId] = useState<string>("");
+  const [cartCount, setCartCount] = useState(3);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [currentImage, setCurrentImage] = useState(0); // Track the current image for dots
-  const isMobile = window.innerWidth <= 768; // Check for mobile view
-  const navigate = useNavigate(); // Hook for navigation
+  const [currentImage, setCurrentImage] = useState<number>(0);
+  const navigate = useNavigate();
+  const isMobile = window.innerWidth <= 768;
 
   useEffect(() => {
+    const count = localStorage.getItem("cartCount");
+    setCartCount(count ? parseInt(count, 10) : 0);
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "https://meta.oxyglobal.tech/api/product-service/showItemsForCustomrs"
+          "https://meta.oxyglobal.tech/api/product-service/getItemsList"
         );
 
+        const data: any[] = response.data;
+
+        // Group items by categoryId
+        const groupedCategories: Record<string, Category> = data.reduce(
+          (acc, item) => {
+            if (!acc[item.categoryId]) {
+              acc[item.categoryId] = {
+                categoryName: item.categoryName,
+                categoryImage: item.categoryImage || null,
+                items: [],
+              };
+            }
+            acc[item.categoryId].items.push({
+              itemName: item.itemName,
+              itemId: item.itemID,
+              itemImage: item.imageType || null,
+              weightUnit: item.weightUnit,
+              itemPrice: item.itemPrice,
+              itemMrp: item.itemMrp || "N/A",
+            });
+            return acc;
+          },
+          {} as Record<string, Category>
+        );
+        console.log("Fetched categories:", groupedCategories);
+
+        // Convert object to array and add manual category
         const manualCategory: Category = {
-          categoryName: "Free Container",
-          categoryLogo: "https://via.placeholder.com/100x100",
-          itemsResponseDtoList: [],
+          categoryName: "Free Container", 
+          categoryImage: "https://via.placeholder.com/100x100",
+          items: [],
         };
-        
-        setCategories([...response.data, manualCategory]);
+
+        setCategories([...Object.values(groupedCategories), manualCategory]);
       } catch (error) {
         console.error("Error fetching categories:", error);
+        // message.error("Error");
+        // notification.error({
+        //   message: "Error",
+        //   description: "Error fetching categories",
+        // });
       } finally {
         setLoading(false);
       }
     };
 
     fetchCategories();
-    const Id = localStorage.getItem("userId");
-    setCustomerId(Id || "");
+    setCustomerId(localStorage.getItem("userId") || "");
   }, []);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || !isMobile) return; // Only enable for mobile view
+    if (!container || !isMobile) return;
 
     let isUserInteracting = false;
 
-    const handleInteractionStart = () => {
-      isUserInteracting = true;
+    const handleInteraction = (state: boolean) => () => {
+      isUserInteracting = state;
     };
 
-    const handleInteractionEnd = () => {
-      isUserInteracting = false;
-    };
-
-    container.addEventListener("touchstart", handleInteractionStart);
-    container.addEventListener("mousedown", handleInteractionStart);
-    container.addEventListener("touchend", handleInteractionEnd);
-    container.addEventListener("mouseup", handleInteractionEnd);
+    container.addEventListener("touchstart", handleInteraction(true));
+    container.addEventListener("mousedown", handleInteraction(true));
+    container.addEventListener("touchend", handleInteraction(false));
+    container.addEventListener("mouseup", handleInteraction(false));
 
     const images = container.querySelectorAll("img");
     const interval = setInterval(() => {
@@ -92,10 +127,10 @@ const Ricebags: React.FC = () => {
 
     return () => {
       clearInterval(interval);
-      container.removeEventListener("touchstart", handleInteractionStart);
-      container.removeEventListener("mousedown", handleInteractionStart);
-      container.removeEventListener("touchend", handleInteractionEnd);
-      container.removeEventListener("mouseup", handleInteractionEnd);
+      container.removeEventListener("touchstart", handleInteraction(true));
+      container.removeEventListener("mousedown", handleInteraction(true));
+      container.removeEventListener("touchend", handleInteraction(false));
+      container.removeEventListener("mouseup", handleInteraction(false));
     };
   }, [isMobile]);
 
@@ -107,46 +142,35 @@ const Ricebags: React.FC = () => {
     navigate(`/itemsdisplay?itemId=${item.itemId}`, { state: { item } });
   };
 
- 
-
   return (
     <div className="font-sans bg-gray-50 min-h-screen">
-      <Header />
+      <Header cartCount={cartCount} />
 
-      {/* Top Image Section */}
+      {/* Image Slider Section */}
       <div className="py-6">
         <div
           ref={scrollContainerRef}
-          className={`flex gap-4 px-4 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide ${
-            isMobile ? "snap-center" : ""
-          }`}
+          className={`flex gap-4 px-4 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide ${isMobile ? "snap-center" : ""
+            }`}
         >
-          <img
-            src={rice1}
-            className="w-full max-w-[300px] md:max-w-[500px] h-auto object-cover rounded-lg"
-            alt="Rice 1"
-          />
-          <img
-            src={rice2}
-            className="w-full max-w-[300px] md:max-w-[500px] h-auto object-cover rounded-lg"
-            alt="Rice 2"
-          />
-          <img
-            src={rice3}
-            className="w-full max-w-[300px] md:max-w-[500px] h-auto object-cover rounded-lg"
-            alt="Rice 3"
-          />
+          {[rice1, rice2, rice3].map((image, index) => (
+            <img
+              key={index}
+              src={image}
+              className="w-full max-w-[300px] md:max-w-[500px] h-auto object-cover rounded-lg"
+              alt={`Rice ${index + 1}`}
+            />
+          ))}
         </div>
 
-        {/* Dots for Mobile View */}
+        {/* Image Dots for Mobile */}
         {isMobile && (
           <div className="flex justify-center mt-4">
             {[rice1, rice2, rice3].map((_, index) => (
               <div
                 key={index}
-                className={`w-3 h-3 rounded-full mx-2 ${
-                  currentImage === index ? "bg-blue-600" : "bg-gray-300"
-                }`}
+                className={`w-3 h-3 rounded-full mx-2 ${currentImage === index ? "bg-blue-600" : "bg-gray-300"
+                  }`}
               ></div>
             ))}
           </div>

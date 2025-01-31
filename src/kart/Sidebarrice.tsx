@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import {
   AiOutlineShoppingCart,
@@ -13,6 +13,20 @@ import { FaRegComments } from "react-icons/fa";
 
 const Sidebar: React.FC = () => {
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   const handleMouseEnter = (menu: string) => {
     setHoveredMenu(menu);
@@ -34,7 +48,7 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-20 md:w-64 bg-white shadow-lg p-4 flex flex-col items-center md:items-start transition-all duration-200">
+    <aside className="w-20 md:w-64 bg-white rounded-xl shadow-sm p-4 flex flex-col items-center md:items-start transition-all duration-200">
       <nav>
         <ul className="space-y-6">
           {menuItems.map((item) => (

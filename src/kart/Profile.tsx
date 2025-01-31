@@ -1,151 +1,267 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBars, FaTimes } from 'react-icons/fa'; // Importing hamburger and close icons
+import { FaBars, FaTimes } from 'react-icons/fa';
 import Header from './Header3';
 import Footer from '../components/Footer';
 import Sidebar from './Sidebarrice';
+import axios from 'axios';
+import {message} from 'antd';
+
+const BASE_URL = "https://meta.oxyglobal.tech/api";
+
+interface Address {
+  flatNo: string;
+  landmark: string;
+  address: string;
+  pincode: string;
+}
+
+interface ProfileFormData {
+  userFirstName: string;
+  userLastName: string;
+  customerEmail: string;
+  alterMobileNumber: string;
+  customerId: string;
+  whatsappNumber: string;
+}
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [cartCount, setCartCount] = useState(3);
+  const [activeTab, setActiveTab] = useState('personal');
+
+  const [formData, setFormData] = useState<ProfileFormData>({
+    userFirstName: '',
+    userLastName: '',
+    customerEmail: '',
+    alterMobileNumber: '',
+    customerId: '',
+    whatsappNumber: '',
+  });
+
+  const [addresses, setAddresses] = useState<Address[]>([
+    { flatNo: '101', landmark: 'Near Park', address: '123 Street, City', pincode: '123456' },
+    { flatNo: '202', landmark: 'Near Mall', address: '456 Avenue, City', pincode: '654321' },
+  ]);
+
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
   const handleAddNewAddress = () => {
-    navigate('/manageaddresses'); // Redirect to the Manage Addresses page
+    navigate('/manageaddresses');
   };
-
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen); // Toggle sidebar visibility
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveProfile = async () => {
+    const { whatsappNumber, ...updatedFormData } = formData;
+    try {
+      const response = await axios.patch(BASE_URL + '/user-service/profileUpdate', updatedFormData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+       message.success('Profile updated successfully!');
+    } catch (error) {
+      alert('Error updating profile.');
+    }
+  };
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      const customerId = '91f4a30b-baf0-48ff-aed5-1ce0521c36fc';
+      try {
+        const response = await axios.get(`${BASE_URL}/user-service/customerProfileDetails`, {
+          params: { customerId },
+        });
+        const data = response.data;
+        setFormData({
+          userFirstName: data.firstName || '',
+          userLastName: data.lastName || '',
+          customerEmail: data.email || '',
+          alterMobileNumber: data.alterMobileNumber || '',
+          customerId: customerId,
+          whatsappNumber: data.whatsappNumber || '',
+        });
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      }
+    };
+    fetchProfileData();
+  }, []);
+
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Header */}
-      <Header />
+    <div className="flex flex-col min-h-screen bg-gray-50">
+    <Header cartCount={cartCount} />
 
-      {/* Mobile Sidebar Toggle Icon */}
-      <div className="block lg:hidden p-3">
-        <button onClick={toggleSidebar} className="text-gray-800 text-2xl">
-          {isSidebarOpen ? <FaTimes /> : <FaBars />} {/* Show hamburger or close icon */}
-        </button>
-      </div>
+    <div className="lg:hidden p-4">
+      <button 
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
+      >
+        {isSidebarOpen ? <FaTimes /> : <FaBars />}
+      </button>
+    </div>
 
-      {/* Main Content */}
-      <div className="p-3 flex">
-        {/* Sidebar */}
-        <div className={`lg:flex ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+    <div className="flex-1 p-4 lg:p-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
           <Sidebar />
         </div>
 
-        {/* Profile Information */}
-        <main className="flex-1 bg-white shadow-lg rounded-lg p-4 md:p-6 ml-0 md:ml-6">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-6">Profile Information</h2>
-          <form className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Full Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter your full name"
-                  className="w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-500"
-                />
-              </div>
-
-              {/* Email Address */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-500"
-                />
-              </div>
-
-              {/* Phone Number */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter your phone number"
-                  className="w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-500"
-                />
-              </div>
-
-              {/* Alternate Phone Number */}
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Alternate Phone Number
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter alternate phone number"
-                  className="w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Address Section */}
-            <div className="mt-6">
-              <h3 className="text-xl font-semibold text-gray-600 mb-4">Addresses</h3>
-              <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6">
-                <div className="bg-gray-100 p-4 rounded-lg flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
-                  <div>
-                    <p>Flat No: 101, Landmark: Near Park</p>
-                    <p>Address: 123 Street, City</p>
-                    <p>Pincode: 123456</p>
-                  </div>
+        <main className="flex-1">
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="border-b border-gray-200">
+                <div className="flex space-x-8 p-4">
                   <button
-                    className="bg-blue-600 text-white py-1 px-3 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
-                    onClick={() => alert('Address Selected')}
+                    className={`pb-4 px-2 ${activeTab === 'personal' ? 'border-b-2 border-purple-600 text-purple-600 font-semibold' : 'text-gray-500'}`}
+                    onClick={() => setActiveTab('personal')}
                   >
-                    Select
+                    Personal Information
                   </button>
-                </div>
-
-                <div className="bg-gray-100 p-4 rounded-lg flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
-                  <div>
-                    <p>Flat No: 202, Landmark: Near Mall</p>
-                    <p>Address: 456 Avenue, City</p>
-                    <p>Pincode: 654321</p>
-                  </div>
                   <button
-                    className="bg-blue-600 text-white py-1 px-3 rounded-lg hover:bg-blue-700 shadow-sm transition-all"
-                    onClick={() => alert('Address Selected')}
+                    className={`pb-4 px-2 ${activeTab === 'addresses' ? 'border-b-2 border-purple-600 text-purple-600 font-semibold' : 'text-gray-500'}`}
+                    onClick={() => setActiveTab('addresses')}
                   >
-                    Select
+                    Addresses
                   </button>
                 </div>
               </div>
 
-              {/* Add New Address and Save Buttons */}
-              <div className="flex flex-row gap-4 w-1/4 sm:flex-row sm:gap-4 sm:justify-between">
-                <button
-                  onClick={handleAddNewAddress}
-                  className="mt-6 w-24 sm:w-auto font-bold bg-purple-600 word-break-all text-white py-2 px-4 rounded-lg shadow-md transition-all"
-                >
-                  Add New Address
-                </button>
+              <div className="p-6">
+                {activeTab === 'personal' && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">First Name</label>
+                        <input
+                          type="text"
+                          name="userFirstName"
+                          value={formData.userFirstName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          placeholder="Enter your first name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Last Name</label>
+                        <input
+                          type="text"
+                          name="userLastName"
+                          value={formData.userLastName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          placeholder="Enter your last name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Email Address</label>
+                        <input
+                          type="email"
+                          name="customerEmail"
+                          value={formData.customerEmail}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          placeholder="Enter your email"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Alternative Mobile Number</label>
+                        <input
+                          type="text"
+                          name="alterMobileNumber"
+                          value={formData.alterMobileNumber}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          placeholder="Enter alternative number"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-sm font-medium text-gray-700">WhatsApp Number</label>
+                        <input
+                          type="text"
+                          name="whatsappNumber"
+                          value={formData.whatsappNumber}
+                          readOnly
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleSaveProfile}
+                        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                {/* Save Button */}
-                <button
-                  className="mt-6 w-24 sm:w-auto bg-green-600 font-bold word-break-all text-white py-2 px-4 rounded-lg hover:bg-green-600 shadow-md transition-all"
-                >
-                  Save Changes
-                </button>
+                {activeTab === 'addresses' && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {addresses.map((address, index) => (
+                        <div
+                          key={index}
+                          className={`p-4 rounded-lg border-2 transition-all ${
+                            selectedAddress === address 
+                              ? 'border-purple-500 bg-purple-50' 
+                              : 'border-gray-200 hover:border-purple-300'
+                          }`}
+                        >
+                          <div className="space-y-2">
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Flat No:</span> {address.flatNo}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Landmark:</span> {address.landmark}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Address:</span> {address.address}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Pincode:</span> {address.pincode}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setSelectedAddress(address)}
+                            className={`mt-4 w-full py-2 rounded-lg transition-colors ${
+                              selectedAddress === address
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-white text-purple-600 border border-purple-600 hover:bg-purple-50'
+                            }`}
+                          >
+                            {selectedAddress === address ? 'Selected' : 'Select'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleAddNewAddress}
+                        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md"
+                      >
+                        Add New Address
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </form>
-        </main>
+          </main>
+        </div>
       </div>
-
-      {/* Footer */}
       <Footer />
     </div>
   );
