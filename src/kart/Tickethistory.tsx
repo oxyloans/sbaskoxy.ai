@@ -16,7 +16,7 @@ interface Ticket {
 const TicketHistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [cartCount, setCartCount] = useState(3);
+  const [cartCount, setCartCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 

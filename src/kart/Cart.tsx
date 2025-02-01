@@ -6,12 +6,12 @@ import Header from './Header3';
 import Footer from '../components/Footer';
 import Sidebar from './Sidebarrice';
 import { message } from 'antd';
-import {isWithinRadius} from "./LocationCheck";
+import { isWithinRadius } from "./LocationCheck";
 
 interface Address {
   id?: string;
   flatNo: string;
-  landmark: string;
+  landMark: string;
   address: string;
   pincode: string;
   addressType: 'Home' | 'Work' | 'Others';
@@ -130,25 +130,25 @@ const CartPage: React.FC = () => {
     }
   };
 
-    
+
 
   const handleAddAddress = async () => {
     try {
       // setIsLoading(true);
-       const fullAddress = formData.flatNo + ',' + formData.landMark + ', ' + formData.address + ', ' + formData.pincode;
-            const coordinates = await getCoordinates(fullAddress);
-      
-            if (!coordinates) {
-              // setError('Unable to find location coordinates. Please check the address.');
-              return;
-            }
-            const WithinRadius = await isWithinRadius(coordinates);
-            console.log(WithinRadius);
-            if(!WithinRadius){
-              // setError('Sorry, we do not deliver to this location');
-              return;
-            }
-      
+      const fullAddress = formData.flatNo + ',' + formData.landMark + ', ' + formData.address + ', ' + formData.pincode;
+      const coordinates = await getCoordinates(fullAddress);
+
+      if (!coordinates) {
+        // setError('Unable to find location coordinates. Please check the address.');
+        return;
+      }
+      const WithinRadius = await isWithinRadius(coordinates);
+      console.log(WithinRadius);
+      if (!WithinRadius) {
+        // setError('Sorry, we do not deliver to this location');
+        return;
+      }
+
       const { lat, lng } = coordinates;
       const data = {
         userId: customerId,
@@ -259,229 +259,236 @@ const CartPage: React.FC = () => {
     }
   };
 
-  const handleToProcess = () =>{
-    if(!selectedAddress){
+  const handleToProcess = () => {
+    if (!selectedAddress) {
       message.error("Please select an address");
-      return;  
-     }
+      return;
+    }
     console.log(selectedAddress);
-    navigate("/checkout", { state: {selectedAddress} })
+    navigate("/checkout", { state: { selectedAddress } })
   }
 
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header cartCount={cartCount} />
 
-      <div className="block lg:hidden p-3">
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-gray-800 text-2xl">
+      <div className="lg:hidden p-4">
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
+        >
           {isSidebarOpen ? <FaTimes /> : <FaBars />}
         </button>
       </div>
 
-      <div className="p-3 flex flex-col lg:flex-row">
-  <div className={`lg:flex ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-    <Sidebar />
-  </div>
+      <div className="flex-1 p-4 lg:p-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+            <Sidebar />
+          </div>
 
-  <main className="flex-1 bg-white shadow-lg  rounded-lg p-8 mb-4 md:p-6 ml-0  md:ml-6">
-    {(!cartData || cartData.length === 0) ? (
-      <div className="flex flex-col items-center justify-center h-full">
-        <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
-        <button
-          onClick={() => navigate('/buyRice')}
-          className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
-        >
-          Browse items
-        </button>
+          <main className="flex-1">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              {(!cartData || cartData.length === 0) ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
+                  <button
+                    onClick={() => navigate('/buyRice')}
+                    className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                  >
+                    Browse items
+                  </button>
+                </div>
+              ) : (
+                cartData.map((item) => (
+                  <div
+                    key={item.itemId}
+                    className="border rounded-lg p-4 mb-4 flex flex-col md:flex-row items-center md:justify-between space-y-4 md:space-y-0"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className="w-20 h-20 bg-gray-200 cursor-pointer"
+                        onClick={() => setSelectedItemDetails(item)}
+                      >
+                        <img
+                          src={item.itemImage}
+                          alt={item.itemName}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-center md:text-left">{item.itemName}</h3>
+                        <p className="text-sm text-center md:text-left">
+                          Weight: {item.quantity} {item.units}
+                        </p>
+                        <p className="text-sm line-through text-red-500 text-center md:text-left">
+                          MRP: ₹{item.itemMrp}
+                        </p>
+                        <p className="text-green-600 font-bold text-center md:text-left">₹{item.itemPrice}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between space-x-4">
+                      <div className="flex items-center border rounded-md">
+                        <button
+                          className="px-3 py-1"
+                          onClick={() => handleDecrease(item)}
+                          disabled={loadingItems[item.itemId]}
+                        >
+                          -
+                        </button>
+                        <span className="px-3 py-1">{cartItems[item.itemId]}</span>
+                        <button
+                          className="px-3 py-1"
+                          onClick={() => handleIncrease(item)}
+                          disabled={loadingItems[item.itemId]}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button
+                        className="bg-red-500 text-white px-4 py-2 rounded-md"
+                        onClick={() => removeCartItem(item)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </main>
+
+          <div className="w-full lg:w-1/4 bg-white shadow-lg rounded-lg p-4 md:p-6 mb-4 lg:mb-0 lg:ml-6">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Cart Summary</h2>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-1">Select Address</label>
+              <select
+                value={selectedAddress?.address || ""}
+                onChange={(e) => {
+                  const selected = addresses.find((addr) => addr.address === e.target.value);
+                  setSelectedAddress(selected || null);
+                }}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Choose an Address</option>
+                {addresses.map((address, index) => (
+                  <option key={index} value={address.address}>
+                    {address.flatNo}, {address.address}, {address.landMark},{address.pincode}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => setShowAddressForm(true)}
+                className="mt-3 w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
+              >
+                + Add New Address
+              </button>
+            </div>
+
+            {showAddressForm && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white p-6 rounded-lg w-full max-w-md">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-3">Add New Address</h3>
+                  <input
+                    type="text"
+                    placeholder="Flat No"
+                    name="flatNo"
+                    value={formData.flatNo}
+                    onChange={handleInputChange}
+                    className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Landmark"
+                    name="landMark"
+                    value={formData.landMark}
+                    onChange={handleInputChange}
+                    className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Pincode"
+                    name="pincode"
+                    value={formData.pincode}
+                    onChange={handleInputChange}
+                    className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+                  />
+                  <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                    <button
+                      onClick={handleAddAddress}
+                      className="w-full sm:w-auto bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
+                    >
+                      Save Address
+                    </button>
+                    <button
+                      onClick={() => setShowAddressForm(false)}
+                      className="w-full sm:w-auto bg-gray-400 text-white py-2 px-4 rounded-lg hover:bg-gray-500 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="border-t border-gray-200 mt-4 pt-4">
+              <div className="flex justify-between mb-2 text-gray-700">
+                <span>Subtotal</span>
+                <span className="font-semibold">
+                  ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
+                </span>
+              </div>
+              <div className="flex justify-between mb-2 text-gray-700">
+                <span>Shipping</span>
+                <span className="font-semibold">₹0.00</span>
+              </div>
+              <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
+                <span>Total</span>
+                <span>
+                  ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
+                </span>
+              </div>
+              <button
+                className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition"
+                onClick={() => handleToProcess()}
+              >
+                Proceed to Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+
+        {/* Item Details Modal */}
+        {selectedItemDetails && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div className="bg-white p-6 rounded-lg w-96">
+              <h2 className="text-xl font-bold">{selectedItemDetails.itemName}</h2>
+              <p className="mt-4">{selectedItemDetails.itemDescription}</p>
+              <button
+                className="mt-4 bg-gray-500 text-white px-4 py-2 rounded-md"
+                onClick={() => setSelectedItemDetails(null)} // Close the details view
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        <Footer />
       </div>
-    ) : (
-      cartData.map((item) => (
-        <div
-          key={item.itemId}
-          className="border rounded-lg p-4 mb-4 flex flex-col md:flex-row items-center md:justify-between space-y-4 md:space-y-0"
-        >
-          <div className="flex items-center space-x-4">
-            <div
-              className="w-20 h-20 bg-gray-200 cursor-pointer"
-              onClick={() => setSelectedItemDetails(item)}
-            >
-              <img
-                src={item.itemImage}
-                alt={item.itemName}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <h3 className="font-bold text-center md:text-left">{item.itemName}</h3>
-              <p className="text-sm text-center md:text-left">
-                Weight: {item.quantity} {item.units}
-              </p>
-              <p className="text-sm line-through text-red-500 text-center md:text-left">
-                MRP: ₹{item.itemMrp}
-              </p>
-              <p className="text-green-600 font-bold text-center md:text-left">₹{item.itemPrice}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex items-center border rounded-md">
-              <button
-                className="px-3 py-1"
-                onClick={() => handleDecrease(item)}
-                disabled={loadingItems[item.itemId]}
-              >
-                -
-              </button>
-              <span className="px-3 py-1">{cartItems[item.itemId]}</span>
-              <button
-                className="px-3 py-1"
-                onClick={() => handleIncrease(item)}
-                disabled={loadingItems[item.itemId]}
-              >
-                +
-              </button>
-            </div>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded-md"
-              onClick={() => removeCartItem(item)}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      ))
-    )}
-  </main>
-
-  <div className="w-full lg:w-1/4 bg-white shadow-lg rounded-lg p-4 md:p-6 mb-4 lg:mb-0 lg:ml-6">
- <h2 className="text-xl font-bold mb-4 text-gray-800">Cart Summary</h2>
- 
- <div className="mb-4">
-   <label className="block text-gray-700 font-medium mb-1">Select Address</label>
-   <select
-     value={selectedAddress?.address || ""}
-     onChange={(e) => {
-       const selected = addresses.find((addr) => addr.address === e.target.value);
-       setSelectedAddress(selected || null);
-     }}
-     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-   >
-     <option value="">Choose an Address</option>
-     {addresses.map((address, index) => (
-       <option key={index} value={address.address}>
-         {address.flatNo}, {address.address}, {address.landmark},{address.pincode}
-       </option>
-     ))}
-   </select>
-   <button
-     onClick={() => setShowAddressForm(true)}
-     className="mt-3 w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
-   >
-     + Add New Address
-   </button>
- </div>
-
- {showAddressForm && (
-   <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-     <div className="bg-white p-6 rounded-lg w-full max-w-md">
-       <h3 className="text-lg font-semibold text-gray-700 mb-3">Add New Address</h3>
-       <input
-         type="text"
-         placeholder="Flat No"
-         name="flatNo"
-         value={formData.flatNo}
-         onChange={handleInputChange}
-         className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-       />
-       <input
-         type="text"
-         placeholder="Landmark"
-         name="landmark"
-         value={formData.landMark}
-         onChange={handleInputChange}
-         className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-       />
-       <input
-         type="text"
-         placeholder="Address"
-         name="address"
-         value={formData.address}
-         onChange={handleInputChange}
-         className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-       />
-       <input
-         type="text"
-         placeholder="Pincode"
-         name="pincode"
-         value={formData.pincode}
-         onChange={handleInputChange}
-         className="w-full p-2 mb-2 border border-gray-300 rounded-md"
-       />
-       <div className="flex flex-col sm:flex-row gap-2 justify-end">
-         <button
-           onClick={handleAddAddress}
-           className="w-full sm:w-auto bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
-         >
-           Save Address
-         </button>
-         <button
-           onClick={() => setShowAddressForm(false)}
-           className="w-full sm:w-auto bg-gray-400 text-white py-2 px-4 rounded-lg hover:bg-gray-500 transition"
-         >
-           Cancel
-         </button>
-       </div>
-     </div>
-   </div>
- )}
-
- <div className="border-t border-gray-200 mt-4 pt-4">
-   <div className="flex justify-between mb-2 text-gray-700">
-     <span>Subtotal</span>
-     <span className="font-semibold">
-       ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
-     </span>
-   </div>
-   <div className="flex justify-between mb-2 text-gray-700">
-     <span>Shipping</span>
-     <span className="font-semibold">₹0.00</span>
-   </div>
-   <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
-     <span>Total</span>
-     <span>
-       ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
-     </span>
-   </div>
-   <button
-     className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition"
-     onClick={() => handleToProcess()}
-   >
-     Proceed to Checkout
-   </button>
- </div>
-</div>
-</div>
-
-
-      {/* Item Details Modal */}
-      {selectedItemDetails && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h2 className="text-xl font-bold">{selectedItemDetails.itemName}</h2>
-            <p className="mt-4">{selectedItemDetails.itemDescription}</p>
-            <button
-            className="mt-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-            onClick={() => setSelectedItemDetails(null)} // Close the details view
-          >
-            Close
-          </button>
-          </div>
-        </div>
-      )}
-
-      <Footer />
-    </div>
-  );
+      );
 };
 
 export default CartPage;
