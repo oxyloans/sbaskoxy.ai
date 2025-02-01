@@ -58,7 +58,7 @@ const WhatsappLogin = () => {
 
   const handleOtpChange = (value: string, index: number) => {
     const sanitizedValue = value.replace(/[^0-9]/g, "");
-    
+
     if (sanitizedValue.length <= 1) {
       const newOtp = [...credentials.otp];
       newOtp[index] = sanitizedValue;
@@ -330,7 +330,7 @@ const WhatsappLogin = () => {
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    {otpSession ? (
+                    {showOtp ? ( // Check if OTP is shown
                       <>
                         <KeyRound className="w-5 h-5" />
                         Verify OTP
@@ -372,7 +372,7 @@ const WhatsappLogin = () => {
             </Link>
           </p>
         </div>
-      </div>   
+      </div>
     </div>
   );
 };
