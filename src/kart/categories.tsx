@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {message} from 'antd'
 const BASE_URL = "https://meta.oxyglobal.tech/api";
@@ -38,6 +39,7 @@ interface CartItem {
 }
 
 const Categories: React.FC<CategoriesProps> = ({
+  
   categories,
   activeCategory,
   onCategoryClick,
@@ -50,6 +52,7 @@ const Categories: React.FC<CategoriesProps> = ({
 }) => {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
+  const navigate = useNavigate(); 
 
   // Fetch cartItems for a particular customer
   const fetchCartData = async () => {
@@ -87,18 +90,35 @@ const Categories: React.FC<CategoriesProps> = ({
   }, []); // Effect to fetch data on mount
 
 
+
   const handleAddToCart = async (item: Item) => {
-    const data = { customerId, itemId: item.itemId, quantity: 1 };
+
+    const accessToken = localStorage.getItem("accessToken");
+    const userId = localStorage.getItem("userId");
+  
+    if (!accessToken || !userId) {
+      message.warning("Please login to add items to the cart.");
+      
+      // Redirect to the login page after 5 seconds
+      setTimeout(() => {
+        navigate("/whatapplogin"); // Change "/login" to your actual login route
+      }, 2000); // 2 seconds delay
+  
+      return;
+    }
+  
+    const data = { customerId: userId, itemId: item.itemId, quantity: 1 };
+  
     try {
-      await axios.post(
-        `${BASE_URL}/cart-service/cart/add_Items_ToCart`,
-        data
-      );
-      fetchCartData(); // Now fetchCartData is correctly declared before use
-       message.success("Item added to cart successfully.");
+      await axios.post(`${BASE_URL}/cart-service/cart/add_Items_ToCart`, data, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+  
+      fetchCartData(); // Fetch updated cart data
+      message.success("Item added to cart successfully.");
     } catch (error) {
       console.error("Error adding to cart:", error);
-       message.error("Error adding to cart.");
+      message.error("Error adding to cart.");
     }
   };
 

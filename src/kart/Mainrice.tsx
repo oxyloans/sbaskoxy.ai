@@ -138,7 +138,8 @@ const Ricebags: React.FC = () => {
     setActiveCategory(categoryName);
   };
 
-  const handleItemClick = (item: Item) => {
+
+const handleItemClick = (item: Item) => {
     navigate(`/itemsdisplay?itemId=${item.itemId}`, { state: { item } });
   };
 

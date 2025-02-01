@@ -93,20 +93,33 @@ const ItemDisplayPage = () => {
   };
 
   const handleAddToCart = async (item: Item) => {
-    const data = { customerId, itemId: item.itemId, quantity: 1 };
+
+    const accessToken = localStorage.getItem("accessToken");
+    const userId = localStorage.getItem("userId");
+  
+    if (!accessToken || !userId) {
+      message.warning("Please login to add items to the cart.");
+      
+      // Redirect to the login page after 5 seconds
+      setTimeout(() => {
+        navigate("/whatapplogin"); // Change "/login" to your actual login route
+      }, 2000); // 2 seconds delay
+  
+      return;
+    }
+  
+    const data = { customerId: userId, itemId: item.itemId, quantity: 1 };
+  
     try {
       await axios.post(`${BASE_URL}/cart-service/cart/add_Items_ToCart`, data, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-      setCartItems((prevCartItems) => ({
-        ...prevCartItems,
-        [item.itemId]: 1,
-      }));
-      message.success("Item added to cart successfully");
-      fetchCartData();
+  
+      fetchCartData(); // Fetch updated cart data
+      message.success("Item added to cart successfully.");
     } catch (error) {
-      console.error("Error adding item to cart:", error);
-      message.error("Error adding item to cart");
+      console.error("Error adding to cart:", error);
+      message.error("Error adding to cart.");
     }
   };
 

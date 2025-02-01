@@ -123,10 +123,10 @@ const App: React.FC = () => {
           <Route path="/bmvcoin" Component={BMVCOIN} />
 
           {/* {kartpage routes} */}
-          <Route path="/buyRice" element={<RequireAuth><Ricebags /></RequireAuth>} />
-          <Route path="/itemsdisplay" element={<RequireAuth><ItemDisplayPage /></RequireAuth>} />
+          <Route path="/buyRice" element={<Ricebags />} />
+          <Route path="/itemsdisplay" element={<ItemDisplayPage />} />
           <Route path="/wallet" element={<RequireAuth><MyWalletPage /></RequireAuth>} />
-          <Route path="/mycart" element={<RequireAuth><CartPage /></RequireAuth>} />
+          <Route path="/mycart" element={<CartPage />} />
           <Route path="/myorders" element={<RequireAuth><MyOrders /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           <Route path="/subscription" element={<RequireAuth><SubscriptionPage /></RequireAuth>} />
