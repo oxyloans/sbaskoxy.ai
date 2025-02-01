@@ -3,8 +3,8 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Footer from "../components/Footer";
 import Header from "./Header3";
-import {message} from 'antd'
-
+import { message } from 'antd';
+import { ShoppingCart, Home, ChevronRight, Minus, Plus, Tag, Package2, Star } from 'lucide-react';
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
@@ -26,7 +26,6 @@ interface CartItem {
   cartId: string;
 }
 
-
 const ItemDisplayPage = () => {
   const { itemId } = useParams<{ itemId: string }>();
   const { state } = useLocation();
@@ -37,13 +36,10 @@ const ItemDisplayPage = () => {
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
-  const customerId = localStorage.getItem("userId"); // Replace with actual customer ID
-  const token = localStorage.getItem("accessToken"); // Replace with actual token
+  const customerId = localStorage.getItem("userId");
+  const token = localStorage.getItem("accessToken");
 
   useEffect(() => {
-    // if (!itemDetails) {
-    //   fetchItemDetails();
-    // }
     fetchCartData();
   }, [itemId]);
 
@@ -220,127 +216,157 @@ const ItemDisplayPage = () => {
     );
   };
 
-  const renderCartControls = (item: Item) => {
+  const renderCartControls = (item: Item, isMainProduct: boolean = false) => {
     const quantity = cartItems[item.itemId] || 0;
     if (quantity > 0) {
       return (
-        <div className="flex items-center space-x-2">
+        <div className={`flex items-center ${isMainProduct ? 'justify-start' : 'justify-center'} space-x-3`}>
           {quantity === 1 ? (
             <button
-              className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm sm:text-base"
+              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
               onClick={() => removeCartItem(item)}
             >
               Remove
             </button>
           ) : (
             <button
-              className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+              className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors"
               onClick={() => handleDecrease(item)}
             >
-              -
+              <Minus className="w-4 h-4" />
             </button>
           )}
-
-          <span className="text-gray-800 font-bold text-sm sm:text-base">{quantity}</span>
+          <span className="text-gray-800 font-bold min-w-[2rem] text-center">{quantity}</span>
           <button
-            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+            className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors"
             onClick={() => handleIncrease(item)}
           >
-            +
+            <Plus className="w-4 h-4" />
           </button>
         </div>
       );
     }
     return (
       <button
-        className="flex-1 px-2 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm sm:text-base text-center"
+        className={`flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors ${isMainProduct ? 'w-auto' : 'w-full'}`}
         onClick={() => handleAddToCart(item)}
       >
+        <ShoppingCart className="w-4 h-4" />
         Add to Cart
       </button>
-      
     );
   };
 
+  const calculateDiscount = (mrp: number, price: number) => {
+    return Math.round(((mrp - price) / mrp) * 100);
+  };
+
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <Header cartCount={cartCount} />
-      <div className="my-8">
-        {/* Breadcrumb */}
-        <nav className="text-sm mb-2 text-gray-500 pl-14">
-          <span
-            className="cursor-pointer hover:underline"
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Enhanced Breadcrumb */}
+        <nav className="flex items-center space-x-2 text-sm mb-6">
+          <button
             onClick={() => navigate("/buyRice")}
+            className="flex items-center text-gray-600 hover:text-purple-600 transition-colors"
           >
+            <Home className="w-4 h-4 mr-1" />
             Home
-          </span>{" "}
-          &gt;{" "}
-          <span>
-            Categories
-          </span>{" "}
-          &gt;{" "}
-          <span className="text-purple-700 font-semibold">{itemDetails?.category}</span>
+          </button>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <span className="text-gray-600">Categories</span>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <span className="text-purple-600 font-medium">{itemDetails?.category}</span>
         </nav>
 
-        {/* Main Content */}
         {itemDetails ? (
-          <div className="bg-white rounded-lg p-6">
-            <div className="flex flex-col lg:flex-row items-center lg:items-start">
-              {/* Image Section */}
-              <div className="w-full lg:w-1/3 aspect-w-1 aspect-h-1 lg:aspect-h-4">
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Enhanced Image Section */}
+              <div className="aspect-square relative overflow-hidden rounded-xl">
                 <img
                   src={itemDetails.itemImage}
                   alt={itemDetails.itemName.trim()}
-                  className="w-full h-full object-cover rounded-lg shadow-md"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
+                <div className="absolute top-4 right-4 bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                  {calculateDiscount(itemDetails.itemMrp, itemDetails.itemPrice)}% OFF
+                </div>
               </div>
 
-              {/* Details Section */}
-              <div className="w-full lg:w-2/3 lg:pl-8 mt-6 lg:mt-0">
-                <h2 className="text-2xl font-bold text-purple-700 mb-4">{itemDetails.itemName.trim()}</h2>
-                <p className="text-gray-700 mb-4">{itemDetails.itemDescription}</p>
-                <p className="text-gray-800 font-medium mb-2">
-                  Weight: {itemDetails.quantity} {itemDetails.units}
-                </p>
-                <div className="flex items-center space-x-4 mb-6">
-                  <span className="text-gray-500 line-through text-lg">MRP: ₹{itemDetails.itemMrp}</span>
-                  <span className="text-green-600 text-lg font-semibold">₹{itemDetails.itemPrice}</span>
+              {/* Enhanced Details Section */}
+              <div className="flex flex-col">
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">{itemDetails.itemName.trim()}</h1>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  {/* <span className="text-gray-500">(50 reviews)</span> */}
                 </div>
-                {renderCartControls(itemDetails)}
+
+                <div className="flex items-baseline gap-4 mb-6">
+                  <span className="text-3xl font-bold text-purple-600">₹{itemDetails.itemPrice}</span>
+                  <span className="text-lg text-gray-500 line-through">₹{itemDetails.itemMrp}</span>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Package2 className="w-5 h-5" />
+                    <span>Weight: {itemDetails.quantity} {itemDetails.units}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Tag className="w-5 h-5" />
+                    <span>Category: {itemDetails.category}</span>
+                  </div>
+                </div>
+
+                <p className="text-gray-600 mb-8">{itemDetails.itemDescription}</p>
+
+                <div className="mt-auto">
+                  {renderCartControls(itemDetails, true)}
+                </div>
               </div>
             </div>
           </div>
         ) : (
-          <p>Loading item details...</p>
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          </div>
         )}
 
-        {/* Related Items */}
-        <h3 className="text-lg font-semibold pl-8 text-purple-700 mt-10 mb-4">Related Items</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {relatedItems.map((relatedItem, index) => (
-            <div
-              key={index}
-              className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-lg transition-shadow"
-            >
-              <div className="w-full aspect-w-1 aspect-h-1">
-                <img
-                  src={relatedItem.itemImage}
-                  alt={relatedItem.itemName.trim()}
-                  className="w-full h-full object-contain rounded"
-                />
+        {/* Enhanced Related Items Section */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Items</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {relatedItems.map((relatedItem, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-xl p-4 shadow-sm hover:shadow-lg transition-all"
+              >
+                <div className="aspect-square mb-4 overflow-hidden rounded-lg">
+                  <img
+                    src={relatedItem.itemImage}
+                    alt={relatedItem.itemName.trim()}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">
+                  {relatedItem.itemName.trim()}
+                </h3>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-lg font-bold text-purple-600">₹{relatedItem.itemPrice}</span>
+                  <span className="text-sm text-gray-500 line-through">₹{relatedItem.itemMrp}</span>
+                </div>
+                {renderCartControls(relatedItem)}
               </div>
-              <p className="font-medium text-center mt-4 mb-4">{relatedItem.itemName.trim()}</p>
-              {renderCartControls(relatedItem)}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-        {/* {Show==true<>
-        <Alert severity="success">Item is increased successfully.</Alert>
-        </>:null} */}
-      {/* <Alert severity="success">Item is increased successfully.</Alert> */}
       </div>
-      {/* {Show && <Toast message="Item added to cart" onClose={() => setShow(false)} />} */}
-     
 
       <Footer />
     </div>

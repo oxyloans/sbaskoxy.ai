@@ -1,18 +1,18 @@
-
-
-import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import "./Whatsapp.css";
 import { Link } from "react-router-dom";
+
 const Whatapplogin: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // Step 4: Get the intended route before login
   const [credentials, setCredentials] = useState({
     otp: ["", "", "", ""],
   });
-  const otpRefs = useRef<HTMLInputElement[]>([]); // Array of refs for OTP input fields
+  const otpRefs = useRef<HTMLInputElement[]>([]);
   const [phoneNumber, setPhoneNumber] = useState<string | undefined>();
   const [error, setError] = useState<string>("");
   const [otpError, setOtpError] = useState<string>("");
@@ -21,6 +21,15 @@ const Whatapplogin: React.FC = () => {
   const [showOtp, setOtpShow] = useState<boolean | null>(false);
   const [isButtonEnabled, setIsButtonEnabled] = useState<boolean | null>(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  // Step 5: Check if user is already logged in
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
+    if (userId && accessToken) {
+      navigate(location.state?.from || "/dashboard", { replace: true });
+    }
+  }, [navigate, location]);
 
   const handleOtpChange = (value: string, index: number) => {
     const newOtp = [...credentials.otp];
@@ -49,26 +58,23 @@ const Whatapplogin: React.FC = () => {
         "https://meta.oxyglobal.tech/api/user-service/registerwithMobileAndWhatsappNumber",
         {
           registrationType: "whatsapp",
-          userType:"Login",
+          userType: "Login",
           whatsappNumber: phoneNumber,
         }
       );
       setIsButtonEnabled(true);
       if (response.data) {
-        localStorage.setItem(
-          "mobileOtpSession",
-          response.data.mobileOtpSession
-        );
+        localStorage.setItem("mobileOtpSession", response.data.mobileOtpSession);
         localStorage.setItem("salt", response.data.salt);
         localStorage.setItem("expiryTime", response.data.otpGeneratedTime);
 
         if (response.data.userId !== null) {
           setShowSuccessPopup(true);
           localStorage.setItem("userId", response.data.userId);
-          localStorage.setItem("accessToken", response.data.accessToken); 
+          localStorage.setItem("accessToken", response.data.accessToken);
 
-          // setMessage("Login Successful!");
-          setTimeout(() => navigate("/dashboard"), 2000);
+          // Step 4: Redirect user to previous page or dashboard
+          setTimeout(() => navigate(location.state?.from || "/dashboard"), 2000);
         } else {
           setOtpShow(true);
           setShowSuccessPopup(true);
@@ -83,8 +89,6 @@ const Whatapplogin: React.FC = () => {
       }
     } catch (err) {
       setError("This number is not registered. Please register now.");
-
-
     }
   };
 
@@ -94,7 +98,7 @@ const Whatapplogin: React.FC = () => {
     setOtpError("");
     setMessage("");
 
-    if (credentials.otp.join("").length != 4) {
+    if (credentials.otp.join("").length !== 4) {
       setOtpError("Please Enter the OTP");
       return;
     }
@@ -108,16 +112,19 @@ const Whatapplogin: React.FC = () => {
           whatsappOtpValue: credentials.otp.join(""),
           salt: localStorage.getItem("salt"),
           whatsappNumber: phoneNumber,
-          userType:"Login",
+          userType: "Login",
           expiryTime: localStorage.getItem("expiryTime"),
         }
       );
       if (response.data) {
         setShowSuccessPopup(true);
         localStorage.setItem("userId", response.data.userId);
+        localStorage.setItem("accessToken", response.data.accessToken);
 
-        setMessage("Login SuccessFull");
-        setTimeout(() => navigate("/dashboard"), 500);
+        setMessage("Login Successful");
+
+        // Step 4: Redirect user to previous page or dashboard
+        setTimeout(() => navigate(location.state?.from || "/dashboard"), 500);
         setTimeout(() => window.location.reload(), 1000);
       } else {
         setOtpError("Invalid OTP. Please try again.");
@@ -127,21 +134,6 @@ const Whatapplogin: React.FC = () => {
       setOtpError("Invalid OTP");
       setOtpSession(err);
     }
-  };
-
-  const otpInputStyle: React.CSSProperties = {
-    display: "flex",
-    gap: "10px",
-    justifyContent: "center",
-  };
-
-  const otpCircleStyle: React.CSSProperties = {
-    width: "40px",
-    height: "40px",
-    textAlign: "center",
-    borderRadius: "50%",
-    border: "1px solid #003300",
-    fontSize: "1.5rem",
   };
 
   return (
@@ -165,10 +157,6 @@ const Whatapplogin: React.FC = () => {
                 onChange={setPhoneNumber}
                 defaultCountry="IN"
                 international
-                countrySelectProps={{
-                  ariaLabel: "Phone number country",
-                  className: "PhoneInputCountrySelect",
-                }}
                 className="PhoneInputInput"
               />
             </div>
@@ -216,17 +204,9 @@ const Whatapplogin: React.FC = () => {
         </form>
         <p className="or-divider">OR</p>
 
-        <div className="alternate-login" style={{ fontSize: '15px', color: '#000' }}>
+        <div className="alternate-login">
           <span>Are you not registered yet? </span>
-          <Link
-            to="/whatsappregister"
-            style={{
-              textDecoration: 'underline',
-              fontWeight: 'bold',
-              color: '#3d5afe',
-              paddingLeft: '5px',
-            }}
-          >
+          <Link to="/whatsappregister" className="register-link">
             Register Now
           </Link>
         </div>

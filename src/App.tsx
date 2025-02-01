@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import Erice from "./components/Erice";
+import RequireAuth from "./auth/RequireAuth"
 
 import Landingpage from "./components/Landingpage";
 import Dasboard from "./components/Dashboard";
@@ -34,8 +35,7 @@ import MyRotaryServices from "./components/MyRotary";
 import AllQueriesforAdmin from "./components/UserQueries";
 import Admin from "./Pages/Admin";
 import AuthorInfo from "./components/AuthorInfo";
-import Ricebags   from "./kart/Mainrice";
-import CheckoutPage from "./kart/Checkout";
+
 
 import Courses from "./components/GPT/Courses";
 import Accomidation from "./components/GPT/Accomidation";
@@ -67,6 +67,7 @@ import RiceSalePage from "./components/Communities";
 import BMVPDF from "./components/bmvpdf";
 import BMVCOIN from "./components/Bmvcoin";
 import Whatsappregister from "./components/Whatsappregister";
+import Ricebags   from "./kart/Mainrice";
 import ItemDisplayPage from "./kart/itemsdisplay";
 import MyWalletPage from "./kart/Wallet";
 import CartPage from "./kart/Cart";
@@ -76,7 +77,7 @@ import SubscriptionPage from "./kart/Subscription";
 import WriteToUs from "./kart/Writetous";
 import TicketHistoryPage from "./kart/Tickethistory";
 import ManageAddressesPage from "./kart/Address";
-
+import CheckoutPage from "./kart/Checkout";
 
 
 const App: React.FC = () => {
@@ -122,17 +123,17 @@ const App: React.FC = () => {
           <Route path="/bmvcoin" Component={BMVCOIN} />
 
           {/* {kartpage routes} */}
-          <Route path="/buyRice" element={<Ricebags />} />
-          <Route path="/itemsdisplay" element={<ItemDisplayPage />} />
-          <Route path="/wallet" element={<MyWalletPage />} />
-          <Route path="/mycart" element={<CartPage />} />
-          <Route path="/myorders" element={<MyOrders />} />
-          <Route path="/profile" element={<ProfilePage/>} />
-          <Route path="/subscription" element={<SubscriptionPage/>} />
-          <Route path="/writetous" element={<WriteToUs/>} />
-          <Route path="/tickethistory" element={<TicketHistoryPage/>} />
-          <Route path="/manageaddresses" element={<ManageAddressesPage/>} />
-          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/buyRice" element={<RequireAuth><Ricebags /></RequireAuth>} />
+          <Route path="/itemsdisplay" element={<RequireAuth><ItemDisplayPage /></RequireAuth>} />
+          <Route path="/wallet" element={<RequireAuth><MyWalletPage /></RequireAuth>} />
+          <Route path="/mycart" element={<RequireAuth><CartPage /></RequireAuth>} />
+          <Route path="/myorders" element={<RequireAuth><MyOrders /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          <Route path="/subscription" element={<RequireAuth><SubscriptionPage /></RequireAuth>} />
+          <Route path="/writetous" element={<RequireAuth><WriteToUs /></RequireAuth>} />
+          <Route path="/tickethistory" element={<RequireAuth><TicketHistoryPage /></RequireAuth>} />
+          <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
+          <Route path="/manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />
 
 
 
