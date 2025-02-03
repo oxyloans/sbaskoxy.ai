@@ -1,10 +1,9 @@
+// Header.tsx
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, UserCircle } from 'lucide-react';
-import { 
-  FaSearch, 
-  FaTimes
-} from "react-icons/fa";
+import { FaSearch, FaTimes } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
+import ValidationPopup from './ValidationPopup';
 import AskOxyLogo from "../assets/img/askoxylogostatic.png";
 import buyrice from "../assets/img/buyrice.png";
 
@@ -22,6 +21,7 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
   const [activeButton, setActiveButton] = useState<'profile' | 'cart' | null>(null);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchPlaceholder, setSearchPlaceholder] = useState("");
+  const [showValidationPopup, setShowValidationPopup] = useState(false);
 
   const searchTexts = [
     "Sonamasoori Rice",
@@ -30,7 +30,6 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
     "HMT Rice"
   ];
 
-  // New effect for smooth placeholder transition
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     const animatePlaceholder = async () => {
@@ -46,8 +45,31 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
     return () => clearTimeout(timeout);
   }, [currentSearchIndex]);
 
-  const handleNavigation = (path:any) => {
+  const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  const checkProfileCompletion = () => {
+    const profileData = localStorage.getItem('profileData');
+    if (profileData) {
+      const parsedData = JSON.parse(profileData);
+      return !!(parsedData.userFirstName && parsedData.userLastName && 
+                parsedData.customerEmail && parsedData.alterMobileNumber);
+    }
+    return false;
+  };
+
+  const handleCartClick = () => {
+    if (!checkProfileCompletion()) {
+      setShowValidationPopup(true);
+    } else {
+      handleNavigation('/mycart');
+    }
+  };
+
+  const handleProfileRedirect = () => {
+    setShowValidationPopup(false);
+    handleNavigation('/profile');
   };
 
   useEffect(() => {
@@ -63,7 +85,7 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
 
   const handleBuyRice = () => {
     navigate("/buyRice");
-  }
+  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchValue(e.target.value);
@@ -139,105 +161,109 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
   );
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-        <div className="flex items-center justify-between h-14 sm:h-20">
-          {/* Logo */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            <img
-              src={AskOxyLogo} 
-              className="h-8 w-auto sm:h-14 object-contain cursor-pointer"
-              alt="AskOxyLogo"
-              onClick={() => handleNavigation('/dashboard')}
-            />
-
-            <button
-              onClick={handleBuyRice}
-              className="flex items-center bg-transparent"
-            >
+    <>
+      <header className="bg-white shadow-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-20">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <img
-                src={buyrice}
-                className="h-8 w-auto sm:h-14 object-contain"
-                alt="BuyRice"
+                src={AskOxyLogo} 
+                className="h-8 w-auto sm:h-14 object-contain cursor-pointer"
+                alt="AskOxyLogo"
+                onClick={() => handleNavigation('/dashboard')}
               />
-            </button>
-          </div>
 
-          {/* Desktop Search */}
-          <div className="hidden sm:block flex-grow mx-4">
-            {renderSearchBar()}
-          </div>
-
-          {/* Mobile Search Icon and Expanded Search */}
-          <div className="sm:hidden flex items-center flex-grow justify-end">
-            {!isSearchVisible ? (
               <button
-                onClick={toggleSearch}
-                className="p-2 text-gray-600 hover:text-blue-500"
+                onClick={handleBuyRice}
+                className="flex items-center bg-transparent"
               >
-                <FaSearch className="w-4 h-4" />
+                <img
+                  src={buyrice}
+                  className="h-8 w-auto sm:h-14 object-contain"
+                  alt="BuyRice"
+                />
               </button>
-            ) : (
-              <div className="absolute left-0 right-0 top-0 bg-white p-2 h-14 flex items-center z-50">
-                <div className="flex-grow mx-2">
-                  {renderSearchBar()}
-                </div>
+            </div>
+
+            <div className="hidden sm:block flex-grow mx-4">
+              {renderSearchBar()}
+            </div>
+
+            <div className="sm:hidden flex items-center flex-grow justify-end">
+              {!isSearchVisible ? (
                 <button
                   onClick={toggleSearch}
-                  className="p-2 text-gray-600 hover:text-red-500"
+                  className="p-2 text-gray-600 hover:text-blue-500"
                 >
-                  <FaTimes className="w-4 h-4" />
+                  <FaSearch className="w-4 h-4" />
                 </button>
-              </div>
-            )}
-          </div>
-
-          {/* Navigation Icons */}
-          <div className="flex space-x-1 sm:space-x-4">
-            <button
-              onClick={() => handleNavigation('/profile')}
-              onMouseDown={() => setActiveButton('profile')}
-              onMouseUp={() => setActiveButton(null)}
-              onMouseLeave={() => setActiveButton(null)}
-              className={`flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full p-1 sm:px-2 sm:py-1 
-                hover:text-green-600 transition-all duration-300 hover:scale-105 active:scale-95 
-                ${location.pathname === '/profile' ? 'bg-green-50 text-green-600' : ''}`}
-            >
-              <UserCircle 
-                size={16}
-                className={`sm:w-6 sm:h-6 transition-colors duration-300 
-                  ${location.pathname === '/profile' ? 'text-green-600' : 
-                  activeButton === 'profile' ? 'text-green-500' : 'text-gray-700'}`}
-              />
-              <span className="hidden sm:inline text-sm">Profile</span>
-            </button>
-
-            <button
-              onClick={() => handleNavigation('/mycart')}
-              onMouseDown={() => setActiveButton('cart')}
-              onMouseUp={() => setActiveButton(null)}
-              onMouseLeave={() => setActiveButton(null)}
-              className={`relative flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full p-1 sm:px-2 sm:py-1 
-                hover:text-blue-600 transition-all duration-300 hover:scale-105 active:scale-95 
-                ${location.pathname === '/mycart' ? 'bg-blue-50 text-blue-600' : ''}`}
-            >
-              <ShoppingCart 
-                size={16}
-                className={`sm:w-6 sm:h-6 transition-colors duration-300 
-                  ${location.pathname === '/mycart' ? 'text-blue-600' : 
-                  activeButton === 'cart' ? 'text-blue-500' : 'text-gray-700'}`}
-              />
-              <span className="hidden sm:inline text-sm">Cart</span>
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full w-3 h-3 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs">
-                  {cartCount}
-                </span>
+              ) : (
+                <div className="absolute left-0 right-0 top-0 bg-white p-2 h-14 flex items-center z-50">
+                  <div className="flex-grow mx-2">
+                    {renderSearchBar()}
+                  </div>
+                  <button
+                    onClick={toggleSearch}
+                    className="p-2 text-gray-600 hover:text-red-500"
+                  >
+                    <FaTimes className="w-4 h-4" />
+                  </button>
+                </div>
               )}
-            </button>
+            </div>
+
+            <div className="flex space-x-1 sm:space-x-4">
+              <button
+                onClick={() => handleNavigation('/profile')}
+                onMouseDown={() => setActiveButton('profile')}
+                onMouseUp={() => setActiveButton(null)}
+                onMouseLeave={() => setActiveButton(null)}
+                className={`flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full p-1 sm:px-2 sm:py-1 
+                  hover:text-green-600 transition-all duration-300 hover:scale-105 active:scale-95 
+                  ${location.pathname === '/profile' ? 'bg-green-50 text-green-600' : ''}`}
+              >
+                <UserCircle 
+                  size={16}
+                  className={`sm:w-6 sm:h-6 transition-colors duration-300 
+                    ${location.pathname === '/profile' ? 'text-green-600' : 
+                    activeButton === 'profile' ? 'text-green-500' : 'text-gray-700'}`}
+                />
+                <span className="hidden sm:inline text-sm">Profile</span>
+              </button>
+
+              <button
+                onClick={handleCartClick}
+                onMouseDown={() => setActiveButton('cart')}
+                onMouseUp={() => setActiveButton(null)}
+                onMouseLeave={() => setActiveButton(null)}
+                className={`relative flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full p-1 sm:px-2 sm:py-1 
+                  hover:text-blue-600 transition-all duration-300 hover:scale-105 active:scale-95 
+                  ${location.pathname === '/mycart' ? 'bg-blue-50 text-blue-600' : ''}`}
+              >
+                <ShoppingCart 
+                  size={16}
+                  className={`sm:w-6 sm:h-6 transition-colors duration-300 
+                    ${location.pathname === '/mycart' ? 'text-blue-600' : 
+                    activeButton === 'cart' ? 'text-blue-500' : 'text-gray-700'}`}
+                />
+                <span className="hidden sm:inline text-sm">Cart</span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full w-3 h-3 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <ValidationPopup
+        isOpen={showValidationPopup}
+        onClose={() => setShowValidationPopup(false)}
+        onAction={handleProfileRedirect}
+      />
+    </>
   );
 };
 
