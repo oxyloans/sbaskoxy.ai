@@ -6,7 +6,8 @@ import {
   Navigate,
 } from "react-router-dom";
 import Erice from "./components/Erice";
-import RequireAuth from "./auth/RequireAuth"
+import RequireAuth from "./Auth/RequireAuth";
+
 
 import Landingpage from "./components/Landingpage";
 import Dasboard from "./components/Dashboard";

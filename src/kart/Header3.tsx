@@ -51,10 +51,13 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
 
   const checkProfileCompletion = () => {
     const profileData = localStorage.getItem('profileData');
+    console.log("profileData", profileData);
+    
     if (profileData) {
       const parsedData = JSON.parse(profileData);
-      return !!(parsedData.userFirstName && parsedData.userLastName && 
-                parsedData.customerEmail && parsedData.alterMobileNumber);
+      console.log("parsedData", parsedData);
+      return !!(parsedData.firstName && parsedData.lastName && 
+                parsedData.email && parsedData.alterMobileNumber);
     }
     return false;
   };

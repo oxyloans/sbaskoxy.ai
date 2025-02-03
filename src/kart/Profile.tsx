@@ -168,6 +168,7 @@ const ProfilePage: React.FC = () => {
           customerId: customerId,
           whatsappNumber: data.whatsappNumber || '',
         });
+        localStorage.setItem('profileData', JSON.stringify(data));
       } catch (error) {
         message.error('Error fetching profile data');
       } finally {
