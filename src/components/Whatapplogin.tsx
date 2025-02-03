@@ -4,7 +4,16 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import { X, Send, KeyRound, PhoneCall, Loader2, MessageCircle, ArrowRight, RefreshCcw } from "lucide-react";
+import {
+  X,
+  Send,
+  KeyRound,
+  PhoneCall,
+  Loader2,
+  MessageCircle,
+  ArrowRight,
+  RefreshCcw,
+} from "lucide-react";
 
 const WhatsappLogin = () => {
   const navigate = useNavigate();
@@ -52,7 +61,7 @@ const WhatsappLogin = () => {
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(() => {
-      navigate('/');
+      navigate("/");
     }, 300);
   };
 
@@ -72,7 +81,10 @@ const WhatsappLogin = () => {
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 4);
+    const pastedData = e.clipboardData
+      .getData("text")
+      .replace(/[^0-9]/g, "")
+      .slice(0, 4);
     const newOtp = [...credentials.otp];
     pastedData.split("").forEach((char, index) => {
       if (index < 4) newOtp[index] = char;
@@ -80,7 +92,10 @@ const WhatsappLogin = () => {
     setCredentials({ otp: newOtp });
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
     if (e.key === "Backspace" && !credentials.otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
@@ -110,7 +125,10 @@ const WhatsappLogin = () => {
       );
       setIsButtonEnabled(true);
       if (response.data) {
-        localStorage.setItem("mobileOtpSession", response.data.mobileOtpSession);
+        localStorage.setItem(
+          "mobileOtpSession",
+          response.data.mobileOtpSession
+        );
         localStorage.setItem("salt", response.data.salt);
         localStorage.setItem("expiryTime", response.data.otpGeneratedTime);
 
@@ -118,7 +136,10 @@ const WhatsappLogin = () => {
           setShowSuccessPopup(true);
           localStorage.setItem("userId", response.data.userId);
           localStorage.setItem("accessToken", response.data.accessToken);
-          setTimeout(() => navigate(location.state?.from || "/dashboard"), 2000);
+          setTimeout(
+            () => navigate(location.state?.from || "/dashboard"),
+            2000
+          );
         } else {
           setOtpShow(true);
           setShowSuccessPopup(true);
@@ -195,7 +216,10 @@ const WhatsappLogin = () => {
           }
         );
         if (response.data) {
-          localStorage.setItem("mobileOtpSession", response.data.mobileOtpSession);
+          localStorage.setItem(
+            "mobileOtpSession",
+            response.data.mobileOtpSession
+          );
           localStorage.setItem("salt", response.data.salt);
           localStorage.setItem("expiryTime", response.data.otpGeneratedTime);
 
@@ -218,7 +242,11 @@ const WhatsappLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100 p-4">
-      <div className={`max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 ${isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+      <div
+        className={`max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 ${
+          isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
+        }`}
+      >
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 relative">
           <button
@@ -249,12 +277,15 @@ const WhatsappLogin = () => {
 
         {/* Main Form */}
         <div className="p-6">
-          <form onSubmit={showOtp ? handleOtpSubmit : handleSubmit} className="space-y-6">
-            {/* Phone Input */}
+          <form
+            onSubmit={showOtp ? handleOtpSubmit : handleSubmit}
+            className="space-y-6"
+          >
             <div className="relative w-full">
               <label
-                className={`absolute left-4 top-3 text-gray-500 text-sm transition-all ${phoneNumber ? "-top-2 text-xs text-purple-600" : ""
-                  }`}
+                className={`relative left-4 -top-2 text-gray-500 text-sm transition-all ${
+                  phoneNumber ? " text-xs text-purple-600" : ""
+                }`}
               >
                 WhatsApp Number <span className="text-red-500">*</span>
               </label>
@@ -265,9 +296,14 @@ const WhatsappLogin = () => {
                   onChange={setPhoneNumber}
                   defaultCountry="IN"
                   international
-                  className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent"
+                  className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:border-none"
                   disabled={showOtp && !isButtonEnabled}
                   placeholder="Enter your number"
+                  style={
+                    {
+                      "--PhoneInputCountryFlag-borderColor": "transparent",
+                    } as any
+                  }
                 />
                 <PhoneCall className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
@@ -279,7 +315,7 @@ const WhatsappLogin = () => {
                 </p>
               )}
             </div>
-            
+
             {/* OTP Input */}
             {showOtp && (
               <div className="space-y-4 animate-fadeIn">
@@ -325,7 +361,6 @@ const WhatsappLogin = () => {
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="space-y-3">
               <button
                 type="submit"

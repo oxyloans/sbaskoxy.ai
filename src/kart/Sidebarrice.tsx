@@ -51,10 +51,10 @@ const Sidebar: React.FC = () => {
     { to: '/myorders', icon: <AiOutlineShoppingCart />, label: 'My Orders' },
     { to: '/profile', icon: <AiOutlineUser />, label: 'Profile Information' },
     { to: '/manageaddresses', icon: <FiMapPin />, label: 'Manage Addresses' },
-    { to: '/mycoupons', icon: <AiOutlineGift />, label: 'My Coupons' },
+    // { to: '/mycoupons', icon: <AiOutlineGift />, label: 'My Coupons' },
     { to: '/subscription', icon: <BsCreditCard />, label: 'My Subscriptions' },
     { to: '/wallet', icon: <AiOutlineWallet />, label: 'My Wallet' },
-    { to: '/myreviews', icon: <AiOutlineStar />, label: 'My Reviews & Ratings' },
+    // { to: '/myreviews', icon: <AiOutlineStar />, label: 'My Reviews & Ratings' },
     { to: '/writetous', icon: <FaRegComments />, label: 'Write to Us' },
   ];
 

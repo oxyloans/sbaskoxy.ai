@@ -102,7 +102,7 @@ const Categories: React.FC<CategoriesProps> = ({
       // Redirect to the login page after 5 seconds
       setTimeout(() => {
         navigate("/whatapplogin"); // Change "/login" to your actual login route
-      }, 2000); // 2 seconds delay
+      }, 2000); // 2seconds delay
   
       return;
     }
@@ -270,7 +270,7 @@ const Categories: React.FC<CategoriesProps> = ({
           </>
         ) : (
           <p className="text-center pt-4 text-gray-500 text-sm sm:text-base">
-            No categories available.
+           
           </p>
         )}
       </div>
