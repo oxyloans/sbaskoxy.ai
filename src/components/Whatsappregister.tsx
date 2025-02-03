@@ -250,23 +250,29 @@ const WhatsappRegister = () => {
         <div className="p-6">
           <form onSubmit={showOtp ? handleOtpSubmit : handleSubmit} className="space-y-6">
             {/* Phone Input */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="relative w-full">
+              <label
+                className={`absolute left-4 top-3 text-gray-500 text-sm transition-all ${phoneNumber ? "-top-2 text-xs text-purple-600" : ""
+                  }`}
+              >
                 WhatsApp Number <span className="text-red-500">*</span>
               </label>
+
               <div className="relative">
                 <PhoneInput
                   value={phoneNumber}
                   onChange={setPhoneNumber}
                   defaultCountry="IN"
                   international
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-all"
+                  className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent"
                   disabled={showOtp && !isButtonEnabled}
+                  placeholder="Enter your number"
                 />
-                <PhoneCall className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <PhoneCall className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
+
               {error && (
-                <p className="text-red-500 text-sm mt-1 flex items-center gap-1 animate-fadeIn">
+                <p className="text-red-500 text-sm mt-2 flex items-center gap-1 animate-fadeIn">
                   <X className="w-4 h-4" />
                   {error}
                 </p>
