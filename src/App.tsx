@@ -79,6 +79,7 @@ import WriteToUs from "./kart/Writetous";
 import TicketHistoryPage from "./kart/Tickethistory";
 import ManageAddressesPage from "./kart/Address";
 import CheckoutPage from "./kart/Checkout";
+import PrivacyPolicy from "./kart/Privacypolicy";
 
 
 
@@ -136,6 +137,7 @@ const App: React.FC = () => {
           <Route path="/tickethistory" element={<RequireAuth><TicketHistoryPage /></RequireAuth>} />
           <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
           <Route path="/manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />
+          <Route path="/privacypolicy" element={<PrivacyPolicy/>} />
 
 
           <Route path="/freesample&steelcontainer" element={<FreeSample />} />

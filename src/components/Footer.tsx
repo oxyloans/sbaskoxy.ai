@@ -1,6 +1,7 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Facebook, Instagram, Linkedin, Apple, PlayCircle, MapPin, Mail, Phone, ExternalLink } from "lucide-react";
-import Logo from "../assets/img/logo.png";
+import Logo from "../assets/img/askoxylogostatic.png";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -35,12 +36,20 @@ const Footer = () => {
     { name: 'We are hiring', path: '/dashboard?section=we-are-hiring' }
   ];
 
-  const contactInfo = [
-    {
-      icon: <MapPin className="h-5 w-5" />,
-      content: "OXYKART TECHNOLOGIES PVT LTD\nMIG-II, 287, KBHB Colony, Kukatpally,\nHyderabad, Telangana - 500072",
-      type: "text"
-    },
+ const contactInfo = [
+  {
+    icon: <MapPin className="h-5 w-5" />,
+    content: (
+      <>
+        <strong>OXYKART TECHNOLOGIES PVT LTD</strong>
+        <br />
+        CC-02, Ground Floor, Block-C, Indu Fortune Fields, The Annexe Phase-13, 
+        KPHB Colony, K P H B Phase 9, Kukatpally, Hyderabad, Telangana - 500085
+      </>
+    ),
+    type: "text",
+  },
+
     {
       icon: <Mail className="h-5 w-5" />,
       content: "support@askoxy.ai",
@@ -166,14 +175,17 @@ const Footer = () => {
               CIN: U72900TG2020PTC142391
             </div>
             <div className="flex items-center space-x-4">
-              {['Privacy Policy', 'Terms of Service'].map((item) => (
-                <a
-                  key={item}
-                  href={`#${item.toLowerCase().replace(' ', '-')}`}
+              {[
+                { name: "Privacy Policy", path: "/privacypolicy" },
+                { name: "Terms of Service", path: "/terms" },
+              ].map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
                   className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200 flex items-center"
                 >
-                  {item}
-                </a>
+                  {item.name}
+                </Link>
               ))}
             </div>
           </div>
