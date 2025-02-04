@@ -7,8 +7,8 @@ const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Item {
   itemName: string;
-  itemId: string;
-  itemImage: null;
+  itemID: string;
+  imageType: null;
   weightUnit: string;
   itemPrice: number;
   itemMrp: number | string;
@@ -17,7 +17,7 @@ interface Item {
 interface Category {
   categoryName: string;
   categoryImage: String | null;
-  items: Item[];
+  zakyaResponseList: Item[];
 }
 
 interface CategoriesProps {
@@ -33,7 +33,7 @@ interface CategoriesProps {
 }
 
 interface CartItem {
-  itemId: string;
+  itemID: string;
   cartQuantity: number;
   cartId: string;
 }
@@ -65,7 +65,7 @@ const Categories: React.FC<CategoriesProps> = ({
       if (response.data.customerCartResponseList) {
         const cartItemsMap = response.data?.customerCartResponseList.reduce(
           (acc: Record<string, number>, item: CartItem) => {
-            acc[item.itemId] = item.cartQuantity || 0;
+            acc[item.itemID] = item.cartQuantity || 0;
             return acc;
           },
           {}
@@ -87,6 +87,8 @@ const Categories: React.FC<CategoriesProps> = ({
 
   useEffect(() => {
     fetchCartData();
+    console.log({categories});
+    
   }, []); // Effect to fetch data on mount
 
 
@@ -102,12 +104,12 @@ const Categories: React.FC<CategoriesProps> = ({
       // Redirect to the login page after 5 seconds
       setTimeout(() => {
         navigate("/whatapplogin"); // Change "/login" to your actual login route
-      }, 2000); // 2seconds delay
+      }, 2000); // 2 seconds delay
   
       return;
     }
   
-    const data = { customerId: userId, itemId: item.itemId, quantity: 1 };
+    const data = { customerId: userId, itemID: item.itemID, quantity: 1 };
   
     try {
       await axios.post(`${BASE_URL}/cart-service/cart/add_Items_ToCart`, data, {
@@ -126,7 +128,7 @@ const Categories: React.FC<CategoriesProps> = ({
     try {
       await axios.patch(
         `${BASE_URL}/cart-service/cart/incrementCartData`,
-        { customerId, itemId: item.itemId }
+        { customerId, itemID: item.itemID }
       );
       fetchCartData();
     //  message.success("Item quantity increased successfully");
@@ -137,17 +139,17 @@ const Categories: React.FC<CategoriesProps> = ({
   };
 
   const handleDecreaseQuantity = async (item: Item) => {
-    console.log("item", cartItems[item.itemId]);
+    console.log("item", cartItems[item.itemID]);
     try {
-      if (cartItems[item.itemId] > 1) {
+      if (cartItems[item.itemID] > 1) {
         await axios.patch(
           `${BASE_URL}/cart-service/cart/decrementCartData`,
-          { customerId, itemId: item.itemId }
+          { customerId, itemID: item.itemID }
         );
         fetchCartData();
         // message.success("Item decreased in cart successfully.");
       } else {
-        const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
+        const targetCartId = cartData.find((cart) => cart.itemID === item.itemID)?.cartId;
         console.log(cartData, "cartData");
 
         await axios.delete(
@@ -201,13 +203,13 @@ const Categories: React.FC<CategoriesProps> = ({
             <h2 className="text-center text-lg sm:text-2xl font-semibold text-gray-800 mb-6 mt-5">
               {activeCategory} Items
             </h2>
-            <p className="text-center pt-2 pb-4 text-gray-500 text-sm sm:text-base">
+            {/* <p className="text-center pt-2 pb-4 text-gray-500 text-sm sm:text-base">
               Please select a category.
-            </p>
+            </p> */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
               {categories
                 .find((category) => category.categoryName === activeCategory)
-                ?.items.map((item, index) => (
+                ?.zakyaResponseList.map((item, index) => (
                   <div
                     key={index}
                     className="bg-purple-50 border rounded-lg p-4 text-center shadow hover:shadow-md transition hover:scale-105"
@@ -217,7 +219,7 @@ const Categories: React.FC<CategoriesProps> = ({
                       onClick={() => onItemClick(item)}
                     >
                       <img
-                        src={item.itemImage ?? "https://via.placeholder.com/150"} // Fallback image
+                        src={item.imageType ?? "https://via.placeholder.com/150"} // Fallback image
                         alt={item.itemName}
                         className="max-h-full max-w-full object-contain"
                       />
@@ -227,7 +229,7 @@ const Categories: React.FC<CategoriesProps> = ({
                     </p>
 
                     <div className="flex items-center justify-between sm:justify-center space-x-2">
-                      {cartItems && cartItems[item.itemId] > 0 ? (
+                      {cartItems && cartItems[item.itemID] > 0 ? (
                         <>
                           {/* Decrease Quantity Button */}
                           <button
@@ -242,7 +244,7 @@ const Categories: React.FC<CategoriesProps> = ({
 
                           {/* Current Quantity */}
                           <span className="text-gray-800 font-bold text-sm sm:text-base">
-                            {cartItems[item.itemId]}
+                            {cartItems[item.itemID]}
                           </span>
 
                           {/* Increase Quantity Button */}
@@ -270,7 +272,7 @@ const Categories: React.FC<CategoriesProps> = ({
           </>
         ) : (
           <p className="text-center pt-4 text-gray-500 text-sm sm:text-base">
-           
+            
           </p>
         )}
       </div>

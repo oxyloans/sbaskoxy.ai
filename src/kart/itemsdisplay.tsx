@@ -9,9 +9,9 @@ import { ShoppingCart, Home, ChevronRight, Minus, Plus, Tag, Package2, Star } fr
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Item {
-  itemId: string;
+  itemID: string;
   itemName: string;
-  itemImage: string;
+  imageType: string;
   itemDescription: string;
   itemMrp: number;
   itemPrice: number;
@@ -21,13 +21,13 @@ interface Item {
 }
 
 interface CartItem {
-  itemId: string;
+  itemID: string;
   cartQuantity: number;
   cartId: string;
 }
 
 const ItemDisplayPage = () => {
-  const { itemId } = useParams<{ itemId: string }>();
+  const { itemID } = useParams<{ itemID: string }>();
   const { state } = useLocation();
   const navigate = useNavigate();
   const [itemDetails, setItemDetails] = useState<Item | null>(state?.item || null);
@@ -41,24 +41,7 @@ const ItemDisplayPage = () => {
 
   useEffect(() => {
     fetchCartData();
-  }, [itemId]);
-
-  const fetchItemDetails = async () => {
-    try {
-      const response = await axios.get(
-        `${BASE_URL}erice-service/user/itemDetails/${itemId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setItemDetails(response.data.item);
-      setRelatedItems(response.data.relatedItems || []);
-    } catch (error) {
-      console.error("Error fetching item details:", error);
-    }
-  };
+  }, [itemID]);
 
   const fetchCartData = async () => {
     try {
@@ -73,7 +56,7 @@ const ItemDisplayPage = () => {
       if (response.data.customerCartResponseList) {
         const cartItemsMap = response.data?.customerCartResponseList.reduce(
           (acc: Record<string, number>, item: CartItem) => {
-            acc[item.itemId] = item.cartQuantity || 0;
+            acc[item.itemID] = item.cartQuantity || 0;
             return acc;
           },
           {}
@@ -108,7 +91,7 @@ const ItemDisplayPage = () => {
       return;
     }
   
-    const data = { customerId: userId, itemId: item.itemId, quantity: 1 };
+    const data = { customerId: userId, itemID: item.itemID, quantity: 1 };
   
     try {
       await axios.post(`${BASE_URL}/cart-service/cart/add_Items_ToCart`, data, {
@@ -125,14 +108,14 @@ const ItemDisplayPage = () => {
 
   const increaseCartItem = async (item: Item) => {
     try {
-      const currentQuantity = cartItems[item.itemId] || 0;
+      const currentQuantity = cartItems[item.itemID] || 0;
       const newQuantity = currentQuantity + 1;
       await axios.patch(
         `${BASE_URL}/cart-service/cart/incrementCartData`,
         {
           cartQuantity: newQuantity,
           customerId,
-          itemId: item.itemId,
+          itemID: item.itemID,
         },
         {
           headers: {
@@ -143,7 +126,7 @@ const ItemDisplayPage = () => {
       );
       setCartItems((prevCartItems) => ({
         ...prevCartItems,
-        [item.itemId]: newQuantity,
+        [item.itemID]: newQuantity,
       }));
       // message.success("Item quantity increased successfully");
       fetchCartData();
@@ -155,7 +138,7 @@ const ItemDisplayPage = () => {
 
   const decreaseCartItem = async (item: Item) => {
     try {
-      const currentQuantity = cartItems[item.itemId];
+      const currentQuantity = cartItems[item.itemID];
       if (currentQuantity === 1) {
         // Remove the item if quantity is 1
         await removeCartItem(item);
@@ -166,7 +149,7 @@ const ItemDisplayPage = () => {
           {
             cartQuantity: newQuantity,
             customerId,
-            itemId: item.itemId,
+            itemID: item.itemID,
           },
           {
             headers: {
@@ -177,7 +160,7 @@ const ItemDisplayPage = () => {
         );
         setCartItems((prevCartItems) => ({
           ...prevCartItems,
-          [item.itemId]: newQuantity,
+          [item.itemID]: newQuantity,
         }));
         // message.success("Item quantity decreased successfully");
         fetchCartData();
@@ -189,7 +172,7 @@ const ItemDisplayPage = () => {
   };
 
   const removeCartItem = async (item: Item) => {
-    const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
+    const targetCartId = cartData.find((cart) => cart.itemID === item.itemID)?.cartId;
     console.log(targetCartId);
     if (!targetCartId) return;
 
@@ -204,7 +187,7 @@ const ItemDisplayPage = () => {
       // Update the cart state after removal
       setCartItems((prevCartItems) => {
         const newCartItems = { ...prevCartItems };
-        delete newCartItems[item.itemId];
+        delete newCartItems[item.itemID];
         return newCartItems;
       });
       message.success("Item removed from cart successfully.");
@@ -216,21 +199,21 @@ const ItemDisplayPage = () => {
   };
 
   const handleIncrease = (item: Item) => {
-    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemID]: true }));
     increaseCartItem(item).finally(() =>
-      setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }))
+      setLoadingItems((prevState) => ({ ...prevState, [item.itemID]: false }))
     );
   };
 
   const handleDecrease = (item: Item) => {
-    setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: true }));
+    setLoadingItems((prevState) => ({ ...prevState, [item.itemID]: true }));
     decreaseCartItem(item).finally(() =>
-      setLoadingItems((prevState) => ({ ...prevState, [item.itemId]: false }))
+      setLoadingItems((prevState) => ({ ...prevState, [item.itemID]: false }))
     );
   };
 
   const renderCartControls = (item: Item, isMainProduct: boolean = false) => {
-    const quantity = cartItems[item.itemId] || 0;
+    const quantity = cartItems[item.itemID] || 0;
     if (quantity > 0) {
       return (
         <div className={`flex items-center ${isMainProduct ? 'justify-start' : 'justify-center'} space-x-3`}>
@@ -300,7 +283,7 @@ const ItemDisplayPage = () => {
               {/* Enhanced Image Section */}
               <div className="aspect-square relative overflow-hidden rounded-xl">
                 <img
-                  src={itemDetails.itemImage}
+                  src={itemDetails.imageType}
                   alt={itemDetails.itemName.trim()}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
@@ -362,7 +345,7 @@ const ItemDisplayPage = () => {
               >
                 <div className="aspect-square mb-4 overflow-hidden rounded-lg">
                   <img
-                    src={relatedItem.itemImage}
+                    src={relatedItem.imageType}
                     alt={relatedItem.itemName.trim()}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />

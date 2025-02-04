@@ -79,6 +79,7 @@ import WriteToUs from "./kart/Writetous";
 import TicketHistoryPage from "./kart/Tickethistory";
 import ManageAddressesPage from "./kart/Address";
 import CheckoutPage from "./kart/Checkout";
+import PaymentDetails from "./kart/PaymentScreen.js"
 
 
 const App: React.FC = () => {
@@ -125,7 +126,7 @@ const App: React.FC = () => {
 
           {/* {kartpage routes} */}
           <Route path="/buyRice" element={<Ricebags />} />
-          <Route path="/itemsdisplay" element={<ItemDisplayPage />} />
+          <Route path="/itemsdisplay/:itemId" element={<ItemDisplayPage />} />
           <Route path="/wallet" element={<RequireAuth><MyWalletPage /></RequireAuth>} />
           <Route path="/mycart" element={<CartPage />} />
           <Route path="/myorders" element={<RequireAuth><MyOrders /></RequireAuth>} />
@@ -135,7 +136,7 @@ const App: React.FC = () => {
           <Route path="/tickethistory" element={<RequireAuth><TicketHistoryPage /></RequireAuth>} />
           <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
           <Route path="/manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />
-
+          {/* <Route path ="/pay" element={<RequireAuth><PaymentDetails /></RequireAuth>} /> */}
 
 
           <Route path="/freesample&steelcontainer" element={<FreeSample />} />

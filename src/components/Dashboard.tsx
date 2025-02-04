@@ -919,7 +919,7 @@ const Dasboard = () => {
                       className="w-7 h-7 mr-2 rounded-full"
                     />
                     <span className="text-[#3c1973] text-sm leading-tight">
-                      Legal Service
+                      Legal Knowledge Hub
                     </span>
                   </button>
                 </div>

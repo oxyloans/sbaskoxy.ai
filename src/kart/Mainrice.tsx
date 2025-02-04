@@ -12,8 +12,8 @@ import { message, notification } from "antd"
 // Define Types for API Data
 interface Item {
   itemName: string;
-  itemId: string;
-  itemImage: null;
+  itemID: string;
+  imageType: null;
   weightUnit: string;
   itemPrice: number;
   itemMrp: number | string;
@@ -22,7 +22,7 @@ interface Item {
 interface Category {
   categoryName: string;
   categoryImage: String | null;
-  items: Item[];
+  zakyaResponseList: Item[];
 }
 
 
@@ -47,38 +47,14 @@ const Ricebags: React.FC = () => {
 
         const data: any[] = response.data;
 
-        // Group items by categoryId
-        const groupedCategories: Record<string, Category> = data.reduce(
-          (acc, item) => {
-            if (!acc[item.categoryId]) {
-              acc[item.categoryId] = {
-                categoryName: item.categoryName,
-                categoryImage: item.categoryImage || null,
-                items: [],
-              };
-            }
-            acc[item.categoryId].items.push({
-              itemName: item.itemName,
-              itemId: item.itemID,
-              itemImage: item.imageType || null,
-              weightUnit: item.weightUnit,
-              itemPrice: item.itemPrice,
-              itemMrp: item.itemMrp || "N/A",
-            });
-            return acc;
-          },
-          {} as Record<string, Category>
-        );
-        console.log("Fetched categories:", groupedCategories);
-
         // Convert object to array and add manual category
         const manualCategory: Category = {
           categoryName: "Free Container", 
           categoryImage: "https://via.placeholder.com/100x100",
-          items: [],
+          zakyaResponseList: [],
         };
-
-        setCategories([...Object.values(groupedCategories), manualCategory]);
+        
+        setCategories([...data, manualCategory]);
       } catch (error) {
         console.error("Error fetching categories:", error);
         // message.error("Error");
@@ -140,7 +116,9 @@ const Ricebags: React.FC = () => {
 
 
 const handleItemClick = (item: Item) => {
-    navigate(`/itemsdisplay?itemId=${item.itemId}`, { state: { item } });
+  console.log({item});
+  
+    navigate(`/itemsdisplay/${item.itemID}`, { state: { item } });
   };
 
   return (

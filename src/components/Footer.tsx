@@ -29,7 +29,7 @@ const Footer = () => {
   const services = [
     { name: 'Free Rudraksha', path: '/dashboard?section=freerudraksha' },
     { name: 'Free AI & GEN AI Training', path: '/dashboard?section=free-ai-gen-ai' },
-    { name: 'Legal Services', path: '/dashboard?section=legal-service' },
+    { name: 'Legal Knowledge Hub', path: '/dashboard?section=legal-service' },
     { name: 'Study Abroad', path: '/dashboard?section=study-abroad' },
     { name: 'My Rotary', path: '/dashboard?section=my-rotary' },
     { name: 'We are hiring', path: '/dashboard?section=we-are-hiring' }
