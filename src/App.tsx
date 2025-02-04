@@ -68,7 +68,7 @@ import RiceSalePage from "./components/Communities";
 import BMVPDF from "./components/bmvpdf";
 import BMVCOIN from "./components/Bmvcoin";
 import Whatsappregister from "./components/Whatsappregister";
-import Ricebags   from "./kart/Mainrice";
+import Ricebags from "./kart/Mainrice";
 import ItemDisplayPage from "./kart/itemsdisplay";
 import MyWalletPage from "./kart/Wallet";
 import CartPage from "./kart/Cart";
@@ -79,7 +79,7 @@ import WriteToUs from "./kart/Writetous";
 import TicketHistoryPage from "./kart/Tickethistory";
 import ManageAddressesPage from "./kart/Address";
 import CheckoutPage from "./kart/Checkout";
-import PaymentDetails from "./kart/PaymentScreen.js"
+
 
 
 const App: React.FC = () => {
@@ -101,7 +101,7 @@ const App: React.FC = () => {
             path="/allcampaignsdetails"
             element={<AllCampaignsDetails />}
           />
-          <Route path ="/bmvpdf" element={<BMVPDF />} />
+          <Route path="/bmvpdf" element={<BMVPDF />} />
           <Route path="/campaignsadd" element={<CampaignsAdd />} />{" "}
           <Route path="/universities-gpt" element={<University />} />
           <Route
@@ -136,7 +136,6 @@ const App: React.FC = () => {
           <Route path="/tickethistory" element={<RequireAuth><TicketHistoryPage /></RequireAuth>} />
           <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
           <Route path="/manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />
-          {/* <Route path ="/pay" element={<RequireAuth><PaymentDetails /></RequireAuth>} /> */}
 
 
           <Route path="/freesample&steelcontainer" element={<FreeSample />} />
@@ -155,7 +154,7 @@ const App: React.FC = () => {
             path="/machines&manufacturing"
             element={<MachinesManufacturingServices />}
           />
-          <Route path="/communities/poojitha" element={<RiceSalePage />} />  
+          <Route path="/communities/poojitha" element={<RiceSalePage />} />
           {/* <Route path="/vanabhojanam" element={<Vanabhojanam/>}/> */}
           {/* Redirect to add a trailing slash if missing */}
           <Route

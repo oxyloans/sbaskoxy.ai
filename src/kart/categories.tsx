@@ -33,7 +33,7 @@ interface CategoriesProps {
 }
 
 interface CartItem {
-  itemID: string;
+  itemId: string;
   cartQuantity: number;
   cartId: string;
 }
@@ -65,7 +65,7 @@ const Categories: React.FC<CategoriesProps> = ({
       if (response.data.customerCartResponseList) {
         const cartItemsMap = response.data?.customerCartResponseList.reduce(
           (acc: Record<string, number>, item: CartItem) => {
-            acc[item.itemID] = item.cartQuantity || 0;
+            acc[item.itemId] = item.cartQuantity || 0;
             return acc;
           },
           {}
@@ -109,7 +109,7 @@ const Categories: React.FC<CategoriesProps> = ({
       return;
     }
   
-    const data = { customerId: userId, itemID: item.itemID, quantity: 1 };
+    const data = { customerId: userId, itemId: item.itemID, quantity: 1 };
   
     try {
       await axios.post(`${BASE_URL}/cart-service/cart/add_Items_ToCart`, data, {
@@ -128,7 +128,7 @@ const Categories: React.FC<CategoriesProps> = ({
     try {
       await axios.patch(
         `${BASE_URL}/cart-service/cart/incrementCartData`,
-        { customerId, itemID: item.itemID }
+        { customerId, itemId: item.itemID }
       );
       fetchCartData();
     //  message.success("Item quantity increased successfully");
@@ -144,12 +144,12 @@ const Categories: React.FC<CategoriesProps> = ({
       if (cartItems[item.itemID] > 1) {
         await axios.patch(
           `${BASE_URL}/cart-service/cart/decrementCartData`,
-          { customerId, itemID: item.itemID }
+          { customerId, itemId: item.itemID }
         );
         fetchCartData();
         // message.success("Item decreased in cart successfully.");
       } else {
-        const targetCartId = cartData.find((cart) => cart.itemID === item.itemID)?.cartId;
+        const targetCartId = cartData.find((cart) => cart.itemId === item.itemID)?.cartId;
         console.log(cartData, "cartData");
 
         await axios.delete(

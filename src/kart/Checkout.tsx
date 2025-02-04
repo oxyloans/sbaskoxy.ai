@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { message } from 'antd';
+import { message,Alert, Modal } from 'antd';
 import Header from './Header3';
 import Footer from '../components/Footer';
 import Sidebar from './Sidebarrice';
 import { ArrowLeft, CreditCard, Truck, Tag, ShoppingBag } from 'lucide-react';
 import { FaBars, FaTimes } from 'react-icons/fa';
+import decryptEas from './decryptEas';
+import encryptEas from './encryptEas';
 
 interface CartItem {
   itemId: string;
@@ -15,22 +17,68 @@ interface CartItem {
   cartQuantity: string;
 }
 
+interface Address {
+  flatNo: string;
+  landMark: string;
+  address: string;
+  pincode: string;
+  addressType: 'Home' | 'Work' | 'Others';
+}
+
+interface ProfileData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  whatsappNumber: string;
+}
+
 const CheckoutPage: React.FC = () => {
+  const { state } = useLocation();
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState('');
-   const [cartCount, setCartCount] = useState<number>(0);
-   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [selectedPayment, setSelectedPayment] = useState<'online' | 'cash'>('online');
+  const [cartCount, setCartCount] = useState<number>(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [selectedPayment, setSelectedPayment] = useState<'ONLINE' | 'COD'>('ONLINE');
+  const [selectedAddress,setSelectedAddress] = useState<Address>(state?.selectedAddress || null)
+  const [grandTotalAmount, setGrandTotalAmount] = useState<number>(0);
+  const [profileData,setProfileData] = useState<ProfileData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    whatsappNumber: '',
+  })
+  const [merchantTransactionId,setMerchantTransactionId] = useState()
+  const [paymentStatus,setPaymentStatus] = useState()
   const navigate = useNavigate();
 
   const BASE_URL = 'https://meta.oxyglobal.tech/api';
   const customerId = localStorage.getItem('userId');
   const token = localStorage.getItem('accessToken');
+  const userData = localStorage.getItem('profileData')
+
+  const queryParams = new URLSearchParams(window.location.search);
+  const params = Object.fromEntries(queryParams.entries());
+  const orderId = params.trans;
+
 
   useEffect(() => {
     fetchCartData();
+    totalCart()
+    
+    if(userData){
+      setProfileData(JSON.parse(userData))
+    }
   }, []);
+
+  useEffect(()=>{
+    const trans = localStorage.getItem('orderId')
+    const paymentId = localStorage.getItem('paymentId')
+    if(trans===orderId){
+      Requery(paymentId)
+    }
+  },[orderId])
+
 
   const fetchCartData = async () => {
     try {
@@ -41,17 +89,40 @@ const CheckoutPage: React.FC = () => {
         }
       );
       setCartData(response.data?.customerCartResponseList || []);
+      
     } catch (error) {
       console.error('Error fetching cart items:', error);
       message.error('Failed to fetch cart items');
     }
   };
 
+  const totalCart = async() => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/cart-service/cart/cartItemData`,{
+        customerId
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setGrandTotalAmount(parseFloat(response.data.totalSum));
+      
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+      message.error('Failed to fetch cart items');
+    }
+
+   
+  };
+
   const calculateSubTotal = () => {
-    return cartData.reduce(
-      (acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity),
-      0
-    ).toFixed(2);
+   const totalCartAmount = cartData.reduce(
+    (acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity),
+    0
+  ).toFixed(2);
+    
+    return totalCartAmount
   };
 
   const handleApplyCoupon = () => {
@@ -63,21 +134,261 @@ const CheckoutPage: React.FC = () => {
   };
 
   const handlePayment = async () => {
-    setLoading(true);
     try {
-      if (selectedPayment === 'online') {
-        message.info('Redirecting to payment gateway...');
-      } else {
-        message.success('Order placed successfully!');
-        navigate('/orders');
+      if (grandTotalAmount === 0) {
+        message.error("Please add items to cart");
+        navigate("/buyRice");
+        return;
       }
-    } catch (error) {
-      console.error('Payment error:', error);
-      message.error('Payment failed. Please try again.');
+  
+      setLoading(true); // Prevent multiple clicks
+  
+      console.log({ selectedPayment });
+  
+      const response = await axios.post(
+        BASE_URL + "/order-service/orderPlacedPaymet",
+        {
+          address: selectedAddress.address,
+          amount: grandTotalAmount,
+          customerId: customerId,
+          flatNo: selectedAddress.flatNo,
+          landMark: selectedAddress.landMark,
+          orderStatus: selectedPayment,
+          pincode: selectedAddress.pincode,
+          walletAmount: 0,
+          couponCodeUsed: null,
+          couponCodeValue: 0,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      console.log(response.data);
+  
+      if (response.status === 200 && response.data) {
+        if (selectedPayment === "COD" && response.data.paymentId === null) {
+          Modal.success({
+            title: "Successfull",
+            content: "Order placed successfully",
+            okText: "Yes",
+            cancelText: "No",
+            onOk() {
+              navigate("/myorder"); // Open link in new tab
+            },
+          });
+          message.success("Order placed successfully");
+          navigate("/myorder");
+        } else if (
+          selectedPayment === "ONLINE" &&
+          response.data.paymentId !== null
+        ) {
+          const data = {
+            mid: "1152305",
+            amount: grandTotalAmount,
+            merchantTransactionId: response.data.paymentId,
+            transactionDate: new Date(),
+            terminalId: "getepay.merchant128638@icici",
+            udf1: profileData.whatsappNumber,
+            udf2: `${profileData.firstName}  ${profileData.lastName}`,
+            udf3: profileData.email,
+            udf4: "",
+            udf5: "",
+            udf6: "",
+            udf7: "",
+            udf8: "",
+            udf9: "",
+            udf10: "",
+            ru: "https://sandbox.askoxy.ai/checkout",
+            callbackUrl: `https://sandbox.askoxy.ai/checkout?trans=${response.data.paymentId}`,
+            currency: "INR",
+            paymentMode: "ALL",
+            bankId: "",
+            txnType: "single",
+            productType: "IPG",
+            txnNote: "Rice Order In Live",
+            vpa: "Getepay.merchant129014@icici",
+          };
+          console.log({ data });
+  
+          // You might need to call a payment function here (e.g., initiatePayment(data))
+          getepayPortal(data);
+        }
+      } else {
+        message.error("Order failed");
+      }
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      message.error("Payment failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  const getepayPortal = async (data:any) => {
+    console.log("getepayPortal", data);
+    const JsonData = JSON.stringify(data);
+
+    var ciphertext = encryptEas(JsonData);
+    var newCipher = ciphertext.toUpperCase();
+
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+      mid: data.mid,
+      terminalId: data.terminalId,
+      req: newCipher,
+    });
+    await fetch(
+      "https://portal.getepay.in:8443/getepayPortal/pg/generateInvoice",
+      {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow",
+      }
+    )
+      .then((response) => response.text())
+      .then((result) => {
+        var resultobj = JSON.parse(result);
+        var responseurl = resultobj.response;
+        console.log("===getepayPortal responseurl======",responseurl);
+        var data = decryptEas(responseurl);
+        console.log("===getepayPortal data======");
+        console.log(data);
+        data = JSON.parse(data);
+        localStorage.setItem("paymentId", data.paymentId)
+        localStorage.setItem("merchantTransactionId", data.merchantTransactionId)
+        const paymentUrl = data.paymentUrl; // Assuming API returns a payment link
+
+        Modal.confirm({
+          title: "Proceed to Payment?",
+          content: "Click OK to continue to the payment gateway.",
+          okText: "Yes",
+          cancelText: "No",
+          onOk() {
+            window.open(paymentUrl); // Open link in new tab
+          },
+        });
+      })
+      .catch((error) => console.log("getepayPortal", error.response));
+    setLoading(false);
+  };
+
+  function Requery(paymentId:any) {
+    setLoading(false);
+    if (
+      paymentStatus === "PENDING" ||
+      paymentStatus === "" ||
+      paymentStatus === null
+    ) {
+      // console.log("Before.....",paymentId)
+
+      const Config = {
+        "Getepay Mid": 1152305,
+        "Getepay Terminal Id": "getepay.merchant128638@icici",
+        "Getepay Key": "kNnyys8WnsuOXgBlB9/onBZQ0jiYNhh4Wmj2HsrV/wY=",
+        "Getepay IV": "L8Q+DeKb+IL65ghKXP1spg==",
+      };
+
+      const JsonData = {
+        mid: Config["Getepay Mid"],
+        paymentId: parseInt(paymentId),
+        referenceNo: "",
+        status: "",
+        terminalId: Config["Getepay Terminal Id"],
+        vpa: "",
+      };
+
+      var ciphertext = encryptEas(
+        JSON.stringify(JsonData),
+        Config["Getepay Key"],
+        Config["Getepay IV"]
+      );
+
+      var newCipher = ciphertext.toUpperCase();
+
+      var myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append(
+        "Cookie",
+        "AWSALBAPP-0=remove; AWSALBAPP-1=remove; AWSALBAPP-2=remove; AWSALBAPP-3=remove"
+      );
+
+      var raw = JSON.stringify({
+        mid: Config["Getepay Mid"],
+        terminalId: Config["Getepay Terminal Id"],
+        req: newCipher,
+      });
+
+      var requestOptions = {
+        
+      };
+
+      fetch(
+        "https://portal.getepay.in:8443/getepayPortal/pg/invoiceStatus",
+        {
+          method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow",
+        }
+      )
+        .then((response) => response.text())
+        .then((result) => {
+          var resultobj = JSON.parse(result);
+          if (resultobj.response != null) {
+            console.log("Requery ID result", paymentId);
+            var responseurl = resultobj.response;
+            console.log({ responseurl });
+            var data = decryptEas(responseurl);
+            data = JSON.parse(data);
+            console.log("Payment Result", data);
+            setPaymentStatus(data.paymentStatus);
+            console.log(data.paymentStatus);
+            if (
+              data.paymentStatus == "SUCCESS" ||
+              data.paymentStatus == "FAILURE"
+            ) {
+              // clearInterval(intervalId); 294182409
+              axios({
+                method: "POST",
+                url: BASE_URL + "erice-service/checkout/orderPlacedPaymet",
+                data: {
+                  paymentId: localStorage.getItem('merchantTransactionId'),
+                  paymentStatus: data.paymentStatus,
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              })
+                .then((secondResponse) => {
+                  console.log(
+                    "Order Placed with Payment API:",
+                    secondResponse.data
+                  );
+                  localStorage.removeItem('paymentId')
+                  localStorage.removeItem('merchantTransactionId')
+                  // setLoading(false);
+                  
+                })
+                .catch((error) => {
+                  console.error("Error in payment confirmation:", error);
+                });
+            } else {
+            }
+          }
+        })
+        .catch((error) => console.log("Payment Status", error));
+    }
+    // else{
+    //   clearInterval(intervalId)
+    // }
+  }
+  
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -155,21 +466,21 @@ const CheckoutPage: React.FC = () => {
                     <div className="p-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
-                          className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm transition ${selectedPayment === 'online'
-                              ? 'border-green-500 bg-green-50 text-green-700'
-                              : 'border-gray-200 hover:border-green-500'
+                          className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm transition ${selectedPayment === 'ONLINE'
+                            ? 'border-green-500 bg-green-50 text-green-700'
+                            : 'border-gray-200 hover:border-green-500'
                             }`}
-                          onClick={() => setSelectedPayment('online')}
+                          onClick={() => setSelectedPayment('ONLINE')}
                         >
                           <CreditCard className="w-4 h-4" />
                           <span className="font-medium">Online Payment</span>
                         </button>
                         <button
-                          className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm transition ${selectedPayment === 'cash'
-                              ? 'border-green-500 bg-green-50 text-green-700'
-                              : 'border-gray-200 hover:border-green-500'
+                          className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm transition ${selectedPayment === 'COD'
+                            ? 'border-green-500 bg-green-50 text-green-700'
+                            : 'border-gray-200 hover:border-green-500'
                             }`}
-                          onClick={() => setSelectedPayment('cash')}
+                          onClick={() => setSelectedPayment('COD')}
                         >
                           <Truck className="w-4 h-4" />
                           <span className="font-medium">Cash on Delivery</span>
@@ -202,7 +513,7 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <div className="p-4 bg-gray-50">
                       <button
-                        onClick={handlePayment}
+                        onClick={()=>handlePayment()}
                         disabled={loading}
                         className="w-full bg-green-500 text-white py-3 rounded-lg text-sm font-medium shadow-sm hover:bg-green-600 transition transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -221,12 +532,12 @@ const CheckoutPage: React.FC = () => {
               </div>
             </div>
           </main>
-          </div>
-          </div>
-
-          <Footer />
         </div>
-        );
+      </div>
+
+      <Footer />
+    </div>
+  );
 };
 
-        export default CheckoutPage;
+export default CheckoutPage;
