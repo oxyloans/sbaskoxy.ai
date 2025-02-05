@@ -316,7 +316,7 @@ const ManageAddressesPage: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="max-w-100 mx-auto">
+                <div className="max-w- mx-auto">
                   <h3 className="text-xl font-semibold text-gray-800 mb-6">
                     {editingId ? 'Edit Address' : 'Add New Address'}
                   </h3>

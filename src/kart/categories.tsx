@@ -75,8 +75,10 @@ const Categories: React.FC<CategoriesProps> = ({
       } else {
         setCartItems({});
         localStorage.setItem("cartCount", "0");
+        updateCartCount(0);
       }
       setCartData(response.data.customerCartResponseList);
+      
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
