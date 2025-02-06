@@ -47,7 +47,6 @@ const ItemDisplayPage = () => {
   const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [selectedSize, setSelectedSize] = useState('S');
   const customerId = localStorage.getItem("userId");
   const token = localStorage.getItem("accessToken");
   const [showChatSection, setShowChatSection] = useState(false);
@@ -55,10 +54,44 @@ const ItemDisplayPage = () => {
  
   const apiKey =""
 
+  const fetchItemDetails = async (id: string) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/product-service/getItemsList`);
+      const allItems = response.data.flatMap((category: any) => 
+        category.zakyaResponseList
+      );
+      const item = allItems.find((item: Item) => item.itemID === id);
+      if (item) {
+        setItemDetails(item);
+      }
+    } catch (error) {
+      console.error("Error fetching item details:", error);
+    }
+  };
+
+  // Updated useEffect to handle both initial load and navigation
   useEffect(() => {
-    fetchCartData();
-    fetchRelatedItems();
-  }, [itemID]);
+    if (itemID) {
+      if (!state?.item) {
+        // If no state is passed, fetch item details
+        fetchItemDetails(itemID);
+      } else {
+        // If state is passed, use it directly
+        setItemDetails(state.item);
+      }
+      fetchCartData();
+      fetchRelatedItems();
+    }
+  }, [itemID, state]); // Added state to dependencies
+
+  // Updated navigation handler for related items
+  const handleRelatedItemClick = (item: Item) => {
+    setItemDetails(item); // Update item details immediately
+    navigate(`/itemsdisplay/${item.itemID}`, { 
+      state: { item },
+      replace: true // Use replace to avoid building up history stack
+    });
+  };
 
   const fetchCartData = async () => {
     try {
@@ -87,6 +120,8 @@ const ItemDisplayPage = () => {
       console.error("Error fetching cart items:", error);
     }
   };
+
+  
 
   const fetchRelatedItems = async () => {
     try {
@@ -427,7 +462,7 @@ const ItemDisplayPage = () => {
                           src={item.imageType}
                           alt={item.itemName}
                           className="w-full h-full object-cover"
-                          onClick={() => navigate(`/itemsdisplay/${item.itemID}`, { state: { item } })}
+                          onClick={() => handleRelatedItemClick(item)}
                         />
                         <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-0.5 rounded-full text-xs">
                           {calculateDiscount(item.itemMrp, item.itemPrice)}% OFF
