@@ -66,6 +66,7 @@ const FreeChatGpt: React.FC = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
 
   const userId = localStorage.getItem("userId");
 
@@ -248,22 +249,41 @@ const FreeChatGpt: React.FC = () => {
 
    // 50ms delay to ensure DOM updates first
   };
+
   
-  const handleMultichainID = () => {
-    axios
-      .get(
-        `https://meta.oxyglobal.tech/api/user-service/getProfile/${localStorage.getItem(
-          "userId"
-        )}`
-      )
-      .then((response) => {
-        console.log(response.data);
-        setmultichainid(response.data.multiChainId);
-        setbmvcoin(response.data.coinAllocated);
-      })
-      .catch((error) => {
-        console.error("There was an error making the request:", error);
-      });
+  
+  const handleMultichainID = async () => {
+    const userId = localStorage.getItem("userId");
+  
+    if (!userId) {
+      console.error("User ID not found in localStorage.");
+      return;
+    }
+  
+    try {
+      const response = await axios.get(
+        `https://meta.oxyglobal.tech/api/user-service/getProfile/${userId}`
+      );
+  
+      if (response.data) {
+        console.log("User Profile Data:", response.data);
+        setmultichainid(response.data.multiChainId || "N/A");
+        setbmvcoin(response.data.coinAllocated || 0);
+      } else {
+        console.warn("No data found in response.");
+      }
+    } catch (error) {
+      console.error("Error fetching profile data:", error);
+    }
+  };
+
+  
+  const handleMultiCopy = () => {
+    if (multichainid) {
+      navigator.clipboard.writeText(multichainid);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 sec
+    }
   };
 
   const query = new URLSearchParams(location.search).get("search") || "";
@@ -272,40 +292,59 @@ const FreeChatGpt: React.FC = () => {
       {/* Main Content Section */}
       <div className="flex flex-col flex-grow">
         {/* Header */}
-        <div className="flex w-full justify-between items-center p-4 bg-white border-b border-gray-300 shadow-md">
-          <h2 className="text-[#3c1973] text-lg sm:text-xl tracking-wide">
-            Welcome {profileData ? `${profileData.firstName} ` : "Guest"}
-          </h2>
-          <div className="flex flex-wrap items-center justify-center sm:justify-between gap-4 mt-4">
-            {/* Blockchain ID */}
-            {multichainid && (
-              <div className="bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md text-center w-full sm:w-fit">
-                <p className="text-sm sm:text-base font-semibold">
-                  Blockchain ID: {multichainid}
-                </p>
-              </div>
-            )}
+        <div className="flex flex-col sm:flex-row w-full justify-between items-center p-4 bg-white border-b border-gray-300 shadow-md">
+  {/* Welcome Section */}
+  <div className="flex items-center mb-4 sm:mb-0">
+    <h2 className="text-[#3c1973] text-lg sm:text-xl tracking-wide font-semibold">
+      Welcome {profileData ? `${profileData.firstName} ` : "Guest"}
+    </h2>
+  </div>
 
-            {/* BMVCOINS Section */}
-            <div className="w-full sm:w-fit">
-              <button
-                onClick={() => handleBmvCoin()}
-                className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md text-sm sm:text-base font-semibold transition-all hover:bg-blue-700"
-              >
-                {showBlockchainText
-                  ? "Go to BLOCK CHAIN"
-                  : `BMVCOINS: ${bmvcoin}`}
-              </button>
-            </div>
-          </div>
-          <div
-            className="flex items-center bg-gray-200 rounded-lg p-1 space-x-2 cursor-pointer"
-            onClick={handleNewChatClick}
-          >
-            <h3 className="font-semibold text-[#3c1973]">New Chat</h3>
-            <PencilSquareIcon className="w-6 h-6 text-[#3c1973]" />
-          </div>
-        </div>
+  {/* Blockchain ID and BMVCOINS Section */}
+  <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+    {/* Blockchain ID */}
+    {multichainid && (
+      <div className="bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-3 w-full sm:w-fit">
+        <p className="text-sm sm:text-base font-semibold">
+          Blockchain ID: {"******" + multichainid.slice(-6)}
+        </p>
+        <button
+          onClick={handleMultiCopy}
+          className="bg-gray-500 text-white px-2 py-1 text-xs rounded hover:bg-gray-600 transition duration-200"
+        >
+          {copied ? "Copied!" : "Copy ID"}
+        </button>
+        <a
+          href="http://bmv.money:2750/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-blue-600 text-white px-3 py-1 text-xs rounded hover:bg-blue-700 transition duration-200"
+        >
+          Go to Blockchain
+        </a>
+      </div>
+    )}
+
+    {/* BMVCOINS Section */}
+    <div className="w-full sm:w-fit">
+      <button
+        onClick={() => handleBmvCoin()}
+        className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md text-sm sm:text-base font-semibold transition-all hover:bg-blue-700 duration-200"
+      >
+        {showBlockchainText ? "Go to BLOCK CHAIN" : `BMVCOINS: ${bmvcoin}`}
+      </button>
+    </div>
+  </div>
+
+  {/* New Chat Section */}
+  <div
+    className="flex items-center bg-gray-200 rounded-lg p-2 space-x-2 cursor-pointer mt-4 sm:mt-0 hover:bg-gray-300 transition duration-200"
+    onClick={handleNewChatClick}
+  >
+    <h3 className="font-semibold text-[#3c1973]">New Chat</h3>
+    <PencilSquareIcon className="w-6 h-6 text-[#3c1973]" />
+  </div>
+</div>
 
         {/* Scrollable Chat Container */}
         <div

@@ -74,6 +74,7 @@ const TicketHistoryPage: React.FC = () => {
         console.error("Error parsing profile data:", error);
       }
     }
+    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
     fetchTickets();
   }, [selectedStatus, storedProfileData]);
 

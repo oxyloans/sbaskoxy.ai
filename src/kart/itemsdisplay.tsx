@@ -8,17 +8,23 @@ import {
 } from 'lucide-react';
 import Footer from "../components/Footer";
 import Header from "./Header3";
+import { parse } from "path";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Item {
   itemID: string;
+  itemId: string;
   itemName: string;
   imageType: string;
-  itemDescription: string;
+  purchaseDescription: string;
   itemMrp: number;
+  priceMrp: number | string;
+  itemQuantity: string;
+  itemUrl: string;
   itemPrice: number;
-  quantity: number;
+  itemWeight: number;
+  weightUnit: string;
   units: string;
   category: string;
 }
@@ -60,7 +66,7 @@ const ItemDisplayPage = () => {
       const allItems = response.data.flatMap((category: any) => 
         category.zakyaResponseList
       );
-      const item = allItems.find((item: Item) => item.itemID === id);
+      const item = allItems.find((item: Item) => item.itemID || item.itemId === id);
       if (item) {
         setItemDetails(item);
       }
@@ -135,21 +141,28 @@ const ItemDisplayPage = () => {
       
         // Find the category that contains the selected item
         const matchingCategory = response.data.find((category: any) =>
-          category.zakyaResponseList.some((item: any) => item.itemID === itemDetails?.itemID)
+          category.zakyaResponseList && // Ensure zakyaResponseList exists
+          Array.isArray(category.zakyaResponseList) && // Ensure it's an array
+          category.zakyaResponseList.some((item: any) => 
+            item.itemID === itemDetails?.itemID || item.itemID === itemDetails?.itemId
+          )
         );
-      
-        if (matchingCategory) {
+        
+        if (matchingCategory && Array.isArray(matchingCategory.zakyaResponseList)) {
           // Extract related items, excluding the selected one
           const categoryItems = matchingCategory.zakyaResponseList
-            .filter((item: any) => item.itemID !== itemDetails?.itemID)
+            .filter((item: any) => 
+              item.itemID !== itemDetails?.itemID && item.itemID !== itemDetails?.itemId // Corrected logical condition
+            )
             .slice(0, 4); // Limit to 4 items
-      
+        
           console.log("Related Items:", categoryItems);
           setRelatedItems(categoryItems);
         } else {
           console.log("No matching category found for this item.");
           setRelatedItems([]);
         }
+        
       
 } catch (error) {
       console.error("Error fetching related items:", error);
@@ -318,13 +331,17 @@ const ItemDisplayPage = () => {
                 <div className="relative">
                   <div className="aspect-square rounded-lg overflow-hidden">
                     <img
-                      src={itemDetails?.imageType}
+                      src={itemDetails?.imageType || itemDetails?.itemUrl }
                       alt={itemDetails?.itemName}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="absolute top-4 right-4 bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
-                    {itemDetails && calculateDiscount(itemDetails.itemMrp, itemDetails.itemPrice)}% OFF
+                    {itemDetails &&
+                      calculateDiscount(
+                        Number(itemDetails.itemMrp) || Number(itemDetails.priceMrp),
+                        Number(itemDetails.itemPrice)
+                      )}% OFF
                   </div>
                 </div>
 
@@ -342,14 +359,14 @@ const ItemDisplayPage = () => {
 
                   <div className="flex items-baseline gap-4">
                     <span className="text-3xl font-bold text-purple-600">₹{itemDetails?.itemPrice}</span>
-                    <span className="text-lg text-gray-500 line-through">₹{itemDetails?.itemMrp}</span>
+                    <span className="text-lg text-gray-500 line-through">₹{itemDetails?.itemMrp || itemDetails?.priceMrp}</span>
                   </div>
 
                  
 
                   {/* Quantity and Add to Cart */}
                   <div className="space-y-4">
-                    {itemDetails && cartItems[itemDetails.itemID] ? (
+                    {itemDetails && cartItems[itemDetails.itemID || itemDetails.itemId] ? (
                       <div className="flex items-center space-x-4">
                         <button
                           className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
@@ -358,7 +375,7 @@ const ItemDisplayPage = () => {
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="font-bold text-xl w-8 text-center">
-                          {cartItems[itemDetails.itemID]}
+                          {cartItems[itemDetails.itemID || itemDetails.itemId]}
                         </span>
                         <button
                           className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
@@ -387,14 +404,14 @@ const ItemDisplayPage = () => {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="flex items-center gap-2">
                   <Package2 className="w-5 h-5 text-purple-600" />
-                  <span>{itemDetails?.quantity} {itemDetails?.units}</span>
+                  <span>{itemDetails?.itemWeight || itemDetails?.itemQuantity} {itemDetails?.weightUnit || itemDetails?.units}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Tag className="w-5 h-5 text-purple-600" />
                   <span>{itemDetails?.category}</span>
                 </div>
               </div>
-              <p className="text-gray-600">{itemDetails?.itemDescription}</p>
+              <p className="text-gray-600">{itemDetails?.purchaseDescription}</p>
             </div>
           </div>
 

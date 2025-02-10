@@ -78,11 +78,11 @@ const SubscriptionCard: React.FC<{
             ₹{plan.amount.toLocaleString()}
           </h2>
           <p className="text-lg font-medium text-purple-600">
-            Get Amount: ₹{plan.getAmount.toLocaleString()}
+          Wallet Balance:₹{plan.getAmount.toLocaleString()}
           </p>
           <p className="text-gray-600">
-            Limit: ₹{plan.limitAmount.toLocaleString()}
-            <span className="text-sm text-gray-400"> /month</span>
+          Monthly Usage Limit: ₹{plan.limitAmount.toLocaleString()}
+
           </p>
         </div>
       </div>
@@ -143,6 +143,7 @@ const Subscription: React.FC = () => {
 
   useEffect(() => {
     getPlans();
+    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
   }, []);
 
   return (
@@ -171,7 +172,7 @@ const Subscription: React.FC = () => {
                   Choose Your Perfect Plan
                 </h1>
                 <p className="text-lg text-gray-600">
-                  Select a subscription that best fits your needs. Upgrade or downgrade at any time.
+                Subscribe & Save Upto ₹500 – Hassle-Free Fresh Rice Delivery!
                 </p>
               </div>
 
@@ -195,7 +196,7 @@ const Subscription: React.FC = () => {
                 ))}
               </div>
 
-              <div className="mt-16 space-y-8">
+              {/* <div className="mt-16 space-y-8">
                 <h2 className="text-2xl font-bold text-gray-900 text-center">
                   All Plans Include
                 </h2>
@@ -221,7 +222,7 @@ const Subscription: React.FC = () => {
                     />
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           </main>
         </div>

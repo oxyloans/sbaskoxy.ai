@@ -21,11 +21,11 @@ interface CartItem {
   itemId: string;
   itemName: string;
   itemPrice: string;
-  itemMrp: string;
-  itemImage: string;
+  priceMrp: number | string;
+  itemUrl: string;
   itemDescription: string;
   units: string;
-  quantity: string;
+  itemQuantity: string;
   cartQuantity: string;
   cartId: string;
 }
@@ -79,6 +79,9 @@ const CartPage: React.FC = () => {
     } finally {
       // setIsLoading(false);
     }
+  };
+  const handleImageClick = (item: CartItem) => {
+    navigate(`/itemsdisplay/${item.itemId}`, { state: { item } });
   };
 
   const fetchCartData = async () => {
@@ -308,10 +311,10 @@ const CartPage: React.FC = () => {
                     <div className="flex items-center space-x-4">
                       <div
                         className="w-20 h-20 bg-gray-200 cursor-pointer"
-                        onClick={() => setSelectedItemDetails(item)}
+                        onClick={() => handleImageClick(item)}
                       >
                         <img
-                          src={item.itemImage}
+                          src={item.itemUrl}
                           alt={item.itemName}
                           className="w-full h-full object-cover"
                         />
@@ -319,10 +322,10 @@ const CartPage: React.FC = () => {
                       <div>
                         <h3 className="font-bold text-center md:text-left">{item.itemName}</h3>
                         <p className="text-sm text-center md:text-left">
-                          Weight: {item.quantity} {item.units}
+                          Weight: {item.itemQuantity} {item.units}
                         </p>
                         <p className="text-sm line-through text-red-500 text-center md:text-left">
-                          MRP: ₹{item.itemMrp}
+                          MRP: ₹{item.priceMrp}
                         </p>
                         <p className="text-green-600 font-bold text-center md:text-left">₹{item.itemPrice}</p>
                       </div>
@@ -471,7 +474,7 @@ const CartPage: React.FC = () => {
 
 
         {/* Item Details Modal */}
-        {selectedItemDetails && (
+        {/* {selectedItemDetails && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
             <div className="bg-white p-6 rounded-lg w-96">
               <h2 className="text-xl font-bold">{selectedItemDetails.itemName}</h2>
@@ -484,7 +487,7 @@ const CartPage: React.FC = () => {
               </button>
             </div>
           </div>
-        )}
+        )} */}
 
         <Footer />
       </div>

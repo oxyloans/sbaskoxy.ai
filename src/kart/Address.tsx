@@ -239,7 +239,7 @@ const ManageAddressesPage: React.FC = () => {
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-md p-6">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-gray-800">Manage Addresses</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Manage Address</h2>
                 {!showForm && (
                   <button
                     onClick={() => setShowForm(true)}

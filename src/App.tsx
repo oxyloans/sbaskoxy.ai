@@ -99,6 +99,7 @@ import TicketHistoryPage from "./kart/Tickethistory";
 import ManageAddressesPage from "./kart/Address";
 import CheckoutPage from "./kart/Checkout";
 import PrivacyPolicy from "./kart/Privacypolicy";
+import ReferralPage from "./kart/Referral";
 
 
 const App: React.FC = () => {
@@ -196,6 +197,7 @@ const App: React.FC = () => {
           <Route path="/mycart" element={<CartPage />} />
           <Route path="/myorders" element={<RequireAuth><MyOrders /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          <Route path="/referral" element={<RequireAuth><ReferralPage /></RequireAuth>} />
           <Route path="/subscription" element={<RequireAuth><SubscriptionPage /></RequireAuth>} />
           <Route path="/writetous/:id" element={<RequireAuth><WriteToUs /></RequireAuth>} />
           <Route path="/writetous" element={<RequireAuth><WriteToUs /></RequireAuth>} />

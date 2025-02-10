@@ -4,29 +4,31 @@ import axios from "axios";
 import Header from "./Header3";
 import Footer from "../components/Footer";
 import Sidebar from "./Sidebarrice";
-import { FaBars, FaTimes } from "react-icons/fa";
 import { FiUploadCloud, FiClock, FiMessageSquare, FiCheckCircle } from "react-icons/fi";
 import { Menu, X } from 'lucide-react';
 
-
 interface ProfileData {
-  firstName: string;
-  lastName: string;
-  email: string;
+  userFirstName: string;
+  userLastName: string;
+  customerEmail: string;
   whatsappNumber: string;
+}
+
+interface FormErrors {
+  query: string;
+  documentId: string;
 }
 
 const WriteToUs: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const userQuery = queryParams.get("userQuery");
   const navigate = useNavigate();
   
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [cartCount, setCartCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [errors, setErrors] = useState<FormErrors>({ query: "", documentId: "" });
 
   const [formData, setFormData] = useState({
     query: "",
@@ -35,51 +37,85 @@ const WriteToUs: React.FC = () => {
   });
 
   const [profileData, setProfileData] = useState<ProfileData>({
-    firstName: "",
-    lastName: "",
-    email: "",
+    userFirstName: "",
+    userLastName: "",
+    customerEmail: "",
     whatsappNumber: "",
   });
 
   const storedProfileData = localStorage.getItem("profileData") || "";
   const storedUserId = localStorage.getItem("userId") || "";
 
-  const [userquery, setUserQuery] = useState<string>(userQuery || "");
-  const [ticketId, setTicketId] = useState<string>(id || "");
-
   useEffect(() => {
     if (storedProfileData) {
       setProfileData(JSON.parse(storedProfileData));
     }
-    if (id) setTicketId(id);
-    if (userQuery) setUserQuery(userQuery);
-  }, [id, userQuery, storedProfileData]);
+    fetchExistingQuery();
+    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
+  }, [id]);
+
+  const fetchExistingQuery = async () => {
+    if (!id) return;
+    
+    try {
+      const response = await axios.get(
+        `https://meta.oxyglobal.tech/api/writetous-service/getQuery/${id}`
+      );
+      if (response.data) {
+        setFormData(prev => ({
+          ...prev,
+          query: response.data.query || ""
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching query:", error);
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = { query: "", documentId: "" };
+    let isValid = true;
+
+    if (!formData.query.trim()) {
+      newErrors.query = "Query is required";
+      isValid = false;
+    }
+    
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = event.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setIsSubmitting(true);
 
-    let data = {
+    const data = {
       adminDocumentId: "",
       askOxyOfers: "FREESAMPLE",
-      comments: id ? formData.query : "",
-      email: profileData.email,
+      comments: formData.query,
+      email: profileData.customerEmail,
       id: id || "",
-      mobileNumber: profileData.whatsappNumber,
+      mobileNumber: localStorage.getItem("whatsappNumber") || profileData.whatsappNumber,
       projectType: "ASKOXY",
-      query: id ? userQuery : formData.query,
+      query: formData.query,
       queryStatus: "PENDING",
       resolvedBy: id ? "user" : "",
       resolvedOn: "",
       status: "",
-      userDocumentId: formData.documentId || "",
+      userDocumentId: formData.documentId,
       userId: storedUserId,
     };
 
@@ -90,6 +126,7 @@ const WriteToUs: React.FC = () => {
       );
       setFormData({ query: "", documentName: "", documentId: "" });
       showNotification("Query submitted successfully!", "success");
+      navigate("/tickethistory");
     } catch (error) {
       console.error("Error submitting query", error);
       showNotification("Failed to submit query. Please try again.", "error");
@@ -121,11 +158,12 @@ const WriteToUs: React.FC = () => {
         }
       );
 
-      setFormData((prevState) => ({
-        ...prevState,
+      setFormData(prev => ({
+        ...prev,
         documentName: response.data.documentName,
         documentId: response.data.id,
       }));
+      setErrors(prev => ({ ...prev, documentId: "" }));
       showNotification("File uploaded successfully!", "success");
     } catch (error) {
       console.error("Error uploading file", error);
@@ -149,25 +187,25 @@ const WriteToUs: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-    <Header cartCount={cartCount} />
+      <Header cartCount={cartCount} />
 
-    <div className="lg:hidden p-4">
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-      >
-        {isSidebarOpen ? <X /> : <Menu />}
-      </button>
-    </div>
+      <div className="lg:hidden p-4">
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
+        >
+          {isSidebarOpen ? <X /> : <Menu />}
+        </button>
+      </div>
 
-    <div className="flex-1 p-4 lg:p-6">
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-          <Sidebar />
-        </div>
+      <div className="flex-1 p-4 lg:p-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
+            <Sidebar />
+          </div>
 
-        <main className="flex-1">
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <main className="flex-1">
+            <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="p-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
                   <div className="space-y-2">
@@ -196,10 +234,8 @@ const WriteToUs: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        name="firstName"
-                        value={profileData.firstName}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-gray-50"
-                        placeholder="Enter your name"
+                        value={profileData.userFirstName + " " + profileData.userLastName}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50"
                         readOnly
                       />
                     </div>
@@ -210,10 +246,9 @@ const WriteToUs: React.FC = () => {
                       </label>
                       <input
                         type="email"
-                        name="email"
-                        value={profileData.email}
+                        value={profileData.customerEmail}
                         readOnly
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-500"
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50"
                       />
                     </div>
 
@@ -223,17 +258,16 @@ const WriteToUs: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        name="mobileNumber"
-                        value={profileData.whatsappNumber}
+                        value={ localStorage.getItem("whatsappNumber") || profileData.whatsappNumber}
                         readOnly
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-500"
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50"
                       />
                     </div>
 
                     {id === undefined && (
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-gray-700">
-                          Attachment
+                          Attachment *
                         </label>
                         <div className="relative">
                           <label className="w-full flex flex-col items-center px-4 py-6 bg-purple-50 text-purple-600 rounded-lg border-2 border-purple-100 border-dashed cursor-pointer hover:bg-purple-100 transition-all duration-300">
@@ -261,6 +295,9 @@ const WriteToUs: React.FC = () => {
                               <span>{formData.documentName}</span>
                             </div>
                           )}
+                          {errors.documentId && (
+                            <p className="mt-1 text-sm text-red-500">{errors.documentId}</p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -268,16 +305,21 @@ const WriteToUs: React.FC = () => {
 
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-gray-700">
-                      Your Query
+                      Your Query *
                     </label>
                     <textarea
                       rows={4}
                       name="query"
                       value={formData.query}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
+                      className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${
+                        errors.query ? 'border-red-500' : 'border-gray-200'
+                      }`}
                       placeholder="Please describe your query in detail..."
                     ></textarea>
+                    {errors.query && (
+                      <p className="text-sm text-red-500">{errors.query}</p>
+                    )}
                   </div>
 
                   <button

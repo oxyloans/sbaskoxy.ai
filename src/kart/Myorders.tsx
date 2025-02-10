@@ -53,6 +53,7 @@ const MyOrders: React.FC = () => {
 
   useEffect(() => {
     fetchOrders();
+    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
   }, []);
 
   const fetchOrders = async (): Promise<void> => {

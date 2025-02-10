@@ -69,6 +69,7 @@ const CheckoutPage: React.FC = () => {
     if(userData){
       setProfileData(JSON.parse(userData))
     }
+    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
   }, []);
 
   useEffect(()=>{

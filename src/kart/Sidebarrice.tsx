@@ -5,9 +5,9 @@ import {
   AiOutlineUser,
   AiOutlineWallet,
 } from 'react-icons/ai';
-import { FiMapPin } from 'react-icons/fi';
+import { FiMapPin  } from 'react-icons/fi';
 import { BsCreditCard } from 'react-icons/bs';
-import { FaRegComments } from 'react-icons/fa';
+import { FaRegComments,FaUserFriends } from 'react-icons/fa';
 
 const AnimatedLogoutButton = ({ onClick, isMobile }: { onClick: () => void, isMobile: boolean }) => {
   const [buttonState, setButtonState] = useState('default');
@@ -64,26 +64,20 @@ const AnimatedLogoutButton = ({ onClick, isMobile }: { onClick: () => void, isMo
     <button
       onClick={handleClick}
       disabled={isAnimating}
-      className={`relative w-full h-12 rounded-md bg-transparent text-gray-600 font-medium overflow-hidden transition-all duration-200 
-        hover:bg-[#faf5ff] flex items-center justify-center md:justify-start py-3 px-4 ${isAnimating ? 'cursor-not-allowed' : ''}`}
+      className={`relative w-full h-12 rounded-md bg-transparent text-gray-600 font-medium overflow-hidden 
+        transition-all duration-200 hover:bg-[#faf5ff] flex items-center justify-start py-3 px-4 
+        ${isAnimating ? 'cursor-not-allowed' : ''}`}
       onMouseEnter={() => !isAnimating && setButtonState('hover')}
       onMouseLeave={() => !isAnimating && setButtonState('default')}
     >
       <div className="flex items-center w-full">
-        {/* Doorway */}
         <svg className="h-6 w-6" viewBox="0 0 100 100">
           <path
             d="M93.4 86.3H58.6c-1.9 0-3.4-1.5-3.4-3.4V17.1c0-1.9 1.5-3.4 3.4-3.4h34.8c1.9 0 3.4 1.5 3.4 3.4v65.8c0 1.9-1.5 3.4-3.4 3.4z"
             className="fill-[#4B5563]"
           />
-          <path
-            className="bang opacity-0"
-            d="M40.5 43.7L26.6 31.4l-2.5 6.7zM41.9 50.4l-19.5-4-1.4 6.3zM40 57.4l-17.7 3.9 3.9 5.7z"
-            fill="white"
-          />
         </svg>
 
-        {/* Figure */}
         <svg 
           className={`h-6 w-6 absolute transition-all duration-300 transform perspective-1000
             ${getFigureTransform()}`}
@@ -91,7 +85,7 @@ const AnimatedLogoutButton = ({ onClick, isMobile }: { onClick: () => void, isMo
         >
           <circle cx="52.1" cy="32.4" r="6.4" className="fill-[#4B5563]" />
           <path
-            d="M50.7 62.8c-1.2 2.5-3.6 5-7.2 4-3.2-.9-4.9-3.5-4-7.8.7-3.4 3.1-13.8 4.1-15.8 1.7-3.4 1.6-4.6 7-3.7 4.3.7 4.6 2.5 4.3 5.4-.4 3.7-2.8 15.1-4.2 17.9z"
+            d="M50.7 62.8c-1.2 2.5-3.6 5-7.2 4-3.2-.9-3.9-3.5-4-7.8.7-3.4 3.1-13.8 4.1-15.8 1.7-3.4 1.6-4.6 7-3.7 4.3.7 4.6 2.5 4.3 5.4-.4 3.7-2.8 15.1-4.2 17.9z"
             className="fill-[#4B5563]"
           />
           <g className="arm1 transition-transform duration-300">
@@ -120,7 +114,6 @@ const AnimatedLogoutButton = ({ onClick, isMobile }: { onClick: () => void, isMo
           </g>
         </svg>
 
-        {/* Door */}
         <svg
           className={`h-6 w-6 absolute transition-transform duration-300 transform perspective-1000 origin-left
             ${getDoorTransform()}`}
@@ -133,8 +126,7 @@ const AnimatedLogoutButton = ({ onClick, isMobile }: { onClick: () => void, isMo
           <circle cx="66" cy="50" r="3.7" className="fill-white" />
         </svg>
 
-        {/* Button Text */}
-        <span className="ml-3 text-sm hidden md:block">Sign Out</span>
+        <span className="ml-3 text-sm">Sign Out</span>
       </div>
     </button>
   );
@@ -165,20 +157,21 @@ const Sidebar = () => {
   const menuItems = [
     { to: '/myorders', icon: <AiOutlineShoppingCart />, label: 'My Orders' },
     { to: '/profile', icon: <AiOutlineUser />, label: 'Profile Information' },
-    { to: '/manageaddresses', icon: <FiMapPin />, label: 'Manage Addresses' },
-    { to: '/subscription', icon: <BsCreditCard />, label: 'My Subscriptions' },
-    { to: '/wallet', icon: <AiOutlineWallet />, label: 'My Wallet' },
+    { to: '/wallet', icon: <AiOutlineWallet />, label: 'My Wallet' },   
+    { to: '/subscription', icon: <BsCreditCard />, label: 'My Subscriptions' },    
+    { to: '/referral', icon: <FaUserFriends />, label: 'Referral' },
     { to: '/writetous', icon: <FaRegComments />, label: 'Write to Us' },
   ];
 
   return (
-    <aside className="w-20 md:w-64 bg-white rounded-xl shadow-sm p-4 flex flex-col items-center md:items-start transition-all duration-200">
+    <aside className="w-full md:w-64 bg-white rounded-xl shadow-sm p-4 flex flex-col items-start transition-all duration-200">
       <style>
         {`
           .nav-link {
             position: relative;
             transition: all 0.2s ease;
             color: #4B5563;
+            width: 100%;
           }
 
           .nav-link::before {
@@ -193,23 +186,6 @@ const Sidebar = () => {
             transition: transform 0.2s ease;
           }
 
-          .nav-link::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color:rgb(230, 217, 251);
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: -1;
-          }
-
-          .nav-link:hover::after {
-            opacity: 1;
-          }
-
           .nav-link.active {
             color: #9333ea;
             font-weight: 600;
@@ -219,39 +195,26 @@ const Sidebar = () => {
             transform: scaleY(1);
           }
 
-          .nav-link:hover .icon {
-            transform: translateX(2px);
-          }
-
           .icon {
             transition: transform 0.2s ease;
-          }
-
-          @media (max-width: 768px) {
-            .nav-link {
-              padding: 0.75rem;
-            }
-            
-            .icon {
-              font-size: 1.5rem;
-            }
+            font-size: 1.5rem;
           }
         `}
       </style>
       <nav className="w-full">
-        <ul className="space-y-6">
+        <ul className="space-y-4">
           {menuItems.map((item) => (
             <li key={item.label} className="relative w-full">
               <NavLink
                 to={item.to}
                 className={({ isActive }) =>
-                  `nav-link flex items-center justify-center md:justify-start py-3 px-4 rounded-md ${
+                  `nav-link flex items-center justify-start py-3 px-4 rounded-md ${
                     isActive ? 'active' : ''
                   }`
                 }
               >
-                <span className="icon text-2xl">{item.icon}</span>
-                <span className="ml-3 text-sm font-medium hidden md:block">
+                <span className="icon">{item.icon}</span>
+                <span className="ml-3 text-sm font-medium">
                   {item.label}
                 </span>
               </NavLink>
