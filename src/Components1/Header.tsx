@@ -5,6 +5,7 @@ import AuthorInfo from "../components/AuthorInfo";
 import axios from "axios";
 import { FaUserEdit } from "react-icons/fa";
 import Fr from '../assets/img/logo.png'
+import buyrice from "../assets/img/buyrice.png";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -57,6 +58,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         console.error("There was an error making the request:", error);
       });
   }, []);
+  const handleBuyRice = () => {
+    navigate("/buyRice");
+  }
   //[#351664]
   return (
     <header className={`bg-white w-full text-black shadow-md p-2`}>
@@ -77,6 +81,16 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           className="flex items-center text-2xl font-bold bg-transparent border-none cursor-pointer focus:outline-none"
           aria-label="Go to home"
         >
+          <button
+            onClick={handleBuyRice}
+            className="flex items-center p-2 bg-transparent"
+          >
+            <img
+              src={buyrice}
+              className="h-12 w-auto object-contain"
+              alt="BuyRice"
+            />
+          </button>
           {/* <span className="text-white">ASKOXY</span>
           <span className="text-[#ffa800]">.AI</span> */}
           <img src={Fr} alt="logo" className="w-28 pl-4 h-17" />

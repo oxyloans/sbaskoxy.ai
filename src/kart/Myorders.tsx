@@ -24,7 +24,7 @@ interface OrderHistory {
 
 interface OrderData {
   orderItems: OrderItem[];
-  orderHistory: OrderHistory[];
+  orderHistory: OrderHistory[] | null;
 }
 
 interface Order {
@@ -42,20 +42,20 @@ interface Order {
 const MyOrders: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailsData, setOrderDetailsData] = useState<OrderData | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [allOrders, setOrders] = useState<Order[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortOption, setSortOption] = useState('newest');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortOption, setSortOption] = useState<string>('newest');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [cartCount, setCartCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await axios.post(API_URL, { customerId });
@@ -67,7 +67,7 @@ const MyOrders: React.FC = () => {
     }
   };
 
-  const getOrderDetails = async (orderId: string) => {
+  const getOrderDetails = async (orderId: string): Promise<OrderData | null> => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
@@ -79,14 +79,30 @@ const MyOrders: React.FC = () => {
           },
         }
       );
-      return response.data[0];
+
+      const orderData = response.data[0];
+      if (!orderData) {
+        throw new Error("No order data received");
+      }
+
+      // Ensure orderHistory is an array
+      if (!Array.isArray(orderData.orderHistory)) {
+        orderData.orderHistory = [];
+      }
+
+      // Ensure orderItems is an array
+      if (!Array.isArray(orderData.orderItems)) {
+        orderData.orderItems = [];
+      }
+
+      return orderData;
     } catch (error) {
       console.error("Error fetching order details:", error);
       return null;
     }
   };
 
-  const handleOrderClick = async (order: Order) => {
+  const handleOrderClick = async (order: Order): Promise<void> => {
     setSelectedOrder(order);
     const details = await getOrderDetails(order.orderId);
     if (details) {
@@ -121,18 +137,18 @@ const MyOrders: React.FC = () => {
     return statusMap[status] || "Unknown";
   };
 
-  const filteredOrders = allOrders.filter(order => {
-    const matchesSearch = searchQuery === '' || 
+  const filteredOrders = allOrders.filter((order: Order) => {
+    const matchesSearch = searchQuery === '' ||
       order.newOrderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items?.some(item => 
+      order.items?.some((item: OrderItem) =>
         item.itemName?.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-    const matchesStatus = statusFilter === 'all' || 
+    const matchesStatus = statusFilter === 'all' ||
       getStatusText(order.orderStatus).toLowerCase() === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
-  }).sort((a, b) => {
+  }).sort((a: Order, b: Order) => {
     switch (sortOption) {
       case 'newest':
         return new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime();
@@ -147,7 +163,7 @@ const MyOrders: React.FC = () => {
     }
   });
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     if (!dateString || dateString === 'N/A') return 'N/A';
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: 'numeric',
@@ -321,17 +337,21 @@ const MyOrders: React.FC = () => {
                 <div>
                   <h4 className="font-medium mb-3">Order Timeline</h4>
                   <div className="space-y-3">
-                    {orderDetailsData.orderHistory.map((history, idx) => (
-                      <div key={idx} className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
-                        <div>
-                          <p className="font-medium">{getStatusText(history.status)}</p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(history.createdAt).toLocaleString()}
-                          </p>
+                    {orderDetailsData?.orderHistory && Array.isArray(orderDetailsData.orderHistory) ? (
+                      orderDetailsData.orderHistory.map((history, idx) => (
+                        <div key={idx} className="flex items-start gap-3">
+                          <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                          <div>
+                            <p className="font-medium">{getStatusText(history.status)}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(history.createdAt).toLocaleString()}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-gray-500">No timeline data available</p>
+                    )}
                   </div>
                 </div>
               </div>

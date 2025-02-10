@@ -70,7 +70,7 @@ const CampaignsAdd: React.FC = () => {
         uploadFormData.append("file", file);
 
         const response = await axios.post(
-          "http://65.0.147.157:9002/api/upload-service/upload?id=45880e62-acaf-4645-a83e-d1c8498e923e&fileType=aadhar",
+          "https://meta.oxyloans.com/api/upload-service/upload?id=45880e62-acaf-4645-a83e-d1c8498e923e&fileType=aadhar",
           uploadFormData,
           {
             headers: {
@@ -92,14 +92,6 @@ const CampaignsAdd: React.FC = () => {
               },
             ],
           }));
-
-          // setFileList((prev) => [
-          //   ...prev,
-          //   {
-          //     imageUrl: response.data.documentPath,
-          //     status: true,
-          //   },
-          // ]);
 
           setImageErrorMessage("");
         } else {
@@ -143,26 +135,21 @@ const CampaignsAdd: React.FC = () => {
     }
 
     // Validate image URLs
-    if (formData.imageUrl.length === 0) {
-      setTypeErrorMessage("At least one image is required");
-      isValid = false;
-    }
+    // if (formData.imageUrl.length === 0) {
+    //   setTypeErrorMessage("At least one image is required");
+    //   isValid = false;
+    // }
 
     // Validate campaign description
     if (formData.campaignDescription.trim() === "") {
       setDescErrorMessage("Campaign description is required");
       isValid = false;
     }
-
-    // If any validation failed, prevent API call
     if (!isValid) {
       setIsSubmitting(false);
-      return; // Stop further execution
+      return;
     }
-
-    // Proceed with API call if all conditions are valid
     setIsSubmitting(true);
-
     const requestPayload = {
       askOxyCampaignDto: [
         {
@@ -178,7 +165,7 @@ const CampaignsAdd: React.FC = () => {
 
     try {
       const response = await axios.patch(
-        "https://meta.oxyglobal.tech/api/auth-service/auth/addCampaignTypes",
+        "https://meta.oxyglobal.tech/api/marketing-service/campgin/addCampaignTypes",
         requestPayload,
         {
           headers: {
@@ -194,7 +181,7 @@ const CampaignsAdd: React.FC = () => {
           campaignType: "",
           campaignDescription: "",
           imageUrl: [],
-          campaignTypeAddBy: "",
+          campaignTypeAddBy: "RAMA",
         });
       } else {
         setErrorMessage("Failed to add campaign. Please try again.");
@@ -209,14 +196,14 @@ const CampaignsAdd: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       {/* Sidebar */}
-      <div className="lg:w-1/4 w-full p-4">
-        <Sidebar />
-      </div>
-      <div className="lg:w-3/4 w-full p-6 flex justify-center items-center">
+      {/* <div className="lg:w-1/4 w-full p-4"> */}
+      <Sidebar />
+      {/* </div> */}
+      <div className="flex flex-1 justify-center items-center p-6">
         <div className="w-full max-w-2xl bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
             Add New Campaign
           </h1>
           <form>
@@ -381,7 +368,7 @@ const CampaignsAdd: React.FC = () => {
               >
                 <option value="RAMA">RAMA</option>
                 <option value="RADHA">RADHA</option>
-                <option value="SRIDHAR">SRIDHAR</option>
+                <option value="HARI">SRIDHAR</option>
               </select>
             </div>
 

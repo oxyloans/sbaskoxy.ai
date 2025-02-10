@@ -36,7 +36,7 @@ interface Message {
 }
 
 const ItemDisplayPage = () => {
-  const { itemID } = useParams<{ itemID: string }>();
+  const { itemId } = useParams<{ itemId: string }>();
   const { state } = useLocation();
   const navigate = useNavigate();
   const [itemDetails, setItemDetails] = useState<Item | null>(state?.item || null);
@@ -71,10 +71,13 @@ const ItemDisplayPage = () => {
 
   // Updated useEffect to handle both initial load and navigation
   useEffect(() => {
-    if (itemID) {
+
+    console.log({itemId});
+    
+    if (itemId) {
       if (!state?.item) {
         // If no state is passed, fetch item details
-        fetchItemDetails(itemID);
+        fetchItemDetails(itemId);
       } else {
         // If state is passed, use it directly
         setItemDetails(state.item);
@@ -82,14 +85,14 @@ const ItemDisplayPage = () => {
       fetchCartData();
       fetchRelatedItems();
     }
-  }, [itemID, state]); // Added state to dependencies
+  }, [itemId, state]); // Added state to dependencies
 
   // Updated navigation handler for related items
   const handleRelatedItemClick = (item: Item) => {
     setItemDetails(item); // Update item details immediately
     navigate(`/itemsdisplay/${item.itemID}`, { 
       state: { item },
-      replace: true // Use replace to avoid building up history stack
+      replace: true 
     });
   };
 

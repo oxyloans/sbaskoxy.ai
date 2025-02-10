@@ -50,7 +50,7 @@ const AllCampaignsDetails: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://meta.oxyglobal.tech/api/auth-service/auth/getAllCampaignDetails",
+        "https://meta.oxyglobal.tech/api/marketing-service/campgin/getAllCampaignDetails",
         {
           headers: {
             accept: "application/json",
@@ -76,9 +76,14 @@ const AllCampaignsDetails: React.FC = () => {
       onOk: async () => {
         try {
           const response = await axios.patch(
-            "https://meta.oxyglobal.tech/api/auth-service/auth/deactivate-campaign",
+            "https://meta.oxyglobal.tech/api/marketing-service/campgin/activate-deactivate-campaign",
             {
-              askOxyCampaignDto: [{ campaignType: campaign.campaignType }],
+              askOxyCampaignDto: [
+                {
+                  campaignType: campaign.campaignType,
+                  campaignStatus: !campaign.campaignStatus,
+                },
+              ],
             },
             {
               headers: {
@@ -88,9 +93,6 @@ const AllCampaignsDetails: React.FC = () => {
           );
 
           if (response.status === 200) {
-            // setCampaigns((prev) =>
-            //   prev.filter((campaign) => campaign.campaignType !== campaign.campaignType)
-            // );
             message.success("Campaign deactivated successfully.");
           } else {
             message.error("Failed to deactivate the campaign.");
@@ -135,7 +137,7 @@ const AllCampaignsDetails: React.FC = () => {
         uploadFormData.append("file", file);
 
         const response = await axios.post(
-          "http://65.0.147.157:9002/api/upload-service/upload?id=45880e62-acaf-4645-a83e-d1c8498e923e&fileType=aadhar",
+          "https://meta.oxyloans.com/api/upload-service/upload?id=45880e62-acaf-4645-a83e-d1c8498e923e&fileType=aadhar",
           uploadFormData,
           {
             headers: {
@@ -146,17 +148,6 @@ const AllCampaignsDetails: React.FC = () => {
         );
 
         if (response.data.uploadStatus === "UPLOADED") {
-          // setFormData((prev) => ({
-          //   ...prev,
-          //   imageUrls: [
-          //     ...prev.imageUrls,
-          //     {
-          //       imageUrl: response.data.documentPath,
-          //       status: true,
-          //       imageId: response.data.id,
-          //     },
-          //   ],
-          // }));
           setFileList((prev) => [
             ...prev,
             {
@@ -221,7 +212,7 @@ const AllCampaignsDetails: React.FC = () => {
 
     try {
       const response = await axios.patch(
-        "https://meta.oxyglobal.tech/api/auth-service/auth/addCampaignTypes",
+        "https://meta.oxyglobal.tech/api/marketing-service/campgin/addCampaignTypes",
         requestPayload,
         {
           headers: {
@@ -316,29 +307,30 @@ const AllCampaignsDetails: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
-      <div className="w-full lg:w-1/5 text-white p-2">
-        <Sidebar />
-      </div>
+    <div className="flex flex-col md:flex-row min-h-screen">
+      <Sidebar />
 
-      <div className="flex-1 p-4 sm:p-6 lg:p-8 mx-auto w-full max-w-full md:max-w-7xl">
+      <div className="flex-3 p-4 sm:p-6 lg:p-8 mx-auto w-full max-w-full md:max-w-7xl">
         <h1 className="text-xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6">
           All Campaign Details
         </h1>
         {loading ? (
           <p className="text-gray-600">Loading campaigns...</p>
         ) : (
-          <Table
-            columns={columns}
-            dataSource={campaigns}
-            rowKey={(record) => record.campaignType}
-            pagination={false}
-            className="border border-gray-300"
-            scroll={{ x: window.innerWidth < 768 ? 800 : undefined }}
-          />
+          <div className="overflow-x-auto">
+            <Table
+              columns={columns}
+              dataSource={campaigns}
+              rowKey={(record) => record.campaignType}
+              pagination={false}
+              className="border border-gray-300"
+              scroll={{ x: window.innerWidth < 768 ? 800 : undefined }}
+            />
+          </div>
         )}
       </div>
 
+      {/* Update Campaign Modal */}
       <Modal
         title="Update Campaign"
         visible={isUpdateModalVisible}
@@ -354,6 +346,7 @@ const AllCampaignsDetails: React.FC = () => {
       >
         {currentCampaign && (
           <div>
+            {/* Campaign Description Input */}
             <Input.TextArea
               rows={4}
               value={formData.campaignDescription}
@@ -366,6 +359,8 @@ const AllCampaignsDetails: React.FC = () => {
               placeholder="Update campaign description"
               className="mb-4"
             />
+
+            {/* Image Upload Section */}
             <div className="flex flex-col gap-2">
               <label className="relative">
                 <div className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 cursor-pointer transition-colors w-fit">
@@ -392,6 +387,8 @@ const AllCampaignsDetails: React.FC = () => {
                   className="hidden"
                 />
               </label>
+
+              {/* Uploading Indicator */}
               {isUploading && (
                 <div className="flex items-center text-sm text-gray-600">
                   <div className="w-4 h-4 mr-2 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
@@ -399,7 +396,10 @@ const AllCampaignsDetails: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Image Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+              {/* Display Existing Images */}
               {formData.imageUrls.map(
                 (image, index) =>
                   image.status && (
@@ -408,7 +408,7 @@ const AllCampaignsDetails: React.FC = () => {
                         <div className="aspect-[4/3]">
                           <img
                             src={image.imageUrl}
-                            alt={`Image not found`}
+                            alt={`Campaign Image ${index + 1}`}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                           />
                         </div>
@@ -432,7 +432,6 @@ const AllCampaignsDetails: React.FC = () => {
                             />
                           </svg>
                         </button>
-
                         <div className="absolute bottom-3 left-3 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
                           Image {index + 1} of {formData.imageUrls.length}
                         </div>
@@ -441,13 +440,14 @@ const AllCampaignsDetails: React.FC = () => {
                   )
               )}
 
+              {/* Display Newly Uploaded Images */}
               {fileList.map((image, index) => (
                 <div key={index} className="relative group">
                   <div className="relative rounded-2xl overflow-hidden border-2 border-gray-100">
                     <div className="aspect-[4/3]">
                       <img
                         src={image.imageUrl}
-                        alt={`Image not found`}
+                        alt={`Uploaded Image ${index + 1}`}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     </div>
@@ -471,14 +471,15 @@ const AllCampaignsDetails: React.FC = () => {
                         />
                       </svg>
                     </button>
-
                     <div className="absolute bottom-3 left-3 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
-                      Image {index + 1} of {formData.imageUrls.length}
+                      Image {index + 1} of {fileList.length}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* Error Message for Images */}
             {imageErrorMessage && (
               <p className="text-red-500 mt-2">{imageErrorMessage}</p>
             )}

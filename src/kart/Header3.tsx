@@ -92,6 +92,7 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchValue(e.target.value);
+    
   };
 
   const toggleSearch = () => {

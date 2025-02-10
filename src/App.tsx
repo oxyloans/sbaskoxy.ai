@@ -125,6 +125,7 @@ const App: React.FC = () => {
           />
           <Route path="/campaignsadd" element={<CampaignsAdd />} />
           <Route path="/sider" element={<Sidebar />} />
+          <Route path="/userqueries" element={<AllQueries />} />
           {/* WhatsApp Login (Before Clicking Sign-in) */}
           <Route path="/communities/srilakshmi" element={<RiceSalePage />} />
           {/* Dashboard (After Login) */}
@@ -194,7 +195,8 @@ const App: React.FC = () => {
           <Route path="/myorders" element={<RequireAuth><MyOrders /></RequireAuth>} />
           <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
           <Route path="/subscription" element={<RequireAuth><SubscriptionPage /></RequireAuth>} />
-          <Route path="/writetous" element={<RequireAuth><WriteToUs /></RequireAuth>} />
+          <Route path="/writetous/:id" element={<RequireAuth><WriteToUs /></RequireAuth>} />
+          <Route path="/writetous" element={<RequireAuth><WriteToUs /></RequireAuth>} />
           <Route path="/tickethistory" element={<RequireAuth><TicketHistoryPage /></RequireAuth>} />
           <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
           <Route path="/manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />

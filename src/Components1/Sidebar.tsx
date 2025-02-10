@@ -218,6 +218,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleCampaignsClick = (campaignType: string) => {
     navigate(`/dashboard/campaign/${campaignType}`);
+    toggleSidebar();
   };
 
   return (
@@ -253,12 +254,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           {" "}
           {/* Add padding-bottom to main container */}
           {/* First Section */}
-          <div className="pt-4 px-4 space-y-3">
+          <div className="pt-4 px-3 space-y-3">
             {items.map((item, index) => (
               <button
                 key={index}
                 onClick={() => handleClick(item)}
-                className="flex items-center w-full text-left py-2 px-4 hover:bg-gray-200 rounded-lg transition-all duration-150"
+                className="flex items-center w-full text-left py-1 px-4 hover:bg-gray-200 rounded-lg transition-all duration-150"
               >
                 {item.image && (
                   <img
@@ -274,14 +275,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             ))}
           </div>
           {/* Second Section */}
-          <div className="px-4 space-y-3">
+          <div className="px-3 py-4 space-y-2">
             {campaigns.map((campaign, index) => {
               if (campaign.campaignStatus) {
                 return (
                   <button
                     key={`${campaign.campaignType}-${index}`}
                     onClick={() => handleCampaignsClick(campaign.campaignType)}
-                    className="flex items-center w-full text-left py-2 px-4 hover:bg-gray-200 rounded-lg transition-all duration-150"
+                    className="flex items-center w-full text-left py-1 px-4 hover:bg-gray-200 rounded-lg transition-all duration-150"
                   >
                     <img
                       src={
