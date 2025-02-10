@@ -94,6 +94,7 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
     setSearchValue(e.target.value);
     
   };
+  
 
   const toggleSearch = () => {
     setIsSearchVisible(!isSearchVisible);

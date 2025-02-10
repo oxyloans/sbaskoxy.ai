@@ -140,7 +140,7 @@ const Ricebags: React.FC = () => {
 
       <div 
         className="relative w-full overflow-hidden"
-        style={{ height: '25vh', minHeight: '200px', maxHeight: '300px' }}
+        style={{ height: '36vh', minHeight: '200px', maxHeight: '300px' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

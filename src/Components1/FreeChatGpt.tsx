@@ -310,7 +310,7 @@ const FreeChatGpt: React.FC = () => {
         {/* Scrollable Chat Container */}
         <div
           className="flex-grow overflow-y-auto border border-gray-300 bg-white shadow-md relative"
-          style={{ maxHeight: "calc(100vh - 120px)" }} // Adjust height for header and input bar
+          style={{ maxHeight: "calc(80vh - 120px)" }} // Adjust height for header and input bar
         >
           {/* Static Bubbles - Centered */}
           {showStaticBubbles && (

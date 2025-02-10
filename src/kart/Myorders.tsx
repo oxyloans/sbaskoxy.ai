@@ -238,7 +238,7 @@ const MyOrders: React.FC = () => {
                   <p className="mt-4 text-gray-600">Loading orders...</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredOrders.map((order) => (
                     <div
                       key={order.newOrderId}
