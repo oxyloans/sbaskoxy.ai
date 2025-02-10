@@ -91,10 +91,10 @@ const PreparationGpt: React.FC = () => {
     const accessToken = localStorage.getItem("accessToken"); // Retrieve access token
     const apiurl =
       userId !== null
-        ? `https://meta.oxyloans.com/api/student-service/user/v1/assistants?ContentType=${encodeURIComponent(
+        ? `https://meta.oxygloabal.tech/api/student-service/user/v1/assistants?ContentType=${encodeURIComponent(
             queryInput
           )}`
-        : `https://meta.oxyloans.com/api/student-service/user/v1/assistants?ContentType=${encodeURIComponent(
+        : `https://meta.oxygloabal.tech/api/student-service/user/v1/assistants?ContentType=${encodeURIComponent(
             queryInput
           )}`;
 
@@ -134,7 +134,7 @@ const PreparationGpt: React.FC = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)

@@ -97,7 +97,7 @@ const Freerudraksha: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `https://meta.oxyloans.com/api/auth-service/auth/getuserAddress?userId=${userId}`
+        `https://meta.oxygloabal.tech/api/auth-service/auth/getuserAddress?userId=${userId}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -131,7 +131,7 @@ const Freerudraksha: React.FC = () => {
     }
 
     const endpoint =
-      "https://meta.oxyloans.com/api/auth-service/auth/rudhrakshaDistribution";
+      "https://meta.oxygloabal.tech/api/auth-service/auth/rudhrakshaDistribution";
     const payload = { address, userId };
 
     try {
@@ -191,7 +191,7 @@ const Freerudraksha: React.FC = () => {
     }
 
     const endpoint =
-      "https://meta.oxyloans.com/api/auth-service/auth/rudhrakshaDistribution";
+      "https://meta.oxygloabal.tech/api/auth-service/auth/rudhrakshaDistribution";
     const payload = { userId, deliveryType };
 
     try {
@@ -244,7 +244,7 @@ const Freerudraksha: React.FC = () => {
   const navigate = useNavigate();
   const handlePopUOk = () => {
     setIsOpen(false);
-    navigate("/user-profile");
+    navigate("/dashboard/user-profile");
   };
 
   const handleWriteToUs = () => {
@@ -295,7 +295,7 @@ const Freerudraksha: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxyloans.com/api/write-to-us/student/saveData`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };

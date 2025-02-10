@@ -84,7 +84,7 @@ const AuthorizeandAgencies = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)
@@ -191,10 +191,10 @@ const AuthorizeandAgencies = () => {
       const accessToken = localStorage.getItem("accessToken"); // Retrieve access token
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/enterChat?prompt=${encodeURIComponent(
+          ? `https://meta.oxygloabal.tech/api/student-service/user/enterChat?prompt=${encodeURIComponent(
               queryInput
             )}`
-          : `https://meta.oxyloans.com/api/student-service/user/enterChat?prompt=${encodeURIComponent(
+          : `https://meta.oxygloabal.tech/api/student-service/user/enterChat?prompt=${encodeURIComponent(
               queryInput
             )}`;
 

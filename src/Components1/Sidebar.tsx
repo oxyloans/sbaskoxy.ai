@@ -111,8 +111,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       const userId = localStorage.getItem("userId");
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/queries?userId=${userId}`
-          : `https://meta.oxyloans.com/api/student-service/user/querie`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/queries?userId=${userId}`
+          : `https://meta.oxygloabal.tech/api/student-service/user/querie`;
       try {
         const response = await axios.get(apiurl);
         if (response.status === 200) {
@@ -148,8 +148,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       const userId = localStorage.getItem("userId");
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/queries?userId=${userId}`
-          : `https://meta.oxyloans.com/api/student-service/user/querie`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/queries?userId=${userId}`
+          : `https://meta.oxygloabal.tech/api/student-service/user/querie`;
       try {
         const response = await axios.get(apiurl);
         if (response.status === 200) {

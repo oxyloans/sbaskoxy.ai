@@ -69,7 +69,7 @@ const HiringService: React.FC = () => {
      setIsButtonDisabled(true);
      // API request to submit the form data
      const response = await axios.post(
-       "https://meta.oxyloans.com/api/auth-service/auth/askOxyOfferes",
+       "https://meta.oxygloabal.tech/api/auth-service/auth/askOxyOfferes",
        formData
      );
      console.log("API Response:", response.data);
@@ -97,7 +97,7 @@ const HiringService: React.FC = () => {
 
   const handlePopUOk = () => {
     setIsOpen(false);
-    navigate("/user-profile");
+    navigate("/dashboard/user-profile");
   };
 
   const handleWriteToUs = () => {
@@ -137,7 +137,7 @@ const HiringService: React.FC = () => {
 
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxyloans.com/api/write-to-us/student/saveData`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`,
     };

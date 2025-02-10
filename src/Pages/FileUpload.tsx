@@ -31,7 +31,7 @@ const FileUploadComponent: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `https://meta.oxyloans.com/api/upload-service/upload?id=87ff1a63-ccc2-4824-8d03-f1a2bef833b4&fileType=image`,
+        `https://meta.oxygloabal.tech/api/upload-service/upload?id=87ff1a63-ccc2-4824-8d03-f1a2bef833b4&fileType=image`,
         formData
       );
 

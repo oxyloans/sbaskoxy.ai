@@ -97,13 +97,13 @@ const Admin: React.FC = () => {
       // Perform multiple API requests in parallel
       const responses = await Promise.allSettled([
         axios.get(
-          "https://meta.oxyloans.com/api/auth-service/auth/usersOfferesDetails"
+          "https://meta.oxygloabal.tech/api/auth-service/auth/usersOfferesDetails"
         ),
         axios.get(
-          "https://meta.oxyloans.com/api/auth-service/auth/AllusersAddress"
+          "https://meta.oxygloabal.tech/api/auth-service/auth/AllusersAddress"
         ),
         axios.post(
-          "https://meta.oxyloans.com/api/auth-service/auth/getalluserdetailsbyrange",
+          "https://meta.oxygloabal.tech/api/auth-service/auth/getalluserdetailsbyrange",
           {
             endingDate: endDate,
             startingDate: startDate,
@@ -164,7 +164,7 @@ const Admin: React.FC = () => {
       setLoading(true);
 
       const response = await axios.post(
-        "http://65.0.147.157:9000/api/auth-service/auth/getalluserdetailsbyrange",
+        "https://meta.oxyloans.com/api/auth-service/auth/getalluserdetailsbyrange",
         {
           endingDate: endDate,
           startingDate: startDate,

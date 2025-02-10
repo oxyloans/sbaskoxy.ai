@@ -89,7 +89,7 @@ const Erice = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)
@@ -197,17 +197,17 @@ const Erice = () => {
       const userId = localStorage.getItem("userId");
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/Erice?userId=${userId}&prompt=${encodeURIComponent(
+          ? `https://meta.oxygloabal.tech/api/student-service/user/Erice?userId=${userId}&prompt=${encodeURIComponent(
               queryInput
             )}`
-          : `https://meta.oxyloans.com/api/student-service/user/Erice?prompt=${encodeURIComponent(
+          : `https://meta.oxygloabal.tech/api/student-service/user/Erice?prompt=${encodeURIComponent(
               queryInput
             )}`;
 
       // Make API request to the specified endpoint
       const response = await axios.post(
-        // // `https://meta.oxyloans.com/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
-        // `https://meta.oxyloans.com/api/student-service/user/erice?prompt=${encodeURIComponent(queryInput)}`
+        // // `https://meta.oxygloabal.tech/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
+        // `https://meta.oxygloabal.tech/api/student-service/user/erice?prompt=${encodeURIComponent(queryInput)}`
         apiurl
       );
 
@@ -312,8 +312,8 @@ const Erice = () => {
       const userId = localStorage.getItem("userId");
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/ericehistory?userId=${userId}`
-          : `https://meta.oxyloans.com/api/student-service/user/ricehistory`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/ericehistory?userId=${userId}`
+          : `https://meta.oxygloabal.tech/api/student-service/user/ricehistory`;
 
       try {
         const response = await axios.get(apiurl);
@@ -335,8 +335,8 @@ const Erice = () => {
       const userId = localStorage.getItem("userId");
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/ericehistory?userId=${userId}`
-          : `https://meta.oxyloans.com/api/student-service/user/ricehistory`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/ericehistory?userId=${userId}`
+          : `https://meta.oxygloabal.tech/api/student-service/user/ricehistory`;
 
       try {
         const response = await axios.get(apiurl);

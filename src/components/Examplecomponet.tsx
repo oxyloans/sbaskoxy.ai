@@ -78,7 +78,7 @@ const Examplecomponet = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId")
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios.get(apiUrl)
       .then(response => {
@@ -163,7 +163,7 @@ const Examplecomponet = () => {
       setriceTopicsshow(false)
       const response = await axios.post(
         
-        `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?InfoType=${encodeURIComponent(queryInput)}`
+        `https://meta.oxygloabal.tech/api/student-service/user/globalChatGpt?InfoType=${encodeURIComponent(queryInput)}`
       );
 
       // Process the API response and update the chat
@@ -288,7 +288,7 @@ const Examplecomponet = () => {
 
     try {
       const response = await axios.post(
-        `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(queryInput)}`
+        `https://meta.oxygloabal.tech/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(queryInput)}`
       );
 
       // Add the API response to chat

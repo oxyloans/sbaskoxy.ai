@@ -81,7 +81,7 @@ const Courses = () => {
    }, [messages]);
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)
@@ -186,13 +186,13 @@ const Courses = () => {
     try {
       const userId = localStorage.getItem("userId");
       // const apiurl = userId !== null
-      // ? `https://meta.oxyloans.com/api/student-service/user/Erice?userId=${userId}&prompt=${encodeURIComponent(queryInput)}`
-      // : `https://meta.oxyloans.com/api/student-service/user/Erice?prompt=${encodeURIComponent(queryInput)}`;
+      // ? `https://meta.oxygloabal.tech/api/student-service/user/Erice?userId=${userId}&prompt=${encodeURIComponent(queryInput)}`
+      // : `https://meta.oxygloabal.tech/api/student-service/user/Erice?prompt=${encodeURIComponent(queryInput)}`;
 
       // Make API request to the specified endpoint
       const response = await axios.post(
-        // // `https://meta.oxyloans.com/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
-        `https://meta.oxyloans.com/api/student-service/user/globalEducationQuery`,
+        // // `https://meta.oxygloabal.tech/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
+        `https://meta.oxygloabal.tech/api/student-service/user/globalEducationQuery`,
         {
           data: {
             queryInput,

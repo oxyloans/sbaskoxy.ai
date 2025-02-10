@@ -138,7 +138,7 @@ const [showConfirmationModal, setShowConfirmationModal] = useState(false);
       // Make both requests concurrently using Promise.all
       await Promise.all([
         axios.post(
-          "https://meta.oxyloans.com/api/auth-service/auth/rudhrakshaDistribution",
+          "https://meta.oxygloabal.tech/api/auth-service/auth/rudhrakshaDistribution",
           {
             userId: userId,
             trvellType: transportation,
@@ -146,7 +146,7 @@ const [showConfirmationModal, setShowConfirmationModal] = useState(false);
           }
         ),
         axios.patch(
-          "https://meta.oxyloans.com/api/student-service/user/profile/update",
+          "https://meta.oxygloabal.tech/api/student-service/user/profile/update",
           {
             userId: userId, // Example of data to send
             firstName: name, // Assuming you have a name field

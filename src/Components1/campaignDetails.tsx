@@ -102,7 +102,7 @@ const CampaignDetails: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxyloans.com/api/write-to-us/student/saveData`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
@@ -131,7 +131,7 @@ const CampaignDetails: React.FC = () => {
     try {
       setIsButtonDisabled(true);
       const response = await axios.post(
-        "http://182.18.139.138:9229/api/marketing-service/campgin/askOxyOfferes",
+        "https://meta.oxyglobal.tech/api/marketing-service/campgin/askOxyOfferes",
         {
           askOxyOfers: campaignType,
           userId: userId,

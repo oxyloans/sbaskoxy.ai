@@ -99,7 +99,7 @@ const UserProfile = () => {
       if (!userId) return;
       try {
         const response = await axios.get<UserProfile>(
-          `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`
+          `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`
         );
                 setIsLoading(true);
         setUserProfile(response.data);
@@ -146,7 +146,7 @@ const UserProfile = () => {
 
     try {
       await axios.patch(
-        "https://meta.oxyloans.com/api/student-service/user/profile/update",
+        "https://meta.oxygloabal.tech/api/student-service/user/profile/update",
         userProfile
       );
 

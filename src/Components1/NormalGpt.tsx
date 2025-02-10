@@ -96,10 +96,10 @@ const NormalGpt: React.FC = () => {
     setQuestionCount((prevCount) => prevCount + 1); // Increment question count
 
     const apiurl = userId
-      ? `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
+      ? `https://meta.oxygloabal.tech/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
           queryInput
         )}&userId=${userId}`
-      : `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
+      : `https://meta.oxygloabal.tech/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
           queryInput
         )}`;
 
@@ -133,7 +133,7 @@ const NormalGpt: React.FC = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)

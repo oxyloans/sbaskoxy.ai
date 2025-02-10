@@ -70,7 +70,7 @@ const CampaignsAdd: React.FC = () => {
         uploadFormData.append("file", file);
 
         const response = await axios.post(
-          "https://meta.oxyloans.com/api/upload-service/upload?id=45880e62-acaf-4645-a83e-d1c8498e923e&fileType=aadhar",
+          "https://meta.oxygloabal.tech/api/upload-service/upload?id=45880e62-acaf-4645-a83e-d1c8498e923e&fileType=aadhar",
           uploadFormData,
           {
             headers: {

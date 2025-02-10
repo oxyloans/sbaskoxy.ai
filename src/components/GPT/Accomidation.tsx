@@ -84,7 +84,7 @@ const Accomidation = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)
@@ -190,17 +190,17 @@ const Accomidation = () => {
       const userId = localStorage.getItem("userId");
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/chat?InfoType=${encodeURIComponent(
+          ? `https://meta.oxygloabal.tech/api/student-service/user/chat?InfoType=${encodeURIComponent(
               queryInput
             )}`
-          : `https://meta.oxyloans.com/api/student-service/user/chat?InfoType=${encodeURIComponent(
+          : `https://meta.oxygloabal.tech/api/student-service/user/chat?InfoType=${encodeURIComponent(
               queryInput
             )}`;
 
       // Make API request to the specified endpoint
       const response = await axios.post(
-        // // `https://meta.oxyloans.com/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
-        `https://meta.oxyloans.com/api/student-service/user/chat?InfoType=${encodeURIComponent(
+        // // `https://meta.oxygloabal.tech/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
+        `https://meta.oxygloabal.tech/api/student-service/user/chat?InfoType=${encodeURIComponent(
           queryInput
         )}`
       );

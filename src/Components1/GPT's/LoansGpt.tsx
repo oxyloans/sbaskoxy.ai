@@ -97,8 +97,8 @@ const LoansGpt: React.FC = () => {
 
        const apiurl =
          userId !== null
-           ? `https://meta.oxyloans.com/api/student-service/user/loans`
-           : `https://meta.oxyloans.com/api/student-service/user/loans`;
+           ? `https://meta.oxygloabal.tech/api/student-service/user/loans`
+           : `https://meta.oxygloabal.tech/api/student-service/user/loans`;
 
        // Make API request to the specified endpoint with Authorization header
        const response = await axios.post(
@@ -141,7 +141,7 @@ const LoansGpt: React.FC = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)

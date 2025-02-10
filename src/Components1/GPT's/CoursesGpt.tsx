@@ -89,16 +89,16 @@ const CoursesGpt: React.FC = () => {
     try {
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/chat?InfoType=${encodeURIComponent(
+          ? `https://meta.oxygloabal.tech/api/student-service/user/chat?InfoType=${encodeURIComponent(
               queryInput
             )}`
-          : `https://meta.oxyloans.com/api/student-service/user/chat?InfoType=${encodeURIComponent(
+          : `https://meta.oxygloabal.tech/api/student-service/user/chat?InfoType=${encodeURIComponent(
               queryInput
             )}`;
 
      const response = await axios.post(
-       // // `https://meta.oxyloans.com/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
-       `https://meta.oxyloans.com/api/student-service/user/globalEducationQuery`,
+       // // `https://meta.oxygloabal.tech/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
+       `https://meta.oxygloabal.tech/api/student-service/user/globalEducationQuery`,
        {
          data: {
            queryInput,
@@ -133,7 +133,7 @@ const CoursesGpt: React.FC = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)

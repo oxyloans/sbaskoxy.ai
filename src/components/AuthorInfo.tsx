@@ -101,7 +101,7 @@ const AuthorInfo: React.FC<AuthorInfoProps> = ({
 
     try {
       const response = await axios.patch(
-        "https://meta.oxyloans.com/api/student-service/user/profile/update",
+        "https://meta.oxygloabal.tech/api/student-service/user/profile/update",
         {
           userId,
           firstName: updatedFirstName,

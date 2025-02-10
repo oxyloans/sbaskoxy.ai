@@ -84,7 +84,7 @@ const AccreditationsRecognization = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)
@@ -193,8 +193,8 @@ const AccreditationsRecognization = () => {
 
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/accreditationsRecognization`
-          : `https://meta.oxyloans.com/api/student-service/user/accreditationsRecognization`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/accreditationsRecognization`
+          : `https://meta.oxygloabal.tech/api/student-service/user/accreditationsRecognization`;
 
       const response = await axios.post(apiurl, payload, {
         headers: {

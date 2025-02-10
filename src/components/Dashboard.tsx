@@ -355,8 +355,8 @@ const Dasboard = () => {
       const userId = localStorage.getItem("userId");
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/queries?userId=${userId}`
-          : `https://meta.oxyloans.com/api/student-service/user/querie`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/queries?userId=${userId}`
+          : `https://meta.oxygloabal.tech/api/student-service/user/querie`;
       try {
         const response = await axios.get(apiurl);
         if (response.status === 200) {
@@ -373,7 +373,7 @@ const Dasboard = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)
@@ -393,8 +393,8 @@ const Dasboard = () => {
       const userId = localStorage.getItem("userId");
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/queries?userId=${userId}`
-          : `https://meta.oxyloans.com/api/student-service/user/querie`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/queries?userId=${userId}`
+          : `https://meta.oxygloabal.tech/api/student-service/user/querie`;
       try {
         const response = await axios.get(apiurl);
         if (response.status === 200) {
@@ -531,10 +531,10 @@ const Dasboard = () => {
 
     const apiurl =
       userId !== null
-        ? `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
+        ? `https://meta.oxygloabal.tech/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
           queryInput
         )}&userId=${userId}`
-        : `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
+        : `https://meta.oxygloabal.tech/api/student-service/user/globalChatGpt?prompt=${encodeURIComponent(
           queryInput
         )}`;
 

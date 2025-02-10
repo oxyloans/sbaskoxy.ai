@@ -52,6 +52,10 @@ const FreeChatGpt: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [multichainid, setmultichainid] = useState("");
+  const [bmvcoin, setbmvcoin] = useState();
+  const [showBlockchainText, setShowBlockchainText] = useState(false);
+
   const [showSendButton, setShowSendButton] = useState(false);
   const [showStaticBubbles, setShowStaticBubbles] = useState(true);
   const [history, setHistory] = useState<string[]>([]);
@@ -148,18 +152,17 @@ const FreeChatGpt: React.FC = () => {
     if (value.trim()) setShowStaticBubbles(false);
   };
 
- const handleNewChatClick = () => {
-   setMessages([]); // Clear the messages
+  const handleNewChatClick = () => {
+    setMessages([]); // Clear the messages
 
+    navigate("/dashboard"); // Navigate first
+    setShowStaticBubbles(true); // Show static chat bubbles after navigation
 
-   navigate("/dashboard"); // Navigate first
-   setShowStaticBubbles(true); // Show static chat bubbles after navigation
-
-   if (inputRef.current) {
-     inputRef.current.value = ""; // Clear the input field
-     setShowSendButton(false); // Hide the send button
-   }
- };
+    if (inputRef.current) {
+      inputRef.current.value = ""; // Clear the input field
+      setShowSendButton(false); // Hide the send button
+    }
+  };
 
   // Dummy rice topics
   const riceTopics = [
@@ -221,170 +224,207 @@ const FreeChatGpt: React.FC = () => {
     }
   };
 
+  // Detect viewport size
+  useEffect(() => {}, []);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
 
-    // Detect viewport size
-    useEffect(() => {
-     
-  
-     
-    }, []);
-    useEffect(() => {
-      const params = new URLSearchParams(location.search);
-     
-      const query = params.get("query");
-  
+    const query = params.get("query");
 
-  
-      // Handle search query (store in history)
-      if (query) {
-        setShowStaticBubbles(false); // Hide rice topics when there's a query
-        handleSend(query);
-      }
-  
-  
-      // if (scrollableRef.current) {
-      //   scrollableRef.current.scrollTo({ top: 0, behavior: "smooth" });
-      // }
-    }, [location.search]);
+    // Handle search query (store in history)
+    if (query) {
+      setShowStaticBubbles(false); // Hide rice topics when there's a query
+      handleSend(query);
+    }
 
-   const query = new URLSearchParams(location.search).get("search") || "";
-return (
-  <main className="flex flex-col h-screen sm:p-2">
-    {/* Main Content Section */}
-    <div className="flex flex-col flex-grow">
-      {/* Header */}
-      <div className="flex w-full justify-between items-center p-4 bg-white border-b border-gray-300 shadow-md">
-        <h2 className="text-[#3c1973] text-lg sm:text-xl tracking-wide">
-          Welcome {profileData ? `${profileData.firstName} ` : "Guest"}
-        </h2>
-        <div
-          className="flex items-center bg-gray-200 rounded-lg p-1 space-x-2 cursor-pointer"
-          onClick={handleNewChatClick}
-        >
-          <h3 className="font-semibold text-[#3c1973]">New Chat</h3>
-          <PencilSquareIcon className="w-6 h-6 text-[#3c1973]" />
-        </div>
-      </div>
+    // if (scrollableRef.current) {
+    //   scrollableRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    // }
+      handleMultichainID();
 
-      {/* Scrollable Chat Container */}
-      <div
-        className="flex-grow overflow-y-auto border border-gray-300 bg-white shadow-md relative"
-        style={{ maxHeight: "calc(100vh - 120px)" }} // Adjust height for header and input bar
-      >
-        {/* Static Bubbles - Centered */}
-        {showStaticBubbles && (
-          <div className="absolute inset-0 flex items-center justify-center p-4 bg-opacity-75 bg-gray-50">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {riceTopics &&
-                riceTopics.map((topic) => (
-                  <div
-                    key={topic.id}
-                    className="p-3 bg-gray-100 text-black rounded-lg shadow hover:bg-gray-300 transition duration-200 cursor-pointer text-center"
-                    style={{ wordWrap: "break-word" }}
-                    onClick={() => {
-                      handleBubbleClick(topic.title);
-                      setInput(topic.title);
-                    }}
-                  >
-                    <ReactMarkdown className="font-medium">
-                      {topic.title}
-                    </ReactMarkdown>
-                  </div>
-                ))}
+  }, [location.search]);
+  const handleBmvCoin = () => {
+    navigate("/dashboard/bmvcoin");
+
+   // 50ms delay to ensure DOM updates first
+  };
+  
+  const handleMultichainID = () => {
+    axios
+      .get(
+        `https://meta.oxyglobal.tech/api/user-service/getProfile/${localStorage.getItem(
+          "userId"
+        )}`
+      )
+      .then((response) => {
+        console.log(response.data);
+        setmultichainid(response.data.multiChainId);
+        setbmvcoin(response.data.coinAllocated);
+      })
+      .catch((error) => {
+        console.error("There was an error making the request:", error);
+      });
+  };
+
+  const query = new URLSearchParams(location.search).get("search") || "";
+  return (
+    <main className="flex flex-col h-screen sm:p-2">
+      {/* Main Content Section */}
+      <div className="flex flex-col flex-grow">
+        {/* Header */}
+        <div className="flex w-full justify-between items-center p-4 bg-white border-b border-gray-300 shadow-md">
+          <h2 className="text-[#3c1973] text-lg sm:text-xl tracking-wide">
+            Welcome {profileData ? `${profileData.firstName} ` : "Guest"}
+          </h2>
+          <div className="flex flex-wrap items-center justify-center sm:justify-between gap-4 mt-4">
+            {/* Blockchain ID */}
+            {multichainid && (
+              <div className="bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md text-center w-full sm:w-fit">
+                <p className="text-sm sm:text-base font-semibold">
+                  Blockchain ID: {multichainid}
+                </p>
+              </div>
+            )}
+
+            {/* BMVCOINS Section */}
+            <div className="w-full sm:w-fit">
+              <button
+                onClick={() => handleBmvCoin()}
+                className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md text-sm sm:text-base font-semibold transition-all hover:bg-blue-700"
+              >
+                {showBlockchainText
+                  ? "Go to BLOCK CHAIN"
+                  : `BMVCOINS: ${bmvcoin}`}
+              </button>
             </div>
           </div>
-        )}
-
-        {/* Chat Messages */}
-        <div className="space-y-4 p-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-24">
-              <Example variant="loading01" />
-            </div>
-          ) : (
-            messages.map((message, index) => (
-              <div
-                key={index}
-                className={`p-4 rounded-md shadow-md ${
-                  message.type === "question"
-                    ? "bg-blue-100 text-black"
-                    : "bg-green-100 text-black"
-                }`}
-              >
-                <ReactMarkdown>{message.content}</ReactMarkdown>
-                <div className="flex items-center mt-2 space-x-2">
-                  <button
-                    className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
-                    onClick={() => handleCopy(message.content)}
-                    title="Copy"
-                  >
-                    <FaRegCopy />
-                  </button>
-                  {isReading ? (
-                    <button
-                      className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
-                      onClick={() => window.speechSynthesis.cancel()}
-                      title="Stop Read Aloud"
-                    >
-                      <FaVolumeOff />
-                    </button>
-                  ) : (
-                    <button
-                      className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
-                      onClick={() => handleReadAloud(message.content)}
-                      title="Read Aloud"
-                    >
-                      <FaVolumeUp />
-                    </button>
-                  )}
-                  <button
-                    className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
-                    onClick={() => handleShare(message.content)}
-                    title="Share"
-                  >
-                    <FaShareAlt />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+          <div
+            className="flex items-center bg-gray-200 rounded-lg p-1 space-x-2 cursor-pointer"
+            onClick={handleNewChatClick}
+          >
+            <h3 className="font-semibold text-[#3c1973]">New Chat</h3>
+            <PencilSquareIcon className="w-6 h-6 text-[#3c1973]" />
+          </div>
         </div>
-        <div ref={bottomRef}></div>
-      </div>
 
-      {/* Input Bar (Fixed at Bottom) */}
-      <div className="sticky bottom-0 w-full bg-white p-3 border-t border-gray-300 shadow-lg">
-        <div className="flex items-center">
-          <div className="flex-grow relative">
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={handleInputChangeWithVisibility}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask a question..."
-              className="w-full p-4 pl-5 pr-14 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffa800] text-gray-800 text-sm md:text-base shadow-md"
-            />
-            {showSendButton && (
-              <button
-                onClick={() => handleSend(input)}
-                className={`absolute right-4 top-1/2 transform -translate-y-1/2 px-5 py-2 rounded-full text-white font-semibold shadow-lg transition ${
-                  isLoading
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-[#ffa800] hover:bg-[#ff8c00]"
-                }`}
-                disabled={isLoading}
-              >
-                {isLoading ? "Sending" : "➤"}
-              </button>
+        {/* Scrollable Chat Container */}
+        <div
+          className="flex-grow overflow-y-auto border border-gray-300 bg-white shadow-md relative"
+          style={{ maxHeight: "calc(100vh - 120px)" }} // Adjust height for header and input bar
+        >
+          {/* Static Bubbles - Centered */}
+          {showStaticBubbles && (
+            <div className="absolute inset-0 flex items-center justify-center p-4 bg-opacity-75 bg-gray-50">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                {riceTopics &&
+                  riceTopics.map((topic) => (
+                    <div
+                      key={topic.id}
+                      className="p-3 bg-gray-100 text-black rounded-lg shadow hover:bg-gray-300 transition duration-200 cursor-pointer text-center"
+                      style={{ wordWrap: "break-word" }}
+                      onClick={() => {
+                        handleBubbleClick(topic.title);
+                        setInput(topic.title);
+                      }}
+                    >
+                      <ReactMarkdown className="font-medium">
+                        {topic.title}
+                      </ReactMarkdown>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Chat Messages */}
+          <div className="space-y-4 p-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-24">
+                <Example variant="loading01" />
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-md shadow-md ${
+                    message.type === "question"
+                      ? "bg-blue-100 text-black"
+                      : "bg-green-100 text-black"
+                  }`}
+                >
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                  <div className="flex items-center mt-2 space-x-2">
+                    <button
+                      className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
+                      onClick={() => handleCopy(message.content)}
+                      title="Copy"
+                    >
+                      <FaRegCopy />
+                    </button>
+                    {isReading ? (
+                      <button
+                        className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
+                        onClick={() => window.speechSynthesis.cancel()}
+                        title="Stop Read Aloud"
+                      >
+                        <FaVolumeOff />
+                      </button>
+                    ) : (
+                      <button
+                        className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
+                        onClick={() => handleReadAloud(message.content)}
+                        title="Read Aloud"
+                      >
+                        <FaVolumeUp />
+                      </button>
+                    )}
+                    <button
+                      className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
+                      onClick={() => handleShare(message.content)}
+                      title="Share"
+                    >
+                      <FaShareAlt />
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
+          <div ref={bottomRef}></div>
+        </div>
+
+        {/* Input Bar (Fixed at Bottom) */}
+        <div className="sticky bottom-0 w-full bg-white p-3 border-t border-gray-300 shadow-lg">
+          <div className="flex items-center">
+            <div className="flex-grow relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={handleInputChangeWithVisibility}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask a question..."
+                className="w-full p-4 pl-5 pr-14 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffa800] text-gray-800 text-sm md:text-base shadow-md"
+              />
+              {showSendButton && (
+                <button
+                  onClick={() => handleSend(input)}
+                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 px-5 py-2 rounded-full text-white font-semibold shadow-lg transition ${
+                    isLoading
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-[#ffa800] hover:bg-[#ff8c00]"
+                  }`}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Sending" : "➤"}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </main>
-);
-
+    </main>
+  );
 };
 
 export default FreeChatGpt;

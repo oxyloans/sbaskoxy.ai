@@ -27,7 +27,7 @@ const BMVCOIN = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center space-y-6 bg-gray-50">
+    <div className="min-h-screen pt-10 flex flex-col justify-center items-center space-y-6 bg-gray-50">
 <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center bg-white shadow-md rounded-lg p-4 border border-gray-200 space-y-4 sm:space-y-0 sm:space-x-4">
   {/* Blockchain ID */}
   <div className="flex items-center space-x-2 w-full sm:w-auto">

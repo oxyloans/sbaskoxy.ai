@@ -98,7 +98,7 @@ const UniversityAgents: React.FC = () => {
 
        // Make API request to the specified endpoint
        const response = await axios.post(
-         // // `https://meta.oxyloans.com/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
+         // // `https://meta.oxygloabal.tech/api/student-service/user/erice?infoType=${encodeURIComponent(queryInput)}`
          `http://65.0.147.157:9001/api/student-service/user/enterChat?prompt=${encodeURIComponent(
            queryInput
          )}`
@@ -133,7 +133,7 @@ const UniversityAgents: React.FC = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)

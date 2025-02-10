@@ -101,7 +101,6 @@ import CheckoutPage from "./kart/Checkout";
 import PrivacyPolicy from "./kart/Privacypolicy";
 
 
-
 const App: React.FC = () => {
   return (
     <Router>
@@ -109,6 +108,8 @@ const App: React.FC = () => {
       <div className="App">
         <Routes>
           <Route path="/whatapplogin" element={<Whatapplogin />} />
+          <Route path="/whatsappregister" element={<Whatsappregister />} />
+          <Route path="/thank-you" element={<ThankYouPage />} />
           <Route
             path="/communities/landmarkresidents"
             element={<RiceSalePage />}
@@ -145,6 +146,7 @@ const App: React.FC = () => {
             <Route path="studyabroad" element={<StudyAbroad />} />
             <Route path="free-chatgpt" element={<FreeChatGpt />} />
             <Route path="user-profile" element={<UserProfile />} />
+            <Route path="bmvcoin" element={<BMVCOIN />} />  
             <Route
               path="machines-manufacturing"
               element={<MachinesManufacturingServices />}

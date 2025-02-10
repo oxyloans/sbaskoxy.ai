@@ -93,8 +93,8 @@ const VisaGpt: React.FC = () => {
 
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/visa`
-          : `https://meta.oxyloans.com/api/student-service/user/visa`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/visa`
+          : `https://meta.oxygloabal.tech/api/student-service/user/visa`;
 
       const response = await axios.post(apiurl, payload, {
         headers: {
@@ -130,7 +130,7 @@ const VisaGpt: React.FC = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)

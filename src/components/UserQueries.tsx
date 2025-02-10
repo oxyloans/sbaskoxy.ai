@@ -52,7 +52,7 @@ const AllQueriesforAdmin: React.FC = () => {
     setLoader(true);
     axios
       .post(
-        `https://meta.oxyloans.com/api/erice-service/writetous/getQueries`,
+        `https://meta.oxygloabal.tech/api/erice-service/writetous/getQueries`,
         data,
         {
           headers: {
@@ -102,7 +102,7 @@ const AllQueriesforAdmin: React.FC = () => {
     setApproveLoader(true);
     axios
       .post(
-        `https://meta.oxyloans.com/api/erice-service/writetous/saveData`,
+        `https://meta.oxygloabal.tech/api/erice-service/writetous/saveData`,
         data,
         {
           headers: {
@@ -172,7 +172,7 @@ const AllQueriesforAdmin: React.FC = () => {
     // API call
     axios
       .post(
-        `https://meta.oxyloans.com/api/erice-service/writetous/uploadQueryScreenShot?userId=${userId}`,
+        `https://meta.oxygloabal.tech/api/erice-service/writetous/uploadQueryScreenShot?userId=${userId}`,
         formData,
         {
           headers: {

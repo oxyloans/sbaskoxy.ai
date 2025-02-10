@@ -84,7 +84,7 @@ const AluminiNetworksAndHealthInsurance = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)
@@ -198,8 +198,8 @@ const AluminiNetworksAndHealthInsurance = () => {
 
       const apiurl =
         userId !== null
-          ? `https://meta.oxyloans.com/api/student-service/user/alumni`
-          : `https://meta.oxyloans.com/api/student-service/user/alumni`;
+          ? `https://meta.oxygloabal.tech/api/student-service/user/alumni`
+          : `https://meta.oxygloabal.tech/api/student-service/user/alumni`;
 
       // Make API request to the specified endpoint with Authorization header
       const response = await axios.post(

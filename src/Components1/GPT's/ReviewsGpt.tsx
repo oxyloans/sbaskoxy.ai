@@ -97,8 +97,8 @@ const ReviewsGpt: React.FC = () => {
 
        const apiurl =
          userId !== null
-           ? `https://meta.oxyloans.com/api/student-service/user/reviews`
-           : `https://meta.oxyloans.com/api/student-service/user/reviews`;
+           ? `https://meta.oxygloabal.tech/api/student-service/user/reviews`
+           : `https://meta.oxygloabal.tech/api/student-service/user/reviews`;
 
        // Make API request to the specified endpoint with Authorization header
        const response = await axios.post(
@@ -141,7 +141,7 @@ const ReviewsGpt: React.FC = () => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)

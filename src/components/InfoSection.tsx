@@ -47,7 +47,7 @@ const InfoSection: React.FC = () => {
 
   //   try {
   //     const result = await axios.post(
-  //       `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?InfoType=${query}`
+  //       `https://meta.oxygloabal.tech/api/student-service/user/globalChatGpt?InfoType=${query}`
   //     );
   //     setResponse(result.data); // Assuming the response data you want is directly in `data`
   //   } catch (error) {

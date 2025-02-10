@@ -64,7 +64,7 @@ const Pushpa2GPT: React.FC = () => {
       return;
     }
   
-    const endpoint = "https://meta.oxyloans.com/api/auth-service/auth/rudhrakshaDistribution";
+    const endpoint = "https://meta.oxygloabal.tech/api/auth-service/auth/rudhrakshaDistribution";
     const payload = { userId: userid, userScriptId: scriptId };
   
     try {

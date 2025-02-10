@@ -64,7 +64,7 @@ const AllQueries: React.FC = () => {
       };
 
       const response = await axios.post(
-        "https://meta.oxyloans.com/api/write-to-us/student/getAllQueries",
+        "https://meta.oxygloabal.tech/api/write-to-us/student/getAllQueries",
         requestPayload,
         {
           headers: {
@@ -157,7 +157,7 @@ const AllQueries: React.FC = () => {
 
     try {
       const response = await fetch(
-        "https://meta.oxyloans.com/api/write-to-us/student/saveData",
+        "https://meta.oxygloabal.tech/api/write-to-us/student/saveData",
         {
           method: "POST",
           headers: {
