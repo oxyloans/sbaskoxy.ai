@@ -148,37 +148,47 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `${BASE_URL}/user-service/customerProfileDetails`,
-          {
-            params: { customerId },
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = response.data;
-        setFormData({
-          userFirstName: data.firstName || '',
-          userLastName: data.lastName || '',
-          customerEmail: data.email || '',
-          alterMobileNumber: data.alterMobileNumber || '',
-          customerId: customerId,
-          whatsappNumber: data.whatsappNumber || '',
-        });
-        localStorage.setItem('profileData', JSON.stringify(data));
-      } catch (error) {
-        message.error('Error fetching profile data');
-      } finally {
-        setIsLoading(false);
+  const fetchProfileData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(
+        `${BASE_URL}/user-service/customerProfileDetails`,
+        {
+          params: { customerId },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = response.data;
+      setFormData({
+        userFirstName: data.firstName || '',
+        userLastName: data.lastName || '',
+        customerEmail: data.email || '',
+        alterMobileNumber: data.alterMobileNumber || '',
+        customerId: customerId,
+        whatsappNumber: data.whatsappNumber || '',
+      });
+      const profileData = {
+        userFirstName: data.firstName || '',
+        userLastName: data.lastName || '',
+        customerEmail: data.email || '',
+        alterMobileNumber: data.alterMobileNumber || '',
+        customerId: customerId,
+        whatsappNumber: data.whatsappNumber || '',
       }
-    };
+      localStorage.setItem('profileData', JSON.stringify(profileData));
+    } catch (error) {
+      message.error('Error fetching profile data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchProfileData();
+  useEffect(() => {
+    if(customerId){
+      fetchProfileData();
     fetchAddresses();
-  }, [customerId, token]);
+    }
+  }, [customerId]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">

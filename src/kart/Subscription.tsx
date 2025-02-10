@@ -175,14 +175,14 @@ const Subscription: React.FC = () => {
                 </p>
               </div>
 
-              {activeSubscription && (
+              {/* {activeSubscription && (
                 <Alert variant="destructive" className="mb-8">
                   <AlertCircle className="h-5 w-5 flex-shrink-0" />
                   <AlertDescription>
                     You have an active subscription. Please complete your current subscription before selecting a new plan.
                   </AlertDescription>
                 </Alert>
-              )}
+              )} */}
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                 {subscriptionPlans.map((plan) => (
