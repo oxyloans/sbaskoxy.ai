@@ -89,7 +89,7 @@ const ReferralPage: React.FC = () => {
   };
 
   const shareReferral = (inviteLink: string) => {
-    const shareText = `Hey! I'm inviting you to join Oxy. Use my referral link to sign up: ${inviteLink}`;
+    const shareText = `Hey! I'm inviting you to join AskOxy.ai - Use my referral link to sign up: ${inviteLink}`;
 
     return {
       whatsapp: () => {
@@ -139,11 +139,11 @@ const ReferralPage: React.FC = () => {
                     <input 
                       type="text" 
                       readOnly 
-                      value={`https://www.askoxy.ai/whatsappregister?ref=${customerId}`}
+                      value={`https://www.sandbox.askoxy.ai/whatsappregister?ref=${customerId}`}
                       className="flex-1 bg-transparent focus:outline-none"
                     />
                     <button 
-                      onClick={() => shareReferral(`https://www.askoxy.ai/whatsappregister?ref=${customerId}`).copy()}
+                      onClick={() => shareReferral(`https://www.sandbox.askoxy.ai/whatsappregister?ref=${customerId}`).copy()}
                       className="ml-2 p-2 hover:bg-purple-100 rounded-full"
                     >
                       <Copy className="text-purple-600" />
@@ -157,13 +157,13 @@ const ReferralPage: React.FC = () => {
                   <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                     <div className="flex space-x-4">
                       <button 
-                        onClick={() => shareReferral(`https://www.askoxy.ai/whatsappregister?ref=${customerId}`).whatsapp()}
+                        onClick={() => shareReferral(`https://www.sandbox.askoxy.ai/whatsappregister?ref=${customerId}`).whatsapp()}
                         className="flex-1 bg-green-500 text-white py-2 rounded-lg flex items-center justify-center"
                       >
                         <FaWhatsapp className="mr-2" /> WhatsApp
                       </button>
                       <button 
-                        onClick={() => shareReferral(`https://www.askoxy.ai/whatsappregister?ref=${customerId}`).sms()}
+                        onClick={() => shareReferral(`https://www.sandbox.askoxy.ai/whatsappregister?ref=${customerId}`).sms()}
                         className="flex-1 bg-blue-500 text-white py-2 rounded-lg flex items-center justify-center"
                       >
                         <MessageCircle className="mr-2" /> SMS

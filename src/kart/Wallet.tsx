@@ -14,6 +14,9 @@ interface Transaction {
   method: string;
   description: string;
   status: 'completed' | 'pending' | 'failed';
+  walletTxAmount: number;
+  walletTxDesc:string;
+  createdAt:string;
 }
 
 const MyWalletPage: React.FC = () => {
@@ -39,7 +42,7 @@ const MyWalletPage: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await axios.post('https://meta.oxyglobal.tech/api/order-service/customerWalletData', {
-        userId: localStorage.getItem("userId")
+        customerId: localStorage.getItem("userId")
       });
       setTransactions(response.data.walletTransactions || []);
       setAmount(response.data.walletAmount || '0');
@@ -88,7 +91,7 @@ const MyWalletPage: React.FC = () => {
                     <Wallet className="w-6 h-6" />
                     <h2 className="text-lg font-semibold">Available Balance</h2>
                   </div>
-                  <p className="text-4xl font-bold mb-3">₹{Number(amount).toLocaleString()}</p>
+                  <p className="text-4xl font-bold mb-3">₹{amount.toLocaleString()}</p>
                   <div className="flex items-center text-purple-200 text-sm">
                     <div className="flex-1">Last updated: Today</div>
                     <ChevronRight className="w-4 h-4" />
@@ -167,9 +170,9 @@ const MyWalletPage: React.FC = () => {
                               }
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900">{transaction.description}</p>
+                              <p className="font-semibold text-gray-900 mb-1 w-1/2">{transaction.walletTxDesc}</p>
                               <p className="text-sm text-gray-600">
-                                {new Date(transaction.date).toLocaleDateString()} • {transaction.method}
+                                {new Date(transaction.createdAt).toLocaleDateString()} • wallet
                               </p>
                             </div>
                           </div>
@@ -179,9 +182,9 @@ const MyWalletPage: React.FC = () => {
                                 ? 'text-green-600' 
                                 : 'text-red-600'
                             }`}>
-                              {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toLocaleString()}
+                              {transaction.type === 'credit' ? '+' : '-'}₹{transaction.walletTxAmount}
                             </p>
-                            <span className={`text-xs px-2 py-1 rounded-full ${
+                            {/* <span className={`text-xs px-2 py-1 rounded-full ${
                               transaction.status === 'completed' 
                                 ? 'bg-green-100 text-green-700'
                                 : transaction.status === 'pending'
@@ -189,7 +192,7 @@ const MyWalletPage: React.FC = () => {
                                   : 'bg-red-100 text-red-700'
                             }`}>
                               {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                            </span>
+                            </span> */}
                           </div>
                         </div>
                       ))

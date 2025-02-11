@@ -43,7 +43,7 @@ const Header1: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
 
     axios
       .get(apiUrl)
@@ -59,7 +59,7 @@ const Header1: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   }, []);
   //[#351664]
   return (
-    <header className={`bg-white w-full text-black shadow-md p-2`}>
+    <header className={`bg-white w-full text-black shadow-md p-3`}>
       <div className="mx-auto flex justify-between items-center">
         {/* Mobile Menu Toggle Button */}
         <button
@@ -87,7 +87,7 @@ const Header1: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           <button
             onClick={() => {
              
-              navigate("/whatapplogin");
+              navigate("/whatsapplogin");
             }}
             className="flex items-center w-full px-4 py-3 hover:bg-gray-100 rounded-b-lg transition-all duration-150"
             role="menuitem"

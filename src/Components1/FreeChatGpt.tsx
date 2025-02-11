@@ -52,10 +52,6 @@ const FreeChatGpt: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [multichainid, setmultichainid] = useState("");
-  const [bmvcoin, setbmvcoin] = useState();
-  const [showBlockchainText, setShowBlockchainText] = useState(false);
-
   const [showSendButton, setShowSendButton] = useState(false);
   const [showStaticBubbles, setShowStaticBubbles] = useState(true);
   const [history, setHistory] = useState<string[]>([]);
@@ -66,7 +62,9 @@ const FreeChatGpt: React.FC = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
+   const [multichainid, setmultichainid] = useState("");
+   const [bmvcoin, setbmvcoin] = useState();
+   const [showBlockchainText, setShowBlockchainText] = useState(false);
 
   const userId = localStorage.getItem("userId");
 
@@ -156,7 +154,7 @@ const FreeChatGpt: React.FC = () => {
   const handleNewChatClick = () => {
     setMessages([]); // Clear the messages
 
-    navigate("/dashboard"); // Navigate first
+    navigate("/dashboard/free-chatgpt"); // Navigate first
     setShowStaticBubbles(true); // Show static chat bubbles after navigation
 
     if (inputRef.current) {
@@ -242,228 +240,187 @@ const FreeChatGpt: React.FC = () => {
     //   scrollableRef.current.scrollTo({ top: 0, behavior: "smooth" });
     // }
       handleMultichainID();
-
   }, [location.search]);
-  const handleBmvCoin = () => {
-    navigate("/dashboard/bmvcoin");
+   const handleBmvCoin = () => {
+     navigate("/dashboard/bmvcoin");
 
-   // 50ms delay to ensure DOM updates first
-  };
-
+     // 50ms delay to ensure DOM updates first
+   };
   
-  
-  const handleMultichainID = async () => {
-    const userId = localStorage.getItem("userId");
-  
-    if (!userId) {
-      console.error("User ID not found in localStorage.");
-      return;
-    }
-  
-    try {
-      const response = await axios.get(
-        `https://meta.oxyglobal.tech/api/user-service/getProfile/${userId}`
-      );
-  
-      if (response.data) {
-        console.log("User Profile Data:", response.data);
-        setmultichainid(response.data.multiChainId || "N/A");
-        setbmvcoin(response.data.coinAllocated || 0);
-      } else {
-        console.warn("No data found in response.");
-      }
-    } catch (error) {
-      console.error("Error fetching profile data:", error);
-    }
-  };
-
-  
-  const handleMultiCopy = () => {
-    if (multichainid) {
-      navigator.clipboard.writeText(multichainid);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 sec
-    }
-  };
+    const handleMultichainID = () => {
+      axios
+        .get(
+          `https://meta.oxyglobal.tech/api/user-service/getProfile/${localStorage.getItem(
+            "userId"
+          )}`
+        )
+        .then((response) => {
+          console.log(response.data);
+          setmultichainid(response.data.multiChainId);
+          setbmvcoin(response.data.coinAllocated);
+        })
+        .catch((error) => {
+          console.error("There was an error making the request:", error);
+        });
+    };
 
   const query = new URLSearchParams(location.search).get("search") || "";
-  return (
-    <main className="flex flex-col h-screen sm:p-2">
-      {/* Main Content Section */}
-      <div className="flex flex-col flex-grow">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row w-full justify-between items-center p-4 bg-white border-b border-gray-300 shadow-md">
-  {/* Welcome Section */}
-  <div className="flex items-center mb-4 sm:mb-0">
-    <h2 className="text-[#3c1973] text-lg sm:text-xl tracking-wide font-semibold">
-      Welcome {profileData ? `${profileData.firstName} ` : "Guest"}
-    </h2>
-  </div>
+  //flex flex-col flex-grow
+return (
+  <main className="flex flex-col h-screen  w-full sm:p-2 ">
+    {/*  //sm:left-64 */}
 
-  {/* Blockchain ID and BMVCOINS Section */}
-  <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-    {/* Blockchain ID */}
-    {multichainid && (
-      <div className="bg-gray-700 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-3 w-full sm:w-fit">
-        <p className="text-sm sm:text-base font-semibold">
-          Blockchain ID: {"******" + multichainid.slice(-6)}
-        </p>
+    {/* Header */}
+
+    <div className="fixed top-16 left-0 lg:left-64 right-0 border-b p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between bg-white z-10 space-y-4 sm:space-y-0">
+      {/* Left Side - Blockchain ID & BMVCOINS */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+        {/* Blockchain ID - Full on Web, Last 5 on Mobile */}
+        {multichainid && (
+          <div className="bg-gray-700 text-white px-2 py-1 rounded-lg shadow-md text-center">
+            {/* Web View: Full Blockchain ID */}
+            <p className="text-sm sm:text-base font-semibold hidden sm:block">
+              Blockchain ID: {multichainid}
+            </p>
+            {/* Mobile View: Last 5 Characters */}
+            <p className="text-sm sm:text-base font-semibold block sm:hidden">
+              BC ID: ****{multichainid.slice(-5)}
+            </p>
+          </div>
+        )}
+
+        {/* BMVCOINS Button */}
         <button
-          onClick={handleMultiCopy}
-          className="bg-gray-500 text-white px-2 py-1 text-xs rounded hover:bg-gray-600 transition duration-200"
+          onClick={handleBmvCoin}
+          className="bg-blue-600 text-white px-2 py-1 rounded-lg shadow-md text-sm sm:text-base font-semibold transition-all hover:bg-blue-700 focus:ring-4 focus:ring-blue-300"
         >
-          {copied ? "Copied!" : "Copy ID"}
+          {showBlockchainText ? "Go to BLOCK CHAIN" : `BCoins: ${bmvcoin}`}
         </button>
-        <a
-          href="http://bmv.money:2750/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-blue-600 text-white px-3 py-1 text-xs rounded hover:bg-blue-700 transition duration-200"
-        >
-          Go to Blockchain
-        </a>
       </div>
-    )}
 
-    {/* BMVCOINS Section */}
-    <div className="w-full sm:w-fit">
-      <button
-        onClick={() => handleBmvCoin()}
-        className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md text-sm sm:text-base font-semibold transition-all hover:bg-blue-700 duration-200"
+      {/* Right Side - New Chat Button */}
+      <div
+        className="flex items-center bg-gray-200 rounded-lg p-1 space-x-2 cursor-pointer hover:bg-gray-300 transition"
+        onClick={handleNewChatClick}
       >
-        {showBlockchainText ? "Go to BLOCK CHAIN" : `BMVCOINS: ${bmvcoin}`}
-      </button>
+        <h3 className="font-semibold text-[#3c1973]">New Chat</h3>
+        <PencilSquareIcon className="w-6 h-6 text-[#3c1973]" />
+      </div>
     </div>
-  </div>
 
-  {/* New Chat Section */}
-  <div
-    className="flex items-center bg-gray-200 rounded-lg p-2 space-x-2 cursor-pointer mt-4 sm:mt-0 hover:bg-gray-300 transition duration-200"
-    onClick={handleNewChatClick}
-  >
-    <h3 className="font-semibold text-[#3c1973]">New Chat</h3>
-    <PencilSquareIcon className="w-6 h-6 text-[#3c1973]" />
-  </div>
-</div>
-
-        {/* Scrollable Chat Container */}
-        <div
-          className="flex-grow overflow-y-auto border border-gray-300 bg-white shadow-md relative"
-          style={{ maxHeight: "calc(80vh - 120px)" }} // Adjust height for header and input bar
-        >
-          {/* Static Bubbles - Centered */}
-          {showStaticBubbles && (
-            <div className="absolute inset-0 flex items-center justify-center p-4 bg-opacity-75 bg-gray-50">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {riceTopics &&
-                  riceTopics.map((topic) => (
-                    <div
-                      key={topic.id}
-                      className="p-3 bg-gray-100 text-black rounded-lg shadow hover:bg-gray-300 transition duration-200 cursor-pointer text-center"
-                      style={{ wordWrap: "break-word" }}
-                      onClick={() => {
-                        handleBubbleClick(topic.title);
-                        setInput(topic.title);
-                      }}
-                    >
-                      <ReactMarkdown className="font-medium">
-                        {topic.title}
-                      </ReactMarkdown>
-                    </div>
-                  ))}
+    {/* Chat Section */}
+    <div className="flex flex-col justify-center items-center fixed top-[177px] left-0 lg:left-64 right-0 bottom-[90px] px-4 bg-white">
+      {/* Static Bubbles (Shown When Not Loading) */}
+      {!isLoading && showStaticBubbles && (
+        <div className="absolute inset-0 flex items-center justify-center bg-opacity-75 z-10">
+          <div className="grid grid-cols-2 gap-4 p-6 w-full max-w-screen-sm mx-auto">
+            {riceTopics?.map((topic) => (
+              <div
+                key={topic.id}
+                className="p-3 bg-gray-100 text-black rounded-lg shadow-md hover:bg-gray-300 transition cursor-pointer text-center"
+                onClick={() => {
+                  handleBubbleClick(topic.title);
+                  setInput(topic.title);
+                }}
+              >
+                <ReactMarkdown className="font-medium">
+                  {topic.title}
+                </ReactMarkdown>
               </div>
-            </div>
-          )}
-
-          {/* Chat Messages */}
-          <div className="space-y-4 p-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-24">
-                <Example variant="loading01" />
-              </div>
-            ) : (
-              messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`p-4 rounded-md shadow-md ${
-                    message.type === "question"
-                      ? "bg-blue-100 text-black"
-                      : "bg-green-100 text-black"
-                  }`}
-                >
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
-                  <div className="flex items-center mt-2 space-x-2">
-                    <button
-                      className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
-                      onClick={() => handleCopy(message.content)}
-                      title="Copy"
-                    >
-                      <FaRegCopy />
-                    </button>
-                    {isReading ? (
-                      <button
-                        className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
-                        onClick={() => window.speechSynthesis.cancel()}
-                        title="Stop Read Aloud"
-                      >
-                        <FaVolumeOff />
-                      </button>
-                    ) : (
-                      <button
-                        className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
-                        onClick={() => handleReadAloud(message.content)}
-                        title="Read Aloud"
-                      >
-                        <FaVolumeUp />
-                      </button>
-                    )}
-                    <button
-                      className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
-                      onClick={() => handleShare(message.content)}
-                      title="Share"
-                    >
-                      <FaShareAlt />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+            ))}
           </div>
-          <div ref={bottomRef}></div>
         </div>
+      )}
 
-        {/* Input Bar (Fixed at Bottom) */}
-        <div className="sticky bottom-0 w-full bg-white p-3 border-t border-gray-300 shadow-lg">
-          <div className="flex items-center">
-            <div className="flex-grow relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={handleInputChangeWithVisibility}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask a question..."
-                className="w-full p-4 pl-5 pr-14 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffa800] text-gray-800 text-sm md:text-base shadow-md"
-              />
-              {showSendButton && (
-                <button
-                  onClick={() => handleSend(input)}
-                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 px-5 py-2 rounded-full text-white font-semibold shadow-lg transition ${
-                    isLoading
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-[#ffa800] hover:bg-[#ff8c00]"
-                  }`}
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Sending" : "➤"}
-                </button>
-              )}
-            </div>
+      {/* Chat Messages Section (Non-Scrollable) */}
+      <div className="w-full max-w-screen-lg flex flex-col space-y-2 flex-grow overflow-y-auto">
+        {/* Loading Indicator (Centered Inside Chat Box) */}
+        {isLoading ? (
+          <div className="flex items-center justify-center flex-grow">
+            <Example variant="loading01" />
           </div>
+        ) : (
+          messages.map((message, index) => (
+            <div
+              key={index}
+              className={`p-4 rounded-md shadow-md w-full ${
+                message.type === "question"
+                  ? "bg-blue-50 border border-blue-300 text-black"
+                  : "bg-green-50 border border-green-300 text-black"
+              }`}
+            >
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+              <div className="flex items-center mt-2 space-x-2">
+                <button
+                  className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
+                  title="Copy"
+                  onClick={() => handleCopy(message.content)}
+                >
+                  <FaRegCopy />
+                </button>
+                {isReading ? (
+                  <button
+                    className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
+                    title="Stop Read Aloud"
+                    onClick={() => window.speechSynthesis.cancel()}
+                  >
+                    <FaVolumeOff />
+                  </button>
+                ) : (
+                  <button
+                    className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
+                    title="Read Aloud"
+                    onClick={() => handleReadAloud(message.content)}
+                  >
+                    <FaVolumeUp />
+                  </button>
+                )}
+                <button
+                  className="p-2 bg-white rounded-full shadow hover:bg-gray-200 transition"
+                  title="Share"
+                  onClick={() => handleShare(message.content)}
+                >
+                  <FaShareAlt />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+        <div ref={bottomRef}></div>
+      </div>
+    </div>
+
+    {/* Input Bar */}
+    <div className="fixed bottom-0 left-0  lg:left-64 right-0 bg-white p-2 border-t shadow-lg">
+      <div className="flex items-center max-w-screen-lg mx-auto px-4">
+        <div className="flex-grow relative">
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend(input)}
+            placeholder="Ask a question..."
+            className="w-full p-4 pl-5 pr-14 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#ffa800] text-gray-800 text-sm md:text-base shadow-md"
+          />
+          <button
+            onClick={() => handleSend(input)}
+            className={`absolute right-4 top-1/2 transform -translate-y-1/2 px-5 py-2 rounded-full text-white font-semibold shadow-lg transition ${
+              isLoading
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-[#ffa800] hover:bg-[#ff8c00]"
+            }`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Sending..." : "➤"}
+          </button>
         </div>
       </div>
-    </main>
-  );
+    </div>
+  </main>
+);
+
+
 };
 
 export default FreeChatGpt;

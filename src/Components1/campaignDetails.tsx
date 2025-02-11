@@ -42,14 +42,14 @@ const CampaignDetails: React.FC = () => {
     userId: userId,
     projectType: "ASKOXY",
   });
-
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
   // Fetch campaigns from the API
   useEffect(() => {
     const fetchCampaigns = async () => {
       setIsLoading(true);
       try {
         const response = await axios.get<Campaign[]>(
-          "https://meta.oxyglobal.tech/api/marketing-service/campgin/getAllCampaignDetails"
+          `${BASE_URL}marketing-service/campgin/getAllCampaignDetails`
         );
         setCampaigns(response.data);
       } catch (err) {
@@ -102,7 +102,7 @@ const CampaignDetails: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
+    const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
@@ -131,7 +131,7 @@ const CampaignDetails: React.FC = () => {
     try {
       setIsButtonDisabled(true);
       const response = await axios.post(
-        "https://meta.oxyglobal.tech/api/marketing-service/campgin/askOxyOfferes",
+        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
         {
           askOxyOfers: campaignType,
           userId: userId,

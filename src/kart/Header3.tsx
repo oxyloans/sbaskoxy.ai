@@ -86,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
   };
 
   const handleCartClick = () => {
-    if (!checkProfileCompletion()) {
+    if (checkProfileCompletion()) {
       setShowValidationPopup(true);
     } else {
       handleNavigation('/mycart');

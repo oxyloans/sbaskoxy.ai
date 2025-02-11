@@ -73,7 +73,7 @@ const CheckoutPage: React.FC = () => {
   }, []);
 
   useEffect(()=>{
-    const trans = localStorage.getItem('orderId')
+    const trans = localStorage.getItem('merchantTransactionId')
     const paymentId = localStorage.getItem('paymentId')
     if(trans===orderId){
       Requery(paymentId)
@@ -186,7 +186,8 @@ const CheckoutPage: React.FC = () => {
         ) {
           const data = {
             mid: "1152305",
-            amount: grandTotalAmount,
+            // amount: grandTotalAmount,
+            amount: 1,
             merchantTransactionId: response.data.paymentId,
             transactionDate: new Date(),
             terminalId: "getepay.merchant128638@icici",
@@ -200,7 +201,7 @@ const CheckoutPage: React.FC = () => {
             udf8: "",
             udf9: "",
             udf10: "",
-            ru: "https://sandbox.askoxy.ai/checkout",
+            ru: "https://sandbox.askoxy.ai/checkout?trans=" + response.data.paymentId,
             callbackUrl: `https://sandbox.askoxy.ai/checkout?trans=${response.data.paymentId}`,
             currency: "INR",
             paymentMode: "ALL",
@@ -208,7 +209,7 @@ const CheckoutPage: React.FC = () => {
             txnType: "single",
             productType: "IPG",
             txnNote: "Rice Order In Live",
-            vpa: "Getepay.merchant129014@icici",
+            vpa: "getepay.merchant128638@icici",
           };
           console.log({ data });
   
@@ -269,7 +270,7 @@ const CheckoutPage: React.FC = () => {
           okText: "Yes",
           cancelText: "No",
           onOk() {
-            window.open(paymentUrl); // Open link in new tab
+            window.location.href = paymentUrl; // Open link in new tab
           },
         });
       })
@@ -323,10 +324,6 @@ const CheckoutPage: React.FC = () => {
         req: newCipher,
       });
 
-      var requestOptions = {
-        
-      };
-
       fetch(
         "https://portal.getepay.in:8443/getepayPortal/pg/invoiceStatus",
         {
@@ -355,7 +352,7 @@ const CheckoutPage: React.FC = () => {
               // clearInterval(intervalId); 294182409
               axios({
                 method: "POST",
-                url: BASE_URL + "erice-service/checkout/orderPlacedPaymet",
+                url: BASE_URL + "/order-service/orderPlacedPaymet",
                 data: {
                   paymentId: localStorage.getItem('merchantTransactionId'),
                   paymentStatus: data.paymentStatus,
@@ -373,7 +370,6 @@ const CheckoutPage: React.FC = () => {
                   localStorage.removeItem('paymentId')
                   localStorage.removeItem('merchantTransactionId')
                   // setLoading(false);
-                  
                 })
                 .catch((error) => {
                   console.error("Error in payment confirmation:", error);

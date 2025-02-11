@@ -41,7 +41,7 @@ const FreeAiandGenAi: React.FC = () => {
   };
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false); // Track submission status
   const [firstRequestDate, setFirstRequestDate] = useState("");
   const [issuccessOpen, setSuccessOpen] = useState<boolean>(false);
@@ -54,13 +54,12 @@ const FreeAiandGenAi: React.FC = () => {
   const mobileNumber = localStorage.getItem("whatsappNumber");
   const [formData, setFormData] = useState({
     askOxyOfers: "FREEAI",
-    mobileNumber: mobileNumber, 
+    mobileNumber: mobileNumber,
     userId: userId,
     projectType: "ASKOXY",
   });
-
-
-const askOxyOfers = localStorage.getItem("askOxyOfers");
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
+  const askOxyOfers = localStorage.getItem("askOxyOfers");
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -69,34 +68,32 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
     }));
   };
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
- const handleSubmit = async () => {
-   try {
-     setIsButtonDisabled(true);
-     // API request to submit the form data
-     const response = await axios.post(
-       "https://meta.oxygloabal.tech/api/auth-service/auth/askOxyOfferes",
-       formData
-     );
-     console.log("API Response:", response.data);
-     localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
+  const handleSubmit = async () => {
+    try {
+      setIsButtonDisabled(true);
+      // API request to submit the form data
+      const response = await axios.post(
+        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        formData
+      );
+      console.log("API Response:", response.data);
+      localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
 
-     // Display success message in the UI (you can implement this based on your UI library)
-     message.success(
-       "Thank you for showing interest in our *Free AI & Gen Ai Training* offer!"
-     );
-
-     
-   } catch (error: any) {
-     if (error.response.status === 500 || error.response.status === 400) {
-       // Handle duplicate participation error
-       message.warning("You have already participated. Thank you!");
-     } else {
-       console.error("API Error:", error);
-       message.error("Failed to submit your interest. Please try again.");
-     }
-     setIsButtonDisabled(false);
-   }
- };
+      // Display success message in the UI (you can implement this based on your UI library)
+      message.success(
+        "Thank you for showing interest in our *Free AI & Gen Ai Training* offer!"
+      );
+    } catch (error: any) {
+      if (error.response.status === 500 || error.response.status === 400) {
+        // Handle duplicate participation error
+        message.warning("You have already participated. Thank you!");
+      } else {
+        console.error("API Error:", error);
+        message.error("Failed to submit your interest. Please try again.");
+      }
+      setIsButtonDisabled(false);
+    }
+  };
 
   const email = localStorage.getItem("email");
 
@@ -104,7 +101,7 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
 
   const handlePopUOk = () => {
     setIsOpen(false);
-    navigate("dashboard/user-profile");
+    navigate("/dashboard/user-profile");
   };
 
   const handleWriteToUs = () => {
@@ -156,7 +153,7 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
+    const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
@@ -182,20 +179,20 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
     <div>
       <div>
         <header>
-          <div className="flex flex-col items-center justify-center md:flex-row  px-4 md:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center md:items-start pt-5 justify-center">
             {/* Title */}
-            <h3 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-sm sm:text-base md:text-lg lg:text-xl">
+            <h1 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-3xl lg:text45xl leading-tight mb-6 md:mb-0">
               FREE AI & GEN AI TRAINING
-            </h3>
+            </h1>
           </div>
 
           {/* Buttons on the right */}
           <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 items-center px-4 md:px-6 lg:px-8">
             {/* Button: I'm Interested */}
             <button
-              className="px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-lg hover:bg-[#04AA6D] transition-all text-sm md:text-base lg:text-lg"
+              className="w-full md:w-auto px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
               onClick={handleSubmit}
-              aria-label="Visit our site"
+              aria-label="I'm Interested"
               disabled={isButtonDisabled} // Disable the button dynamically
             >
               I'm Interested
@@ -203,15 +200,16 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
 
             {/* Button: Write To Us */}
             <button
-              className="px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-lg hover:bg-[#008CBA] transition-all text-sm md:text-base lg:text-lg"
+              className="w-full md:w-auto px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-md hover:bg-[#008CBA] text-sm md:text-base lg:text-lg transition duration-300"
               aria-label="Write To Us"
               onClick={handleWriteToUs}
             >
               Write To Us
             </button>
 
+            {/* Modal for "Write To Us" */}
             {isOpen && (
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
                 <div className="relative bg-white rounded-lg shadow-md p-6 w-96">
                   {/* Close Button */}
                   <i
@@ -238,7 +236,6 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
                       id="phone"
                       disabled={true}
                       value={mobileNumber || ""}
-                      // value={"9908636995"}
                       className="block w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3d2a71] focus:border-[#3d2a71] transition-all duration-200"
                       placeholder="Enter your mobile number"
                       style={{ fontSize: "0.8rem" }}
@@ -257,7 +254,6 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
                       type="email"
                       id="email"
                       value={email || ""}
-                      // value={"kowthavarapuanusha@gmail.com"}
                       disabled={true}
                       className="block w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3d2a71] focus:border-[#3d2a71] transition-all duration-200"
                       placeholder="Enter your email"
@@ -291,14 +287,16 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
                     <button
                       className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
                       onClick={handleWriteToUsSubmitButton}
+                      disabled={isLoading}
                     >
-                      Submit Query
+                      {isLoading ? "Sending..." : "Submit Query"}
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Profile Alert Modal */}
             {isprofileOpen && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                 <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-transform scale-105">
@@ -328,6 +326,7 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
               </div>
             )}
 
+            {/* Success Modal */}
             {issuccessOpen && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                 <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-transform scale-105 text-center">
@@ -353,57 +352,69 @@ const askOxyOfers = localStorage.getItem("askOxyOfers");
 
         {/* Main Content */}
 
-        <div className="flex flex-col md:flex-row items-center justify-center mt-8 px-4">
-          {/* Left Section: Image */}
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end mb-6 md:mb-0">
-            <img
-              src={FG}
-              alt="My Rotarian"
-              className="max-w-full h-auto rounded-lg shadow-lg object-cover"
-            />
-          </div>
-
-          {/* Right Section: Text */}
-          <div className="w-full md:w-1/2 text-left md:pl-8 space-y-6">
-            {/* Offer Heading */}
-            <div className="text-center md:text-left p-3">
-              <strong className="text-[#6A1B9A] text-xl md:text-2xl lg:text-3xl font-semibold">
-                Our Offer: Free AI & Gen AI Training
-              </strong>
+        <div className="flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 py-10 min-h-screen">
+          {/* Main Container */}
+          <div className="flex flex-col md:flex-row items-center max-w-6xl w-full bg-white shadow-lg rounded-2xl overflow-hidden">
+            {/* Left Section - Image */}
+            <div className="w-full md:w-1/2 p-6 flex justify-center">
+              <img
+                src={FG}
+                alt="AI Training Offer"
+                className="w-full max-w-md md:max-w-lg h-auto rounded-xl shadow-md"
+              />
             </div>
 
-            {/* Details */}
-            <div className="space-y-4 text-gray-800 leading-relaxed">
-              <p>
-                <strong>Unlock your career potential</strong> with ASKOXY.AI’s
-                free AI & Generative AI training, combined with Java and
-                Microservices expertise.{" "}
-                <strong>Open to all graduates, pass or fail</strong>, this
-                program empowers freshers to land their first job and
-                experienced professionals to achieve high-salary roles. 🎓
+            {/* Right Section - Content */}
+            <div className="w-full md:w-1/2 p-6 space-y-6 text-center md:text-left">
+              {/* Offer Heading */}
+              <h2 className="text-[#6A1B9A] text-3xl md:text-4xl font-bold">
+                🚀 Free AI & Gen AI Training
+              </h2>
+
+              {/* Details */}
+              <p className="text-gray-700 text-lg leading-relaxed">
+                <strong>Unlock your career potential</strong> with{" "}
+                <span className="text-[#008CBA] font-semibold">ASKOXY.AI</span>
+                ’s free AI & Generative AI training, combined with Java and
+                Microservices expertise.
               </p>
-              <p>
+
+              <p className="text-gray-700 text-lg leading-relaxed">
+                <strong className="text-[#D81B60]">
+                  Open to all graduates, pass or fail
+                </strong>
+                , this program empowers freshers to land their first job and
+                helps experienced professionals achieve high-salary roles. 🎓
+              </p>
+
+              <p className="text-gray-700 text-lg leading-relaxed">
                 Gain hands-on experience with free project training, guided by
-                visionary leader <strong>Radhakrishna Thatavarti</strong>,
-                Founder & CEO of ASKOXY.AI. 🚀{" "}
-                <strong>Transform your future today!</strong> 🌐
+                visionary leader{" "}
+                <strong className="text-[#D81B60]">
+                  Radhakrishna Thatavarti
+                </strong>
+                , Founder & CEO of ASKOXY.AI.{" "}
+                <strong className="text-[#008CBA]">
+                  Transform your future today!
+                </strong>{" "}
+                🌐
               </p>
+
+              {/* Call-to-action Button */}
+              <div className="flex justify-center md:justify-start">
+                <a
+                  href="https://sites.google.com/view/globalecommercemarketplace/home"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Oxyloans Training Guide"
+                >
+                  <button className="px-6 py-3 text-lg font-bold bg-[#008CBA] text-white rounded-lg shadow-md hover:bg-[#006F8E] transition-transform transform hover:scale-105 focus:ring-4 focus:ring-blue-300">
+                    📖 Our Training Guide
+                  </button>
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Call-to-action Button */}
-        <div className="flex justify-center mt-8 px-4">
-          <a
-            href="https://sites.google.com/view/globalecommercemarketplace/home" // Replace with your Google site link
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Oxyloans Training Guide"
-          >
-            <button className="w-full md:w-52 h-12 text-base md:text-lg font-bold bg-[#008CBA] text-white rounded-lg shadow-lg hover:bg-[#006F8E] transition-all">
-              Our Training Guide
-            </button>
-          </a>
         </div>
       </div>
 

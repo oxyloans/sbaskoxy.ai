@@ -63,7 +63,7 @@ const StudyAbroad: React.FC = () => {
 
   const [issuccessOpen, setSuccessOpen] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-
+ const [isLoading, setIsLoading] = useState<boolean>(false);
   const userId = localStorage.getItem("userId");
   const [isprofileOpen, setIsprofileOpen] = useState<boolean>(false);
   const [queryError, setQueryError] = useState<string | undefined>(undefined);
@@ -75,6 +75,7 @@ const StudyAbroad: React.FC = () => {
     mobileNumber: mobileNumber,
     projectType: "ASKOXY",
   });
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -90,7 +91,7 @@ const StudyAbroad: React.FC = () => {
       setIsButtonDisabled(true);
       // API request to submit the form data
       const response = await axios.post(
-        "https://meta.oxygloabal.tech/api/auth-service/auth/askOxyOfferes",
+        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
         formData
       );
       console.log("API Response:", response.data);
@@ -187,9 +188,9 @@ const StudyAbroad: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
+    const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
-      Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
+      Authorization: `Bearer ${accessToken}`,
     };
 
     try {
@@ -215,12 +216,12 @@ const StudyAbroad: React.FC = () => {
         <header>
           {/* Container for layout */}
 
-          <div className="flex flex-col items-center justify-center md:flex-row  px-4 md:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-center md:flex-row pt-5 px-4 md:px-6 lg:px-8">
             {/* Title */}
-            <h3 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-sm sm:text-base md:text-lg lg:text-xl">
+            <h1 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-xl sm:text-xl md:text-3xl lg:text-xl leading-tight mb-6 md:mb-0">
               World's 1<sup>st</sup> AI & Blockchain based platform for
               university admissions
-            </h3>
+            </h1>
           </div>
 
           {/* Buttons on the right */}
@@ -230,58 +231,76 @@ const StudyAbroad: React.FC = () => {
             {/* Dropdown Menu Button */}
             <div className="relative">
               <button
-                className="px-4 py-2 text-sm md:text-base bg-[#ea4c89] text-white rounded-md hover:bg-[#ea4c89] shadow-md transition-all"
+                className="bg-[#ea4c89] w-full md:w-auto px-4 py-2  text-white rounded-lg shadow-md hover:bg-[#008CBA] text-sm md:text-base lg:text-lg transition duration-300"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 aria-label="Navigate options"
               >
-                Explore GPT'S
+                Explore GPTS
               </button>
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <ul className="absolute bg-white text-black shadow-lg rounded-md mt-2 w-48 md:w-60 overflow-y-auto max-h-60">
                   {[
-                    { label: "Accommodation GPT", path: "/accommodation-gpt" },
+                    {
+                      label: "Accommodation GPT",
+                      path: "/dashboard/accommodation-gpt",
+                    },
                     {
                       label: "Accreditations Recognization GPT",
-                      path: "/accreditations-gpt",
+                      path: "/dashboard/accreditations-gpt",
                     },
                     {
                       label: "Application Support GPT",
-                      path: "/applicationsupport-gpt",
+                      path: "/dashboard/applicationsupport-gpt",
                     },
                     { label: "Courses GPT", path: "/courses-gpt" },
                     {
                       label: "Foreign Exchange & Predeparture GPT",
-                      path: "/foreign-exchange",
+                      path: "/dashboard/foreign-exchange",
                     },
                     {
                       label: "Information About Countries GPT",
-                      path: "/informationaboutcountries-gpt",
+                      path: "/dashboard/informationaboutcountries-gpt",
                     },
-                    { label: "Loans GPT", path: "/loans-gpt" },
-                    { label: "Logistics GPT", path: "/logistics-gpt" },
+                    { label: "Loans GPT", path: "/dashboard/loans-gpt" },
+                    {
+                      label: "Logistics GPT",
+                      path: "/dashboard/logistics-gpt",
+                    },
                     {
                       label: "Offer Letter& Acceptance Letter GPT",
-                      path: "/applicationsupport-gpt",
+                      path: "/dashboard/applicationsupport-gpt",
                     },
-                    { label: "Placements GPT", path: "/placements-gpt" },
+                    {
+                      label: "Placements GPT",
+                      path: "/dashboard/placements-gpt",
+                    },
                     {
                       label: "Qualification & Specialization GPT",
-                      path: "/qualificationspecialization-gpt",
+                      path: "/dashboard/qualificationspecialization-gpt",
                     },
-                    { label: "Scholarships GPT", path: "/scholarships-gpt" },
+                    {
+                      label: "Scholarships GPT",
+                      path: "/dashboard/scholarships-gpt",
+                    },
                     {
                       label: "English Test & Interview Preparation GPT",
                       path: "/testandinterview-gpt",
                     },
-                    { label: "Universities GPT", path: "/universities-gpt" },
+                    {
+                      label: "Universities GPT",
+                      path: "/dashboard/universities-gpt",
+                    },
                     {
                       label: "University Agents GPT",
-                      path: "/universitiesagents-gpt",
+                      path: "/dashboard/universitiesagents-gpt",
                     },
-                    { label: "University Reviews GPT", path: "/reviews-gpt" },
-                    { label: "Visa GPT", path: "/visa-gpt" },
+                    {
+                      label: "University Reviews GPT",
+                      path: "/dashboard/reviews-gpt",
+                    },
+                    { label: "Visa GPT", path: "/dashboard/visa-gpt" },
                   ]
                     .sort((a, b) => a.label.localeCompare(b.label))
                     .map((item) => (
@@ -297,7 +316,7 @@ const StudyAbroad: React.FC = () => {
               )}
             </div>
             <button
-              className="px-4 py-2 text-sm md:text-base bg-[#04AA6D] text-white rounded-md hover:bg-[#04AA6D] shadow-md transition-all"
+              className="w-full md:w-auto px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
               onClick={handleSubmit}
               aria-label="Visit our site"
               disabled={isButtonDisabled}
@@ -305,7 +324,7 @@ const StudyAbroad: React.FC = () => {
               I'm Interested
             </button>
             <button
-              className="px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-lg hover:bg-[#008CBA] transition-all text-sm md:text-base lg:text-lg"
+              className="w-full md:w-auto px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-md hover:bg-[#008CBA] text-sm md:text-base lg:text-lg transition duration-300"
               aria-label="Write To Us"
               onClick={handleWriteToUs}
             >
@@ -393,8 +412,9 @@ const StudyAbroad: React.FC = () => {
                     <button
                       className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
                       onClick={handleWriteToUsSubmitButton}
+                      disabled={isLoading}
                     >
-                      Submit Query
+                      {isLoading ? "Sending..." : "Submit Query"}
                     </button>
                   </div>
                 </div>
@@ -544,7 +564,7 @@ const StudyAbroad: React.FC = () => {
               rel="noopener noreferrer"
               aria-label="Visit Scholarship Platform"
             >
-              bankd
+              BankD
             </a>
           </div>
         </div>

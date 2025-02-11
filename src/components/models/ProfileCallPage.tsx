@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
+import { User } from "lucide-react";
 
 interface EducationDetail {
   graduationType: string;
@@ -92,16 +93,19 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const navigate = useNavigate();
+  const userId = localStorage.getItem("userId");
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      const userId = localStorage.getItem("userId");
       if (!userId) return;
       try {
         const response = await axios.get<UserProfile>(
-          `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`
+          `${BASE_URL}user-service/getProfile/${userId}`
         );
-                setIsLoading(true);
+        setIsLoading(true);
+        console.log(response.data);
+
         setUserProfile(response.data);
 
         localStorage.setItem("email", response.data.email);
@@ -139,15 +143,24 @@ const UserProfile = () => {
     return Object.keys(validationErrors).length === 0;
   };
 
- 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateInputs()) return;
 
+    const requestPayload = {
+      // address: userProfile.address,
+      city: userProfile.city,
+      email: userProfile.email,
+      firstName: userProfile.firstName,
+      lastName: userProfile.lastName,
+      userId: userId,
+      gender: userProfile.gender,
+    };
+
     try {
       await axios.patch(
-        "https://meta.oxygloabal.tech/api/student-service/user/profile/update",
-        userProfile
+        `${BASE_URL}user-service/profile/update`,
+        requestPayload
       );
 
       localStorage.setItem("user", JSON.stringify({ profileCompleted: true }));
@@ -223,6 +236,16 @@ const UserProfile = () => {
             }
             error={errors.city}
           />
+          <InputField
+            label="Gender"
+            name="gender"
+            value={userProfile.gender}
+            placeholder="Enter your gender"
+            onChange={(e) =>
+              setUserProfile({ ...userProfile, gender: e.target.value })
+            }
+            error={errors.gender}
+          />
         </div>
         <div className="mt-8 flex justify-center">
           <button
@@ -236,7 +259,6 @@ const UserProfile = () => {
       </form>
     </div>
   );
-
 };
 
 export default UserProfile;

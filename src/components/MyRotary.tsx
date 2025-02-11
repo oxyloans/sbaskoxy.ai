@@ -15,7 +15,6 @@ import img5 from "../assets/img/image5.png";
 import img6 from "../assets/img/image6.png";
 import { notification } from "antd";
 
-
 const images = [
   { src: img1, alt: "Image 1" },
   { src: img2, alt: "Image 2" },
@@ -49,15 +48,14 @@ const MyRotaryServices = () => {
   const mobileNumber = localStorage.getItem("whatsappNumber");
   const [isprofileOpen, setIsprofileOpen] = useState<boolean>(false);
   const [query, setQuery] = useState("");
+   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     askOxyOfers: "ROTARIAN",
     userId: userId,
     mobileNumber: mobileNumber,
     projectType: "ASKOXY",
   });
-
- 
-
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -72,7 +70,7 @@ const MyRotaryServices = () => {
       setIsButtonDisabled(true);
       // API request to submit the form data
       const response = await axios.post(
-        "https://meta.oxygloabal.tech/api/auth-service/auth/askOxyOfferes",
+        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
         formData
       );
       console.log("API Response:", response.data);
@@ -93,7 +91,6 @@ const MyRotaryServices = () => {
       setIsButtonDisabled(false);
     }
   };
-
 
   const email = localStorage.getItem("email");
 
@@ -152,7 +149,7 @@ const MyRotaryServices = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
+    const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
@@ -179,7 +176,7 @@ const MyRotaryServices = () => {
       <div>
         <header>
           {/* Layout container */}
-          <div className="flex flex-col items-center justify-center md:flex-row  px-4 md:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-center md:flex-row pt-4  px-4 md:px-6 lg:px-8">
             {/* Title */}
             {/* <h3 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-sm sm:text-base md:text-lg lg:text-xl">
               Legal Services
@@ -190,7 +187,7 @@ const MyRotaryServices = () => {
           <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 items-center px-4 md:px-6 lg:px-8">
             {/* Button: I'm Interested */}
             <button
-              className="px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-lg hover:bg-[#04AA6D] transition-all text-sm md:text-base lg:text-lg"
+              className="bg-[#04AA6D] w-full md:w-auto px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
               onClick={handleSubmit}
               disabled={isButtonDisabled}
               aria-label="Visit our site"
@@ -200,7 +197,7 @@ const MyRotaryServices = () => {
 
             {/* Button: Write To Us */}
             <button
-              className="px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-lg hover:bg-[#008CBA] transition-all text-sm md:text-base lg:text-lg"
+              className="bg-[#008CBA] w-full md:w-auto px-4 py-2  text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
               aria-label="Write To Us"
               onClick={handleWriteToUs}
             >
@@ -288,8 +285,9 @@ const MyRotaryServices = () => {
                     <button
                       className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
                       onClick={handleWriteToUsSubmitButton}
+                      disabled={isLoading}
                     >
-                      Submit Query
+                      {isLoading ? "Sending..." : "Submit Query"}
                     </button>
                   </div>
                 </div>

@@ -26,13 +26,13 @@ const HiringService: React.FC = () => {
   const [errors, setErrors] = useState<{ mobileNumber?: string }>({});
   const userId = localStorage.getItem("userId");
   const [currentIndex, setCurrentIndex] = useState(0);
-
+ const [isLoading, setIsLoading] = useState<boolean>(false);
   const [issuccessOpen, setSuccessOpen] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [queryError, setQueryError] = useState<string | undefined>();
   const [isprofileOpen, setIsprofileOpen] = useState<boolean>(false);
   const [query, setQuery] = useState("");
-
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
   const handleNext = () => {
     if (currentIndex < images.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -64,32 +64,32 @@ const HiringService: React.FC = () => {
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
- const handleSubmit = async () => {
-   try {
-     setIsButtonDisabled(true);
-     // API request to submit the form data
-     const response = await axios.post(
-       "https://meta.oxygloabal.tech/api/auth-service/auth/askOxyOfferes",
-       formData
-     );
-     console.log("API Response:", response.data);
-     localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
+  const handleSubmit = async () => {
+    try {
+      setIsButtonDisabled(true);
+      // API request to submit the form data
+      const response = await axios.post(
+        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        formData
+      );
+      console.log("API Response:", response.data);
+      localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
 
-     // Display success message in the UI (you can implement this based on your UI library)
-     message.success(
-       "Thank you for showing interest in our *We Are Hiring* offer!"
-     );
-   } catch (error: any) {
-     if (error.response.status === 500 || error.response.status === 400) {
-       // Handle duplicate participation error
-       message.warning("You have already participated. Thank you!");
-     } else {
-       console.error("API Error:", error);
-       message.error("Failed to submit your interest. Please try again.");
-     }
-     setIsButtonDisabled(false);
-   }
- };
+      // Display success message in the UI (you can implement this based on your UI library)
+      message.success(
+        "Thank you for showing interest in our *We Are Hiring* offer!"
+      );
+    } catch (error: any) {
+      if (error.response.status === 500 || error.response.status === 400) {
+        // Handle duplicate participation error
+        message.warning("You have already participated. Thank you!");
+      } else {
+        console.error("API Error:", error);
+        message.error("Failed to submit your interest. Please try again.");
+      }
+      setIsButtonDisabled(false);
+    }
+  };
 
   const email = localStorage.getItem("email");
 
@@ -137,7 +137,7 @@ const HiringService: React.FC = () => {
 
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
+    const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`,
     };
@@ -158,9 +158,9 @@ const HiringService: React.FC = () => {
   return (
     <>
       <header>
-        <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 items-center px-4 md:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 pt-4 items-center px-4 md:px-6 lg:px-8">
           <button
-            className="px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-lg hover:bg-[#04AA6D] transition-all text-sm md:text-base lg:text-lg"
+            className=" bg-[#04AA6D] w-full md:w-auto px-4 py-2 text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
             onClick={handleSubmit}
             disabled={isButtonDisabled}
             aria-label="Join Us Now"
@@ -169,7 +169,7 @@ const HiringService: React.FC = () => {
           </button>
 
           <button
-            className="px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-lg hover:bg-[#008CBA] transition-all text-sm md:text-base lg:text-lg"
+            className=" bg-[#008CBA] w-full md:w-auto px-4 py-2 text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
             aria-label="Write To Us"
             onClick={handleWriteToUs}
           >
@@ -245,8 +245,9 @@ const HiringService: React.FC = () => {
                 <button
                   className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
                   onClick={handleWriteToUsSubmitButton}
+                  disabled={isLoading}
                 >
-                  Submit Query
+                  {isLoading ? "Sending..." : "Submit Query"}
                 </button>
               </div>
             </div>
@@ -254,29 +255,31 @@ const HiringService: React.FC = () => {
         )}
 
         {isprofileOpen && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
-            <div className="relative bg-white rounded-lg shadow-md p-6 w-96">
-              <i
-                className="fas fa-times absolute top-3 right-3 text-xl text-gray-700 cursor-pointer hover:text-red-500"
-                onClick={() => setIsprofileOpen(false)}
-                aria-label="Close"
-              />
-              <h2 className="text-xl font-bold mb-4 text-[#3d2a71]">
-                Profile Missing
-              </h2>
-              <p className="mb-4 text-black">Please complete your profile.</p>
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-transform scale-105">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl text-[#3d2a71] font-bold">Alert...!</h2>
+                <button
+                  className="font-bold text-2xl text-red-500 hover:text-red-700 focus:outline-none"
+                  onClick={() => setIsprofileOpen(false)}
+                >
+                  &times;
+                </button>
+              </div>
+              <p className="text-center text-black mb-6">
+                Please fill your profile details.
+              </p>
               <div className="flex justify-center">
                 <button
-                  className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
+                  className="bg-[#f9b91a] text-white px-5 py-2 rounded-lg font-semibold hover:bg-[#f4a307] focus:outline-none"
                   onClick={handlePopUOk}
                 >
-                  Go to Profile
+                  OK
                 </button>
               </div>
             </div>
           </div>
         )}
-
         {issuccessOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-transform scale-105 text-center">
@@ -303,7 +306,7 @@ const HiringService: React.FC = () => {
         <div className="container mx-auto px-6 lg:px-12 p-16 bg-white rounded-sm">
           <div className="text-center mb-12 px-4 sm:px-6 md:px-8">
             <Title level={2} className="text-3xl font-semibold text-[#3d2a71]">
-              Digital <span className="text-[#04AA6D]">Ambassadors</span>
+              <span className="text-[#04AA6D]"> Digital Ambassadors</span>
             </Title>
             <Paragraph className="text-lg text-gray-600">
               Join Our Dynamic Team and Embark on a Digital Journey!

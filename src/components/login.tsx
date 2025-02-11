@@ -66,7 +66,7 @@ const Login = () => {
         }
 
         try {
-            const response = await fetch('https://meta.oxygloabal.tech/api/auth-service/auth/registerwithMobile', {
+            const response = await fetch('https://meta.oxyloans.com/api/auth-service/auth/registerwithMobile', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ const Login = () => {
         e.preventDefault();
 
         try {
-            const response = await fetch('https://meta.oxygloabal.tech/api/auth-service/auth/registerwithMobile', {
+            const response = await fetch('https://meta.oxyloans.com/api/auth-service/auth/registerwithMobile', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

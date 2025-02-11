@@ -1,0 +1,85 @@
+/* Header styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 22px; /* Increased padding for a more spacious feel */
+  background-color: #ffffff;
+  color: #2d2d2d; /* Darker text for better contrast */
+  box-shadow: 0 6px 64px rgba(0, 0, 0, 0.1); /* Slightly stronger shadow for a more polished look */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  font-family: 'Roboto', sans-serif; /* Professional font */
+}
+
+.logo img {
+  width: 130px; /* A more balanced logo size */
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+.logo img:hover {
+  transform: scale(1.2); /* Slight zoom on hover */
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Added gap between icons and buttons */
+}
+
+.cart-icon {
+  font-size: 1.75rem; /* Larger size for more emphasis */
+  cursor: pointer;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.cart-icon:hover {
+  transform: scale(1.15); /* Hover effect with scaling */
+  color: #3d5afe; /* Subtle color change on hover */
+}
+
+.sign-in-btn {
+  padding: 10px 24px;
+  background-color: #351664; /* Primary blue color */
+  color: #ffffff;
+  border: none;
+  border-radius: 30px; /* More rounded button edges */
+  font-size: 1.1rem; /* Slightly larger text */
+  font-weight: 500; /* Added font weight for boldness */
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.sign-in-btn:hover {
+  background-color: #351662; /* Orange hover effect */
+  transform: translateY(-3px); /* Lift effect */
+}
+
+.sign-in-btn:focus {
+  outline: none; /* Remove default outline */
+  box-shadow: 0 0 0 3px rgba(255, 128, 0, 0.5); /* Focus ring for accessibility */
+}
+
+/* Additional styling for the page content */
+body {
+  margin-top: 80px; /* Adjust space for the larger header */
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 16px; /* Less padding on smaller screens */
+  }
+  
+  .cart-icon {
+    font-size: 1.5rem; /* Smaller cart icon on mobile */
+  }
+  
+  .sign-in-btn {
+    font-size: 1rem; /* Adjust button text size */
+  }
+}

@@ -4,8 +4,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthorInfo from "../components/AuthorInfo";
 import axios from "axios";
 import { FaUserEdit } from "react-icons/fa";
-import Fr from '../assets/img/logo.png'
+import Fr from '../assets/img/logo.png';
 import buyrice from "../assets/img/buyrice.png";
+import AskOxyLogo from "../assets/img/askoxylogostatic.png";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -44,7 +45,9 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    const apiUrl = `https://meta.oxygloabal.tech/api/student-service/user/profile?id=${userId}`;
+    const apiUrl = `https://meta.oxyloans.com/api/student-service/user/profile?id=${userId}`;
+
+    
 
     axios
       .get(apiUrl)
@@ -60,10 +63,13 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   }, []);
   const handleBuyRice = () => {
     navigate("/buyRice");
-  }
+  };
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
   //[#351664]
   return (
-    <header className={`bg-white w-full text-black shadow-md p-2`}>
+    <header className={`bg-white w-full text-black shadow-md p-3`}>
       <div className="mx-auto flex justify-between items-center">
         {/* Mobile Menu Toggle Button */}
         <button
@@ -77,24 +83,23 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         {/* Sidebar Component */}
 
         {/* Logo Section */}
-        <button
-          className="flex items-center text-2xl font-bold bg-transparent border-none cursor-pointer focus:outline-none"
-          aria-label="Go to home"
-        >
-          <button
-            onClick={handleBuyRice}
-            className="flex items-center p-2 bg-transparent"
-          >
-            <img
-              src={buyrice}
-              className="h-12 w-auto object-contain"
-              alt="BuyRice"
-            />
-          </button>
-          {/* <span className="text-white">ASKOXY</span>
-          <span className="text-[#ffa800]">.AI</span> */}
-          <img src={Fr} alt="logo" className="w-28 pl-4 h-17" />
-        </button>
+        <img
+                src={AskOxyLogo} 
+                className="h-8 w-auto sm:h-14 object-contain cursor-pointer"
+                alt="AskOxyLogo"
+                onClick={() => handleNavigation('/dashboard')}
+              />
+
+              <button
+                onClick={handleBuyRice}
+                className="flex items-center bg-transparent"
+              >
+                <img
+                  src={buyrice}
+                  className="h-8 w-auto sm:h-14 object-contain"
+                  alt="BuyRice"
+                />
+              </button>
 
         {/* Profile Dropdown */}
         {/* Profile Dropdown */}
@@ -160,7 +165,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 >
                   <FaUserEdit className="mr-3 text-gray-600" size={24} />
                   <span className="font-bold text-[#351664]">
-                    Profile Updated
+                    Profile Update
                   </span>
                 </a>
 

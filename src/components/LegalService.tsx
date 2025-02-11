@@ -37,6 +37,7 @@ const LegalService: React.FC = () => {
   const [query, setQuery] = useState("");
   const [queryError, setQueryError] = useState<string | undefined>(undefined);
   const mobileNumber = localStorage.getItem("whatsappNumber");
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
   const handleNext = () => {
     if (currentIndex < images.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -60,7 +61,6 @@ const LegalService: React.FC = () => {
     projectType: "ASKOXY",
   });
 
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -70,32 +70,32 @@ const LegalService: React.FC = () => {
   };
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-    const handleSubmit = async () => {
-      try {
-        setIsButtonDisabled(true);
-        // API request to submit the form data
-        const response = await axios.post(
-          "https://meta.oxygloabal.tech/api/auth-service/auth/askOxyOfferes",
-          formData
-        );
-        console.log("API Response:", response.data);
-        localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
+  const handleSubmit = async () => {
+    try {
+      setIsButtonDisabled(true);
+      // API request to submit the form data
+      const response = await axios.post(
+        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        formData
+      );
+      console.log("API Response:", response.data);
+      localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
 
-        // Display success message in the UI (you can implement this based on your UI library)
-        message.success(
-          "Thank you for showing interest in our *Legal Service* offer!"
-        );
-      } catch (error: any) {
-        if (error.response.status === 500 || error.response.status === 400) {
-          // Handle duplicate participation error
-          message.warning("You have already participated. Thank you!");
-        } else {
-          console.error("API Error:", error);
-          message.error("Failed to submit your interest. Please try again.");
-        }
-        setIsButtonDisabled(false);
+      // Display success message in the UI (you can implement this based on your UI library)
+      message.success(
+        "Thank you for showing interest in our *Legal Service* offer!"
+      );
+    } catch (error: any) {
+      if (error.response.status === 500 || error.response.status === 400) {
+        // Handle duplicate participation error
+        message.warning("You have already participated. Thank you!");
+      } else {
+        console.error("API Error:", error);
+        message.error("Failed to submit your interest. Please try again.");
       }
-    };
+      setIsButtonDisabled(false);
+    }
+  };
 
   const email = localStorage.getItem("email");
 
@@ -154,7 +154,7 @@ const LegalService: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
+    const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
@@ -181,18 +181,18 @@ const LegalService: React.FC = () => {
       <div>
         <header>
           {/* Layout container */}
-          <div className="flex flex-col items-center justify-center md:flex-row  px-4 md:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center md:items-start pt-5 justify-center">
             {/* Title */}
-            <h3 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-sm sm:text-base md:text-lg lg:text-xl">
-              Legal Services
-            </h3>
+            <h1 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-3xl lg:text45xl leading-tight mb-6 md:mb-0">
+              Legal Knowledge Hub
+            </h1>
           </div>
 
           {/* Buttons on the right */}
           <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 items-center px-4 md:px-6 lg:px-8">
             {/* Button: I'm Interested */}
             <button
-              className="px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-lg hover:bg-[#04AA6D] transition-all text-sm md:text-base lg:text-lg"
+              className="w-full md:w-auto px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
               onClick={handleSubmit}
               aria-label="Visit our site"
               disabled={isButtonDisabled}
@@ -202,7 +202,7 @@ const LegalService: React.FC = () => {
 
             {/* Button: Write To Us */}
             <button
-              className="px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-lg hover:bg-[#008CBA] transition-all text-sm md:text-base lg:text-lg"
+              className="bg-[#008CBA] w-full md:w-auto px-4 py-2  text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
               aria-label="Write To Us"
               onClick={handleWriteToUs}
             >
@@ -290,8 +290,9 @@ const LegalService: React.FC = () => {
                     <button
                       className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
                       onClick={handleWriteToUsSubmitButton}
+                      disabled={isLoading}
                     >
-                      Submit Query
+                      {isLoading ? "Sending..." : "Submit Query"}
                     </button>
                   </div>
                 </div>
@@ -364,7 +365,8 @@ const LegalService: React.FC = () => {
             {/* Welcome Heading */}
             <div className="text-center md:text-left">
               <strong className="text-[20px] md:text-[24px] text-[#6A1B9A] font-semibold">
-                Welcome, Lawyers and Advocates! 2X Your Revenue with AskOxy.ai
+                Welcome, Lawyers and Advocates! Elevate Your Legal Practice with
+                AskOxy.ai
               </strong>
             </div>
 
@@ -372,24 +374,22 @@ const LegalService: React.FC = () => {
             <div className="space-y-4 text-gray-800">
               <ul className="list-disc pl-6">
                 <li>
-                  <strong>Grow Your Client Base:</strong> Connect with users
-                  actively seeking legal guidance and cases.
+                  <strong>Enhance Your Professional Presence:</strong>Increase
+                  your visibility among individuals seeking legal guidance.
                 </li>
                 <li>
-                  <strong>2X Your Revenue:</strong> Maximize your earning
-                  potential through increased visibility and more cases.
-                </li>
-                <li>
-                  <strong>Share Expertise:</strong> Publish legal insights to
+                  <strong>Share Expertise:</strong>Publish legal insights to
                   educate and establish your authority.
                 </li>
                 <li>
                   <strong>Collaborate on Legal Publications:</strong> Partner
-                  with professionals to create impactful content.
+                  with professionals to create impactful legal content.
                 </li>
+
                 <li>
-                  <strong>Expand Your Network:</strong> Be part of a vibrant,
-                  trusted platform for lawyers and advocates.
+                  <strong>Expand Your Legal Network:</strong> Be part of a
+                  vibrant, trusted platform for knowledge sharing and
+                  collaboration.
                 </li>
               </ul>
             </div>

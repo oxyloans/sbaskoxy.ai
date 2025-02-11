@@ -1,9 +1,15 @@
 import React from 'react';
 import { FaSearch } from "react-icons/fa";  // Import the search icon
-import HeroSection from './HeroSection';
-import InfoSection from './InfoSection';
-import ProductsSection from './ProductsSection';
-import Testimonials from './Testimonials';
+// import HeroSection from './HeroSection';
+// import InfoSection from './InfoSection';
+// import ProductsSection from './ProductsSection';
+// import Testimonials from './Testimonials';
+import Header from './Header';
+import ServicesSlider from './ServicesSlider';
+import HorizontalScrollGallery from './ServicesUI';
+import FreeGPTs from './FreeGPTs';
+import BMVCoinPromo from './BMVCoinPromo';
+import OXYGroupCompanies from './OXYGroupCompanies';
 import Footer from './Footer';
 
 // You can customize the styling based on your project's requirements
@@ -12,12 +18,25 @@ const Landingpage: React.FC = () => {
     <>
       {/* Hero Section */}
       <section>
-        <HeroSection />
+    <Header/>
       </section>
 
       {/* Info Section */}
       <section>
-        <InfoSection />
+       <HorizontalScrollGallery/>
+      </section>
+      <section>
+        <ServicesSlider />
+        
+      </section>
+      <section>
+        <FreeGPTs />
+      </section>
+      <section>
+        <BMVCoinPromo />
+      </section>
+      <section>
+        <OXYGroupCompanies />
       </section>
 
       {/* Products Section */}

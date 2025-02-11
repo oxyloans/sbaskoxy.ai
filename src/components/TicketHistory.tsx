@@ -204,7 +204,7 @@ const TicketHistory: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://meta.oxygloabal.tech/api/write-to-us/student/getAllQueries",
+        "https://meta.oxyloans.com/api/write-to-us/student/getAllQueries",
         {
           askOxyOfers:
             askOxyOffersFilter ||
@@ -235,7 +235,7 @@ const TicketHistory: React.FC = () => {
     setReplyLoading(true);
     try {
       const response = await axios.post(
-        "https://meta.oxygloabal.tech/api/write-to-us/student/saveData",
+        "https://meta.oxyloans.com/api/write-to-us/student/saveData",
         {
           id: selectedQuery.id,
           userId: selectedQuery.userId,
@@ -282,7 +282,7 @@ const TicketHistory: React.FC = () => {
     setCancelLoading(true);
     try {
       const response = await axios.post(
-        "https://meta.oxygloabal.tech/api/write-to-us/student/saveData",
+        "https://meta.oxyloans.com/api/write-to-us/student/saveData",
         {
           id: selectedQuery.id,
           userId: selectedQuery.userId,

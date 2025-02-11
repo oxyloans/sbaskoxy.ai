@@ -35,6 +35,7 @@ const images = [
 
 const Freerudraksha: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   const handleNext = () => {
     if (currentIndex < images.length - 1) {
@@ -97,15 +98,15 @@ const Freerudraksha: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `https://meta.oxygloabal.tech/api/auth-service/auth/getuserAddress?userId=${userId}`
+        `${BASE_URL}auth-service/auth/getuserAddress?userId=${userId}`
       );
       if (response.ok) {
         const data = await response.json();
         console.log(data);
         console.log(address);
         setSavedAddress(address);
-        setDelivery(delivery); // Assuming the API response has the address under 'address' key
-        setModalType("success"); // Move to address confirmation modal
+        setDelivery(delivery);
+        setModalType("success");
       } else {
         message.error("Failed to fetch saved address. Please try again.");
       }
@@ -130,8 +131,7 @@ const Freerudraksha: React.FC = () => {
       return; // Prevent submitting again
     }
 
-    const endpoint =
-      "https://meta.oxygloabal.tech/api/auth-service/auth/rudhrakshaDistribution";
+    const endpoint = `${BASE_URL}marketing-service/campgin/rudhrakshaDistribution`;
     const payload = { address, userId };
 
     try {
@@ -190,8 +190,7 @@ const Freerudraksha: React.FC = () => {
       return; // Prevent submitting again
     }
 
-    const endpoint =
-      "https://meta.oxygloabal.tech/api/auth-service/auth/rudhrakshaDistribution";
+    const endpoint = `${BASE_URL}marketing-service/campgin/rudhrakshaDistribution`;
     const payload = { userId, deliveryType };
 
     try {
@@ -295,7 +294,7 @@ const Freerudraksha: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
+    const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
@@ -321,7 +320,7 @@ const Freerudraksha: React.FC = () => {
     <div>
       <header>
         {/* Title and Buttons Container */}
-        <div className="flex flex-col md:flex-row items-center md:items-start justify-center">
+        <div className="flex flex-col md:flex-row items-center md:items-start pt-5 justify-center">
           {/* Title */}
           <h1 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-3xl lg:text45xl leading-tight mb-6 md:mb-0">
             The Two Worlds
@@ -329,7 +328,7 @@ const Freerudraksha: React.FC = () => {
         </div>
 
         {/* Buttons */}
-        <div className="flex flex-col md:flex-row justify-center md:justify-end items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 items-center px-4 md:px-6 lg:px-8">
           <button
             className="w-full md:w-auto px-4 py-2 bg-[#04AA6D] text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
             onClick={handleWhatsappClick}
@@ -435,8 +434,9 @@ const Freerudraksha: React.FC = () => {
                   <button
                     className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
                     onClick={handleWriteToUsSubmitButton}
+                    disabled={isLoading}
                   >
-                    Submit Query
+                    {isLoading ? "Sending..." : "Submit Query"}
                   </button>
                 </div>
               </div>

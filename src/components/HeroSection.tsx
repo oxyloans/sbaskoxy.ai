@@ -343,7 +343,7 @@ const HeroSection: React.FC = () => {
 
     try {
       const result = await axios.post(
-        `https://meta.oxygloabal.tech/api/student-service/user/globalChatGpt?InfoType=${query}`
+        `https://meta.oxyloans.com/api/student-service/user/globalChatGpt?InfoType=${query}`
       );
       setResponse(result.data); // Assuming the response data you want is directly in `data`
     } catch (error) {
@@ -404,7 +404,7 @@ const HeroSection: React.FC = () => {
       window.location.href = `/dashboard?query=${encodeURIComponent(query)}`;
     } else {
       // Otherwise, redirect to normal page
-      window.location.href = `/normal?query=${encodeURIComponent(query)}`;
+      window.location.href = `/normal?${encodeURIComponent(query)}`;
     }
   };
   return (

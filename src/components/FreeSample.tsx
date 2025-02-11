@@ -8,7 +8,7 @@ import { notification } from "antd";
 import { HiOutlineDocument } from "react-icons/hi";
 
 import Container from "./ContainerPolicy";
-import FR from "../assets/img/WhatsApp Image 2025-01-23 at 15.50.44.png"
+import FR from "../assets/img/WhatsApp Image 2025-01-23 at 15.50.44.png";
 
 import Footer from "./Footer";
 import { message, Modal } from "antd";
@@ -50,6 +50,7 @@ const FreeSample: React.FC = () => {
 
   const userId = localStorage.getItem("userId");
   const [issuccessOpen, setSuccessOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isprofileOpen, setIsprofileOpen] = useState<boolean>(false);
   const [query, setQuery] = useState("");
@@ -61,7 +62,8 @@ const FreeSample: React.FC = () => {
     mobileNumber: mobileNumber,
     projectType: "ASKOXY",
   });
-   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -72,32 +74,30 @@ const FreeSample: React.FC = () => {
   };
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-const handleSubmit = async () => {
-  try {
-    setIsButtonDisabled(true);
-    // API request to submit the form data
-    const response = await axios.post(
-      "https://meta.oxygloabal.tech/api/auth-service/auth/askOxyOfferes",
-      formData
-    );
-    console.log("API Response:", response.data);
-    localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
+  const handleSubmit = async () => {
+    try {
+      setIsButtonDisabled(true);
+      // API request to submit the form data
+      const response = await axios.post(
+        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        formData
+      );
+      console.log("API Response:", response.data);
+      localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
 
-    // Redirect to the thank-you page
-    navigate("/thank-you");
-  } catch (error: any) {
-    if (error.response.status === 500 || error.response.status === 400) {
-      // Handle duplicate participation error
-      message.warning("You have already participated. Thank you!");
-    } else {
-      console.error("API Error:", error);
-      message.error("Failed to submit your interest. Please try again.");
+      // Redirect to the thank-you page
+      navigate("/thank-you");
+    } catch (error: any) {
+      if (error.response.status === 500 || error.response.status === 400) {
+        // Handle duplicate participation error
+        message.warning("You have already participated. Thank you!");
+      } else {
+        console.error("API Error:", error);
+        message.error("Failed to submit your interest. Please try again.");
+      }
+      setIsButtonDisabled(false);
     }
-    setIsButtonDisabled(false);
-  }
-};
-
-
+  };
 
   const email = localStorage.getItem("email");
 
@@ -156,7 +156,7 @@ const handleSubmit = async () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `https://meta.oxygloabal.tech/api/write-to-us/student/saveData`;
+    const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
@@ -177,21 +177,27 @@ const handleSubmit = async () => {
       // alert("Failed to send query. Please try again.");
     }
   };
-    const [showContainer, setShowContainer] = useState(false);
-    
-        const handleButtonClick = () => {
-            window.open(
-              "https://drive.google.com/file/d/1x_0b6DIt5-rbq1fubeHcIMO5Grxr46p1/view",
-              "_blank"
-            ); // Set state to show the container when the button is clicked
-        };
-    
+  const [showContainer, setShowContainer] = useState(false);
+
+  const handleButtonClick = () => {
+    window.open(
+      "https://drive.google.com/file/d/1x_0b6DIt5-rbq1fubeHcIMO5Grxr46p1/view",
+      "_blank"
+    ); // Set state to show the container when the button is clicked
+  };
 
   return (
     <div>
       <div>
         <header>
           {/* Buttons on the right */}
+          <div className="flex flex-col md:flex-row items-center md:items-start pt-5 justify-center">
+            {/* Title */}
+            <h1 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-3xl lg:text45xl leading-tight mb-6 md:mb-0">
+              Free Rice Samples & Steel Container
+            </h1>
+          </div>
+
           <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 items-center px-4 md:px-6    lg:px-8">
             {/* Button: I'm Interested */}
 
@@ -212,7 +218,7 @@ const handleSubmit = async () => {
 
             {/* Button: Write To Us */}
             <button
-              className="px-4 py-2 bg-[#008CBA] text-white rounded-lg shadow-lg hover:bg-[#008CBA] transition-all text-sm md:text-base lg:text-lg"
+              className=" bg-[#008CBA] w-full md:w-auto px-4 py-2  text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300 "
               aria-label="Write To Us"
               onClick={handleWriteToUs}
             >
@@ -300,8 +306,9 @@ const handleSubmit = async () => {
                     <button
                       className="px-4 py-2 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#3d2a71] transition-all text-sm md:text-base lg:text-lg"
                       onClick={handleWriteToUsSubmitButton}
+                      disabled={isLoading}
                     >
-                      Submit Query
+                      {isLoading ? "Sending..." : "Submit Query"}
                     </button>
                   </div>
                 </div>
@@ -358,22 +365,21 @@ const handleSubmit = async () => {
               </div>
             )}
           </div>
-          <div className="flex flex-col items-center justify-center md:flex-row  pt-4 md:px-6 lg:px-8">
-            {/* Title */}
+          {/* <div className="flex flex-col items-center justify-center md:flex-row  pt-4 md:px-6 lg:px-8">
+
             <h3 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-sm sm:text-base md:text-lg lg:text-xl">
-              Free Rice Samples & Steel Container
+            
             </h3>
-          </div>
+          </div> */}
         </header>
 
-        {/* Details Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2 px-4">
           {/* Image Section */}
           <div className="flex justify-center p-4">
             <img
               src={FR}
               alt="Free Sample"
-              className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg rounded-lg shadow-lg object-cover"
+              className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg rounded-lg shadow-lg pointer-events-none select-none"
             />
           </div>
 
@@ -419,8 +425,6 @@ const handleSubmit = async () => {
                 I'm Interested
               </button>
             </div>
-
-            
           </div>
         </div>
       </div>
