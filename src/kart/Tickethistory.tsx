@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Header from "./Header3";
 import Footer from "../components/Footer";
-import Sidebar from "./Sidebarrice";
 import { FaBars, FaTimes, FaArrowLeft, FaFilter, FaFile, FaComments, FaBan, FaPen } from "react-icons/fa";
 import { Modal, Spin } from "antd";
 import { Menu, X, Plus, ArrowUpRight, ArrowDownRight, CreditCard, Wallet, ChevronRight } from 'lucide-react';
@@ -175,22 +173,12 @@ const TicketHistoryPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
 
-      <div className="lg:hidden p-4">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          {isSidebarOpen ? <X /> : <Menu />}
-        </button>
-      </div>
+    
 
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
-          </div>
+          
 
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">
@@ -210,7 +198,7 @@ const TicketHistoryPage: React.FC = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => navigate("/writetous")}
+                    onClick={() => navigate("/main/writetous")}
                     className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors shadow-sm flex items-center gap-2"
                   >
                     <FaPen className="text-sm" />

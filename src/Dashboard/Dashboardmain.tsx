@@ -1,199 +1,271 @@
-import React, { useState } from 'react';
-import { 
-  ShoppingBag,
-  BookOpen,
-  BarChart2,
-  GraduationCap,
-  Users,
-  UserCheck,
+import React, { useState, useEffect } from "react";
+import {
   Coins,
   Bot,
-  Settings
-} from 'lucide-react';
+  Settings,
+  Menu,
+  X,
+  ChevronRight,
+  Gem,
+  Cpu,
+  Package,
+  Globe,
+  Scale,
+  Factory,
+  Briefcase,
+  Users,
+  BarChart2,
+  ShoppingBag,
+  Search,
+  Copy,
+  Check,
+} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../kart/Header3";
-import RudrakshaImage from "../assets/img/WEBSITE (1).png";
+import Ricebags from "../kart/Mainrice";
+// import FreeChatGPTmain from './FreechatGPTmain';
+import axios from "axios";
+import Content1 from "./Content";
 
+// Import your images here
+import RudrakshaImage from "../assets/img/WEBSITE (1).png";
+import FG from "../assets/img/genai.png";
+import FR from "../assets/img/WhatsApp Image 2025-01-23 at 15.50.44.png";
+import StudyImage from "../assets/img/R33.jpg";
+import Legalimage from "../assets/img/legal.png";
+import Rotary from "../assets/img/myrotray (1).png";
+import MMServices from "../assets/img/manufacturing.png";
+import hiring from "../assets/img/wearehiring.png";
+import FreeChatGPTmain from "./FreechatGPTmain";
+import BMVCOINmain from './BMVcoinmain';
 interface DashboardItem {
   title: string;
   image: string;
   description: string;
   path: string;
   icon: React.ReactNode;
+  category?: string;
 }
 
 const DashboardMain: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('services');
+  const [activeTab, setActiveTab] = useState<string>("products");
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [cartCount, setCartCount] = useState<number>(0);
+  const [multichainId, setMultichainId] = useState<string>("");
+  const [bmvCoin, setBmvCoin] = useState<number>(0);
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
-  const handleNavigation = (path: string): void => {
-    window.location.href = path;
-  };
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const pathTab = location.pathname.split("/").pop();
+  
+
+    if (pathTab) {
+      setActiveTab(pathTab);
+    }
+  }, [location.pathname]);
 
   const services: DashboardItem[] = [
     {
-      title: 'Free Rudraksha',
-     image: RudrakshaImage,
-      description: 'Spiritual and wellness services',
-      path: '/services/freerudraksha',
-      icon: <ShoppingBag color="#7c3aed" size={24} />
+      title: "Free Rudraksha",
+      image: RudrakshaImage,
+      description:
+        "Receive a sacred Rudraksha bead, known for its spiritual and wellness benefits.",
+      path: "/main/services/freerudraksha",
+      icon: <Gem className="text-purple-600" size={24} />,
+      category: "Spiritual",
     },
     {
-      title: 'Free AI & GEN AI Training',
-      image: '/api/placeholder/400/320',
-      description: 'First Job - Professional AI Training',
-      path: '/services/ai-training',
-      icon: <BookOpen color="#7c3aed" size={24} />
+      title: "Free AI & Gen AI Training",
+      image: FG,
+      description:
+        "Enroll in free AI and Generative AI training sessions to enhance your technical skills.",
+      path: "/main/services/freeai-genai",
+      icon: <Cpu className="text-purple-600" size={24} />,
+      category: "Education",
     },
     {
-      title: 'Legal Services',
-      image: '/api/placeholder/400/320',
-      description: 'Lawyers & Advocates',
-      path: '/services/legal',
-      icon: <BarChart2 color="#7c3aed" size={24} />
+      title: "Free Rice Samples",
+      image: FR,
+      description:
+        "Request free rice samples along with a high-quality steel container for storage.",
+      path: "/main/services/freesample-steelcontainer",
+      icon: <Package className="text-purple-600" size={24} />,
+      category: "Food",
     },
     {
-      title: 'Study Abroad',
-      image: '/api/placeholder/400/320',
-      description: 'International Education Consultancy',
-      path: '/services/study-abroad',
-      icon: <GraduationCap color="#7c3aed" size={24} />
+      title: "Study Abroad",
+      image: StudyImage,
+      description:
+        "Explore opportunities to study abroad with expert guidance and support.",
+      path: "/main/services/studyabroad",
+      icon: <Globe className="text-purple-600" size={24} />,
+      category: "Education",
     },
     {
-      title: 'My Rotary',
-      image: '/api/placeholder/400/320',
-      description: 'Community International',
-      path: '/services/rotary',
-      icon: <Users color="#7c3aed" size={24} />
+      title: "Legal Knowledge Hub",
+      image: Legalimage,
+      description:
+        "Access expert legal advice and educational resources to navigate legal matters.",
+      path: "/main/services/legalservice",
+      icon: <Scale className="text-purple-600" size={24} />,
+      category: "Legal",
     },
     {
-      title: 'We are hiring',
-      image: '/api/placeholder/400/320',
-      description: 'Join our growing team',
-      path: '/careers',
-      icon: <UserCheck color="#7c3aed" size={24} />
-    }
+      title: "My Rotary",
+      image: Rotary,
+      description:
+        "Join a network of leaders making a difference through Rotary initiatives and programs.",
+      path: "/main/services/myrotary",
+      icon: <Users className="text-purple-600" size={24} />,
+      category: "Community",
+    },
+    {
+      title: "Manufacturing Services",
+      image: MMServices,
+      description:
+        "Explore advanced machinery and manufacturing services for industrial growth.",
+      path: "/main/services/machines-manufacturing",
+      icon: <Factory className="text-purple-600" size={24} />,
+      category: "Industrial",
+    },
+    {
+      title: "We Are Hiring",
+      image: hiring,
+      description:
+        "Explore exciting job opportunities and be a part of our growing team.",
+      path: "/main/services/we-are-hiring",
+      icon: <Briefcase className="text-purple-600" size={24} />,
+      category: "Careers",
+    },
   ];
 
   const products: DashboardItem[] = [
     {
-      title: 'Product 1',
-      image: '/api/placeholder/400/320',
-      description: 'Product description',
-      path: '/products/1',
-      icon: <ShoppingBag color="#7c3aed" size={24} />
-    }
+      title: "Digital Products",
+      image: RudrakshaImage,
+      description: "Browse our collection of digital products and resources.",
+      path: "/buyRice",
+      icon: <ShoppingBag className="text-purple-600" size={24} />,
+      category: "Digital",
+    },
   ];
 
   const freeGPTs: DashboardItem[] = [
     {
-      title: 'GPT Service 1',
-      image: '/api/placeholder/400/320',
-      description: 'AI Assistant',
-      path: '/gpts/1',
-      icon: <Bot color="#7c3aed" size={24} />
-    }
+      title: "AI Assistant",
+      image: RudrakshaImage,
+      description: "Try our free AI-powered assistant for various tasks.",
+      path: "/services/Freechatgpt",
+      icon: <Bot className="text-purple-600" size={24} />,
+      category: "AI",
+    },
   ];
 
-  const bmvCoin: DashboardItem[] = [
+  const bmvCoinItems: DashboardItem[] = [
     {
-      title: 'BMV Coin Service',
-      image: '/api/placeholder/400/320',
-      description: 'Cryptocurrency Service',
-      path: '/bmvcoin/service',
-      icon: <Coins color="#7c3aed" size={24} />
-    }
+      title: "BMV Coins",
+      image: RudrakshaImage,
+      description: "Manage and track your BMV coin balance and transactions.",
+      path: "/coins/dashboard",
+      icon: <Coins className="text-purple-600" size={24} />,
+      category: "Finance",
+    },
   ];
 
-  const TabButton = ({ tab, icon, label }: { tab: string; icon: React.ReactNode; label: string }) => (
-    <button 
-      onClick={() => setActiveTab(tab)}
-      className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-        activeTab === tab 
-          ? 'bg-purple-100 text-purple-700 shadow-sm' 
-          : 'hover:bg-gray-100 text-gray-600'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-  );
+  const filteredItems = (items: DashboardItem[]) => {
+    return items.filter(
+      (item) =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.category &&
+          item.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  };
 
   const renderItems = (items: DashboardItem[]): JSX.Element => (
-    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-6 px-4">
-  {items.map((item: DashboardItem, index: number) => (
-    <div 
-      key={index}
-      onClick={() => handleNavigation(item.path)}
-      className="flex flex-col bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-    >
-      <div className="relative h-36 sm:h-40">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="p-2 bg-purple-50 rounded-lg">
-            {item.icon}
+    <div className="space-y-6">
+      {activeTab === "products" ? (
+        <>
+          <Ricebags />
+        </>
+      ) : activeTab === "services" ? (
+        <>
+          <div className="relative">
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
           </div>
-          <h3 className="text-base font-semibold text-gray-900">
-            {item.title}
-          </h3>
-        </div>
-        <p className="text-sm text-gray-600">
-          {item.description}
-        </p>
-        <button className="mt-3 w-full py-2 px-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 text-sm">
-          Learn More
-        </button>
-      </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredItems(items).map((item, index) => (
+              <div
+                key={index}
+                onClick={() => navigate(item.path)}
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg 
+                  transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                  />
+                  {item.category && (
+                    <span className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-white/90 rounded-full">
+                      {item.category}
+                    </span>
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
+                      {item.icon}
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                      {item.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-600 line-clamp-2 group-hover:text-gray-900 transition-colors">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : activeTab === "freegpts" ? (
+        <>{ <FreeChatGPTmain /> }</>
+      ) : (
+        activeTab === "bmvcoin" && <>{ <BMVCOINmain /> }</>
+      )}
     </div>
-  ))}
-</div>
-
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
-        <Header cartCount={cartCount} />
-      <div className="max-w-7xl mx-auto py-8">
-        {/* Centered Tab Navigation */}
-        <div className="mb-12">
-          <div className="flex flex-col items-center">
-            
-            <div className="flex flex-wrap justify-center gap-4 p-2">
-              <TabButton 
-                tab="services" 
-                icon={<Settings size={20} color={activeTab === 'services' ? "#7c3aed" : "#64748b"} />} 
-                label="Services" 
-              />
-              <TabButton 
-                tab="products" 
-                icon={<ShoppingBag size={20} color={activeTab === 'products' ? "#7c3aed" : "#64748b"} />} 
-                label="Products" 
-              />
-              <TabButton 
-                tab="freegpts" 
-                icon={<Bot size={20} color={activeTab === 'freegpts' ? "#7c3aed" : "#64748b"} />} 
-                label="FreeGPTs" 
-              />
-              <TabButton 
-                tab="bmvcoin" 
-                icon={<Coins size={20} color={activeTab === 'bmvcoin' ? "#7c3aed" : "#64748b"} />} 
-                label="BMVCOIN" 
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Content Section */}
-        <div className="mt-6">
-          {activeTab === 'services' && renderItems(services)}
-          {activeTab === 'products' && renderItems(products)}
-          {activeTab === 'freegpts' && renderItems(freeGPTs)}
-          {activeTab === 'bmvcoin' && renderItems(bmvCoin)}
+      <div className="bg-white rounded-xl shadow-sm">
+        <div className="p-4 lg:p-6">
+          {activeTab === "services" && renderItems(services)}
+          {activeTab === "products" && renderItems(products)}
+          {activeTab === "freegpts" && renderItems(freeGPTs)}
+          {activeTab === "bmvcoin" && renderItems(bmvCoinItems)}
         </div>
       </div>
     </div>

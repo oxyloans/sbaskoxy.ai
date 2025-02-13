@@ -12,9 +12,9 @@ import rice3 from "../assets/img/ricecard3.png";
 
 interface Item {
   itemName: string;
-  itemID: string;
-  imageType: null;
-  weightUnit: string;
+  itemId: string;
+  itemImage: null;
+  weight: string;
   itemPrice: number;
   itemMrp: number | string;
 }
@@ -22,9 +22,8 @@ interface Item {
 interface Category {
   categoryName: string;
   categoryImage: String | null;
-  zakyaResponseList: Item[];
+  itemsResponseDtoList: Item[];
 }
-
 const Ricebags: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("All Categories");
@@ -95,7 +94,7 @@ const Ricebags: React.FC = () => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "https://meta.oxyglobal.tech/api/product-service/getItemsList"
+          "https://meta.oxyglobal.tech/api/product-service/showItemsForCustomrs"
         );
         const data: Category[] = response.data;
         
@@ -103,14 +102,14 @@ const Ricebags: React.FC = () => {
           {
             categoryName: "All Categories",
             categoryImage: null,
-            zakyaResponseList: data.flatMap(cat => cat.zakyaResponseList)
+            itemsResponseDtoList: data.flatMap(cat => cat.itemsResponseDtoList)
           },
-          ...data,
-          {
-            categoryName: "Free Sample",
-            categoryImage: null,
-            zakyaResponseList: []
-          }
+          // ...data,
+          // {
+          //   categoryName: "Free Sample",
+          //   categoryImage: null,
+          //   zakyaResponseList: []
+          // }
         ];
         
         setCategories(allCategories);
@@ -131,12 +130,12 @@ const Ricebags: React.FC = () => {
   };
 
   const handleItemClick = (item: Item) => {
-    navigate(`/itemsdisplay/${item.itemID}`, { state: { item } });
+    navigate(`/main/itemsdisplay/${item.itemId}`, { state: { item } });
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
+      {/* <Header cartCount={cartCount} /> */}
 
       <div 
         className="relative w-full overflow-hidden"
@@ -215,13 +214,13 @@ const Ricebags: React.FC = () => {
       </div>
 
       <main className="bg-white shadow-sm">
-        <div className="px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div >
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="text-center mb-8 md:mb-12"
           >
-            <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+            <h1 className="text-3xl pt-6 md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
               Premium Quality Rice
             </h1>
             <p className="mt-3 md:mt-4 text-base md:text-lg text-gray-600">

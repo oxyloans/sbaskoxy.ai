@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from './Header3';
 import { Menu, X, Filter, Search, Package2, CreditCard } from 'lucide-react';
 import Footer from '../components/Footer';
-import Sidebar from './Sidebarrice';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import axios from "axios";
 
@@ -175,22 +173,10 @@ const MyOrders: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
 
-      <div className="lg:hidden p-4">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          {isSidebarOpen ? <FaTimes /> : <FaBars />}
-        </button>
-      </div>
 
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
-          </div>
 
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">
@@ -264,7 +250,7 @@ const MyOrders: React.FC = () => {
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Payment</p>
-                            <p className="font-medium">{order.paymentType === "1" ? "COD" : "Online"}</p>
+                            <p className="font-medium">{order.paymentType !== "1" ? "COD" : "Online"}</p>
                           </div>
                           <div>
                             <p className="text-sm text-gray-500">Order Date</p>

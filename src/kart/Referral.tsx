@@ -10,9 +10,7 @@ import {
   X 
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
-import Header from './Header3';
 import Footer from '../components/Footer';
-import Sidebar from './Sidebarrice';
 import axios from 'axios';
 
 interface RefereeDetail {
@@ -110,23 +108,11 @@ const ReferralPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
 
-      <div className="lg:hidden p-4">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          {isSidebarOpen ? <FaTimes /> : <FaBars />}
-        </button>
-      </div>
-
+    
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
-          </div>
-
+         
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-2xl font-bold mb-6 text-gray-800">Referral Program</h2>

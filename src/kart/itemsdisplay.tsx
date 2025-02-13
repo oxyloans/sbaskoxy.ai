@@ -6,27 +6,27 @@ import {
   ShoppingCart, Home, ChevronRight, Minus, Plus, Tag,
   Package2, Star, Bot, X, MessageCircle, Heart
 } from 'lucide-react';
+import ValidationPopup from "./ValidationPopup";
 import Footer from "../components/Footer";
-import Header from "./Header3";
 import { parse } from "path";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Item {
-  itemID: string;
   itemId: string;
   itemName: string;
-  imageType: string;
-  purchaseDescription: string;
+  itemImage: string;
+  itemDescription: string;
   itemMrp: number;
   priceMrp: number | string;
-  itemQuantity: string;
+  weight: string;
   itemUrl: string;
   itemPrice: number;
   itemWeight: number;
   weightUnit: string;
   units: string;
   category: string;
+  image:string;
 }
 
 interface CartItem {
@@ -49,6 +49,7 @@ const ItemDisplayPage = () => {
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
+  const [showValidationPopup, setShowValidationPopup] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -57,22 +58,27 @@ const ItemDisplayPage = () => {
   const token = localStorage.getItem("accessToken");
   const [showChatSection, setShowChatSection] = useState(false);
 
+
  
   const apiKey =""
 
   const fetchItemDetails = async (id: string) => {
     try {
-      const response = await axios.get(`${BASE_URL}/product-service/getItemsList`);
+      const response = await axios.get(`${BASE_URL}/product-service/showItemsForCustomrs`);
       const allItems = response.data.flatMap((category: any) => 
-        category.zakyaResponseList
+        category.itemsResponseDtoList
       );
-      const item = allItems.find((item: Item) => item.itemID || item.itemId === id);
+      const item = allItems.find((item: Item) =>  item.itemId === id);
       if (item) {
         setItemDetails(item);
       }
     } catch (error) {
       console.error("Error fetching item details:", error);
     }
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
   };
 
   // Updated useEffect to handle both initial load and navigation
@@ -96,7 +102,7 @@ const ItemDisplayPage = () => {
   // Updated navigation handler for related items
   const handleRelatedItemClick = (item: Item) => {
     setItemDetails(item); // Update item details immediately
-    navigate(`/itemsdisplay/${item.itemID}`, { 
+    navigate(`/itemsdisplay/${item.itemId}`, { 
       state: { item },
       replace: true 
     });
@@ -130,6 +136,11 @@ const ItemDisplayPage = () => {
     }
   };
 
+  const handleProfileRedirect = () => {
+    setShowValidationPopup(false);
+    handleNavigation("/main/profile");
+  };
+
   
 
   const fetchRelatedItems = async () => {
@@ -141,18 +152,18 @@ const ItemDisplayPage = () => {
       
         // Find the category that contains the selected item
         const matchingCategory = response.data.find((category: any) =>
-          category.zakyaResponseList && // Ensure zakyaResponseList exists
-          Array.isArray(category.zakyaResponseList) && // Ensure it's an array
-          category.zakyaResponseList.some((item: any) => 
-            item.itemID === itemDetails?.itemID || item.itemID === itemDetails?.itemId
+          category.itemsResponseDtoList && 
+          Array.isArray(category.itemsResponseDtoList) && // Ensure it's an array
+          category.itemsResponseDtoList.some((item: any) => 
+            item.itemId === itemDetails?.itemId || item.itemId === itemDetails?.itemId
           )
         );
         
-        if (matchingCategory && Array.isArray(matchingCategory.zakyaResponseList)) {
+        if (matchingCategory && Array.isArray(matchingCategory.itemsResponseDtoList)) {
           // Extract related items, excluding the selected one
-          const categoryItems = matchingCategory.zakyaResponseList
+          const categoryItems = matchingCategory.itemsResponseDtoList
             .filter((item: any) => 
-              item.itemID !== itemDetails?.itemID && item.itemID !== itemDetails?.itemId // Corrected logical condition
+              item.itemId !== itemDetails?.itemId && item.itemId !== itemDetails?.itemId // Corrected logical condition
             )
             .slice(0, 4); // Limit to 4 items
         
@@ -169,17 +180,37 @@ const ItemDisplayPage = () => {
     }
   };
 
+  const checkProfileCompletion = () => {
+    const profileData = localStorage.getItem("profileData");
+    console.log("profileData", profileData);
+
+    if (profileData) {
+      const parsedData = JSON.parse(profileData);
+      console.log("parsedData", parsedData);
+      return !!(
+        parsedData.userFirstName &&  parsedData.userFirstName != "" &&
+        parsedData.userLastName &&   parsedData.userLastName != "" &&
+        parsedData.customerEmail && parsedData.customerEmail != ""&&
+        parsedData.alterMobileNumber && parsedData.alterMobileNumber !=""
+      );
+    }
+    return false;
+  };
+
   const handleAddToCart = async (item: Item) => {
     if (!token || !customerId) {
       message.warning("Please login to add items to the cart.");
-      setTimeout(() => navigate("/whatapplogin"), 2000);
+      setTimeout(() => navigate("/whatsapplogin"), 2000);
       return;
+    }
+    if (!checkProfileCompletion()) {
+      setShowValidationPopup(true);
     }
 
     try {
       await axios.post(
         `${BASE_URL}/cart-service/cart/add_Items_ToCart`,
-        { customerId, itemId: item.itemID, quantity: 1 },
+        { customerId, itemId: item.itemId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchCartData();
@@ -196,8 +227,8 @@ const ItemDisplayPage = () => {
       : `${BASE_URL}/cart-service/cart/decrementCartData`;
 
     try {
-      if (!increment && cartItems[item.itemID] <= 1) {
-        const targetCartId = cartData.find((cart) => cart.itemId === item.itemID)?.cartId;
+      if (!increment && cartItems[item.itemId] <= 1) {
+        const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
         await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
           data: { id: targetCartId },
           headers: { Authorization: `Bearer ${token}` }
@@ -206,7 +237,7 @@ const ItemDisplayPage = () => {
       } else {
         await axios.patch(
           endpoint,
-          { customerId, itemId: item.itemID },
+          { customerId, itemId: item.itemId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
@@ -305,12 +336,11 @@ const ItemDisplayPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         {/* Enhanced Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm mb-6">
           <button
-            onClick={() => navigate("/buyRice")}
+            onClick={() => navigate("/main/dashboard/products")}
             className="flex items-center text-gray-600 hover:text-purple-600 transition-colors"
           >
             <Home className="w-4 h-4 mr-1" />
@@ -331,7 +361,7 @@ const ItemDisplayPage = () => {
                 <div className="relative">
                   <div className="aspect-square rounded-lg overflow-hidden">
                     <img
-                      src={itemDetails?.imageType || itemDetails?.itemUrl }
+                      src={itemDetails?.itemImage || itemDetails?.image }
                       alt={itemDetails?.itemName}
                       className="w-full h-full object-cover"
                     />
@@ -366,7 +396,7 @@ const ItemDisplayPage = () => {
 
                   {/* Quantity and Add to Cart */}
                   <div className="space-y-4">
-                    {itemDetails && cartItems[itemDetails.itemID || itemDetails.itemId] ? (
+                    {itemDetails && cartItems[itemDetails.itemId ] ? (
                       <div className="flex items-center space-x-4">
                         <button
                           className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
@@ -375,7 +405,7 @@ const ItemDisplayPage = () => {
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="font-bold text-xl w-8 text-center">
-                          {cartItems[itemDetails.itemID || itemDetails.itemId]}
+                          {cartItems[itemDetails.itemId]}
                         </span>
                         <button
                           className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
@@ -404,14 +434,14 @@ const ItemDisplayPage = () => {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="flex items-center gap-2">
                   <Package2 className="w-5 h-5 text-purple-600" />
-                  <span>{itemDetails?.itemWeight || itemDetails?.itemQuantity} {itemDetails?.weightUnit || itemDetails?.units}</span>
+                  <span>{itemDetails?.itemWeight || itemDetails?.weight} {itemDetails?.weightUnit || itemDetails?.units}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Tag className="w-5 h-5 text-purple-600" />
                   <span>{itemDetails?.category}</span>
                 </div>
               </div>
-              <p className="text-gray-600">{itemDetails?.purchaseDescription}</p>
+              <p className="text-gray-600">{itemDetails?.itemDescription}</p>
             </div>
           </div>
 
@@ -479,7 +509,7 @@ const ItemDisplayPage = () => {
                     >
                       <div className="aspect-square relative">
                         <img
-                          src={item.imageType}
+                          src={item.itemImage || item.image} 
                           alt={item.itemName}
                           className="w-full h-full object-cover"
                           onClick={() => handleRelatedItemClick(item)}
@@ -494,7 +524,7 @@ const ItemDisplayPage = () => {
                           <span className="text-purple-600 font-bold">₹{item.itemPrice}</span>
                           <span className="text-gray-500 text-xs line-through">₹{item.itemMrp}</span>
                         </div>
-                        {cartItems[item.itemID] ? (
+                        {cartItems[item.itemId] ? (
                           <div className="flex items-center justify-center space-x-3">
                             <button
                               className="p-1.5 bg-purple-100 text-purple-600 rounded-md hover:bg-purple-200"
@@ -503,7 +533,7 @@ const ItemDisplayPage = () => {
                               <Minus className="w-3 h-3" />
                             </button>
                             <span className="font-bold text-sm w-6 text-center">
-                              {cartItems[item.itemID]}
+                              {cartItems[item.itemId]}
                             </span>
                             <button
                               className="p-1.5 bg-purple-100 text-purple-600 rounded-md hover:bg-purple-200"
@@ -529,9 +559,16 @@ const ItemDisplayPage = () => {
             </div>
           </div>
         </div>
+        <ValidationPopup
+        isOpen={showValidationPopup}
+        onClose={() => setShowValidationPopup(false)}
+        onAction={handleProfileRedirect}
+      />
       </div>
       <Footer />
+
     </div>
+    
   );
 };
 

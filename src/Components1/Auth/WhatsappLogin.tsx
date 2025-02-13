@@ -39,7 +39,7 @@ const WhatsappLogin = () => {
     const userId = localStorage.getItem("userId");
     const accessToken = localStorage.getItem("accessToken");
     if (userId && accessToken) {
-      navigate(location.state?.from || "/dashboard", { replace: true });
+      navigate(location.state?.from || "/main/dashboard/services", { replace: true });
     }
   }, [navigate, location]);
 
@@ -137,7 +137,7 @@ const WhatsappLogin = () => {
           localStorage.setItem("userId", response.data.userId);
           localStorage.setItem("accessToken", response.data.accessToken);
           setTimeout(
-            () => navigate(location.state?.from || "/dashboard"),
+            () => navigate(location.state?.from || "/main/dashboard/services"),
             2000
           );
         } else {
@@ -189,7 +189,7 @@ const WhatsappLogin = () => {
         localStorage.setItem("userId", response.data.userId);
         localStorage.setItem("accessToken", response.data.accessToken);
         setMessage("Login Successful");
-        setTimeout(() => navigate(location.state?.from || "/dashboard"), 500);
+        setTimeout(() => navigate(location.state?.from || "/main/dashboard/services"), 500);
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (err) {

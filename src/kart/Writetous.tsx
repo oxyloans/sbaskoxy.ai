@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
-import Header from "./Header3";
 import Footer from "../components/Footer";
-import Sidebar from "./Sidebarrice";
 import { FiUploadCloud, FiClock, FiMessageSquare, FiCheckCircle } from "react-icons/fi";
 import { Menu, X } from 'lucide-react';
 
@@ -23,7 +21,7 @@ const WriteToUs: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [cartCount, setCartCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,7 +54,7 @@ const WriteToUs: React.FC = () => {
 
   const fetchExistingQuery = async () => {
     if (!id) return;
-    
+
     try {
       const response = await axios.get(
         `https://meta.oxyglobal.tech/api/writetous-service/getQuery/${id}`
@@ -80,7 +78,7 @@ const WriteToUs: React.FC = () => {
       newErrors.query = "Query is required";
       isValid = false;
     }
-    
+
     setErrors(newErrors);
     return isValid;
   };
@@ -97,9 +95,9 @@ const WriteToUs: React.FC = () => {
 
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
 
     const data = {
@@ -126,7 +124,7 @@ const WriteToUs: React.FC = () => {
       );
       setFormData({ query: "", documentName: "", documentId: "" });
       showNotification("Query submitted successfully!", "success");
-      navigate("/tickethistory");
+      navigate("/main/tickethistory");
     } catch (error) {
       console.error("Error submitting query", error);
       showNotification("Failed to submit query. Please try again.", "error");
@@ -175,9 +173,8 @@ const WriteToUs: React.FC = () => {
 
   const showNotification = (message: string, type: "success" | "error") => {
     const notificationElement = document.createElement("div");
-    notificationElement.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
-      type === "success" ? "bg-green-500" : "bg-red-500"
-    } text-white transform transition-transform duration-300 ease-in-out`;
+    notificationElement.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${type === "success" ? "bg-green-500" : "bg-red-500"
+      } text-white transform transition-transform duration-300 ease-in-out`;
     notificationElement.textContent = message;
     document.body.appendChild(notificationElement);
     setTimeout(() => {
@@ -187,24 +184,10 @@ const WriteToUs: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
 
-      <div className="lg:hidden p-4">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          {isSidebarOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-
-      <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
-          </div>
 
-          <main className="flex-1">
+          <main className="flex-1 p-4 lg:p-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="p-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
@@ -218,7 +201,7 @@ const WriteToUs: React.FC = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => navigate("/tickethistory")}
+                    onClick={() => navigate("/main/tickethistory")}
                     className="group flex items-center gap-2 bg-purple-50 text-purple-700 px-6 py-3 rounded-full hover:bg-purple-100 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     <FiMessageSquare className="w-5 h-5" />
@@ -258,7 +241,7 @@ const WriteToUs: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        value={ localStorage.getItem("whatsappNumber") || profileData.whatsappNumber}
+                        value={localStorage.getItem("whatsappNumber") || profileData.whatsappNumber}
                         readOnly
                         className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50"
                       />
@@ -312,9 +295,8 @@ const WriteToUs: React.FC = () => {
                       name="query"
                       value={formData.query}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${
-                        errors.query ? 'border-red-500' : 'border-gray-200'
-                      }`}
+                      className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${errors.query ? 'border-red-500' : 'border-gray-200'
+                        }`}
                       placeholder="Please describe your query in detail..."
                     ></textarea>
                     {errors.query && (
@@ -325,9 +307,8 @@ const WriteToUs: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full bg-gradient-to-r from-purple-600 to-purple-400 text-white py-4 rounded-lg hover:from-purple-700 hover:to-purple-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 ${
-                      isSubmitting ? "opacity-75 cursor-not-allowed" : ""
-                    }`}
+                    className={`w-full bg-gradient-to-r from-purple-600 to-purple-400 text-white py-4 rounded-lg hover:from-purple-700 hover:to-purple-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 ${isSubmitting ? "opacity-75 cursor-not-allowed" : ""
+                      }`}
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
@@ -362,7 +343,7 @@ const WriteToUs: React.FC = () => {
             </div>
           </main>
         </div>
-      </div>
+
 
       <Footer />
     </div>

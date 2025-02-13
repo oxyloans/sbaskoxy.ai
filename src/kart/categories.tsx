@@ -8,9 +8,9 @@ const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Item {
   itemName: string;
-  itemID: string;
-  imageType: null;
-  weightUnit: string;
+  itemId: string;
+  itemImage: null;
+  weight: string;
   itemPrice: number;
   itemMrp: number | string;
 }
@@ -18,7 +18,7 @@ interface Item {
 interface Category {
   categoryName: string;
   categoryImage: String | null;
-  zakyaResponseList: Item[];
+  itemsResponseDtoList: Item[];
 }
 
 interface CategoriesProps {
@@ -56,6 +56,7 @@ const Categories: React.FC<CategoriesProps> = ({
 
   const fetchCartData = async () => {
     const Id = localStorage.getItem("userId");
+    
     try {
       const response = await axios.get(
         `${BASE_URL}/cart-service/cart/customersCartItems?customerId=${Id}`
@@ -103,7 +104,7 @@ const Categories: React.FC<CategoriesProps> = ({
     try {
       await axios.post(
         `${BASE_URL}/cart-service/cart/add_Items_ToCart`,
-        { customerId: userId, itemId: item.itemID, quantity: 1 },
+        { customerId: userId, itemId: item.itemId, quantity: 1 },
         { headers: { Authorization: `Bearer ${accessToken}` }}
       );
       fetchCartData();
@@ -120,14 +121,14 @@ const Categories: React.FC<CategoriesProps> = ({
         ? `${BASE_URL}/cart-service/cart/incrementCartData`
         : `${BASE_URL}/cart-service/cart/decrementCartData`;
       
-      if (!increment && cartItems[item.itemID] <= 1) {
-        const targetCartId = cartData.find((cart) => cart.itemId === item.itemID)?.cartId;
+      if (!increment && cartItems[item.itemId] <= 1) {
+        const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
         await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
           data: { id: targetCartId },
         });
         message.success("Item removed from cart successfully.");
       } else {
-        await axios.patch(endpoint, { customerId, itemId: item.itemID });
+        await axios.patch(endpoint, { customerId, itemId: item.itemId });
       }
       fetchCartData();
     } catch (error) {
@@ -138,10 +139,10 @@ const Categories: React.FC<CategoriesProps> = ({
 
   const getCurrentCategoryItems = () => {
     if (!activeCategory || activeCategory === "All Categories") {
-      return categories.flatMap(cat => cat.zakyaResponseList);
+      return categories.flatMap(cat => cat.itemsResponseDtoList);
     }
     const category = categories.find(cat => cat.categoryName === activeCategory);
-    return category ? category.zakyaResponseList : [];
+    return category ? category.itemsResponseDtoList : [];
   };
 
   return (
@@ -183,11 +184,11 @@ const Categories: React.FC<CategoriesProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
         >
           {getCurrentCategoryItems().map((item, index) => (
             <motion.div
-              key={item.itemID}
+              key={item.itemId}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: index * 0.05 }}
@@ -199,7 +200,7 @@ const Categories: React.FC<CategoriesProps> = ({
               >
                 <div className="aspect-square mb-3 overflow-hidden rounded-lg bg-purple-50">
                   <img
-                    src={item.imageType ?? "https://via.placeholder.com/150"}
+                    src={item.itemImage  ?? "https://via.placeholder.com/150"}
                     alt={item.itemName}
                     className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
                   />
@@ -212,7 +213,7 @@ const Categories: React.FC<CategoriesProps> = ({
                   <span className="text-gray-500 line-through text-sm">₹{item.itemMrp}</span>
                 </div>
 
-                {cartItems[item.itemID] > 0 ? (
+                {cartItems[item.itemId] > 0 ? (
                   <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1">
                     <motion.button
                       whileTap={{ scale: 0.9 }}
@@ -224,7 +225,7 @@ const Categories: React.FC<CategoriesProps> = ({
                     >
                       -
                     </motion.button>
-                    <span className="font-medium text-purple-700">{cartItems[item.itemID]}</span>
+                    <span className="font-medium text-purple-700">{cartItems[item.itemId]}</span>
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600"

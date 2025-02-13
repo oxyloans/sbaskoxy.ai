@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes, FaHome, FaBriefcase, FaMapMarkerAlt, FaTrash, FaPen } from 'react-icons/fa';
 import { Loader2, AlertCircle, X, CheckCircle2 } from 'lucide-react';
-import Header from './Header3';
 import Footer from '../components/Footer';
-import Sidebar from './Sidebarrice';
+
 import axios from 'axios';
 import { isWithinRadius } from './LocationCheck';
 
@@ -136,12 +135,12 @@ const ProfilePage = () => {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customerEmail)) {
       errors.customerEmail = 'Please enter a valid email address';
     }
-    if (!formData.alterMobileNumber.trim()) errors.alterMobileNumber = 'Alternative mobile number is required';
+    if (!formData.alterMobileNumber.trim()) errors.alterMobileNumber = 'Alternate mobile number is required';
     else if (!/^\d{10}$/.test(formData.alterMobileNumber)) {
       errors.alterMobileNumber = 'Please enter a valid 10-digit mobile number';
     }
     else if (formData.alterMobileNumber === formData.whatsappNumber) {
-      errors.alterMobileNumber = "Alternative mobile number and WhatsApp number must be different.";
+      errors.alterMobileNumber = "Alternate mobile number and WhatsApp number must be different.";
 
     }
     setValidationErrors(errors);
@@ -305,25 +304,18 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
 
-      <div className="lg:hidden p-4">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          {isSidebarOpen ? <FaTimes /> : <FaBars />}
-        </button>
-      </div>
+     
 
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
-          </div>
+        
 
           <main className="flex-1">
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="fixed inset-y-0 left-0 z-40 w-72 bg-white shadow-lg
+          transform -translate-x-full
+          lg:relative lg:translate-x-0 lg:w-auto lg:shadow-none
+          transition-transform duration-300 ease-in-out">
               <div className="border-b border-gray-200">
                 <div className="flex space-x-8 p-4">
                   <button
@@ -423,7 +415,7 @@ const ProfilePage = () => {
 
                       <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
-                          Alternative Mobile Number
+                          Alternate Mobile Number
                           <span className="text-xs text-gray-500"> (If unavailable, we'll contact this number)</span>
                         </label>
                         <input
@@ -431,14 +423,14 @@ const ProfilePage = () => {
                           maxLength={10} // Restricts input to 10 characters
                           pattern="\d*"  
                           name="alterMobileNumber"
-                          value={formData.alterMobileNumber}
+                          value={formData.alterMobileNumber.trim()}
                           onChange={(e) => setFormData({ ...formData, alterMobileNumber: e.target.value })}
                           className={`w-full px-4 py-3 rounded-lg border ${
                             validationErrors.alterMobileNumber
                               ? 'border-red-500 ring-1 ring-red-500'
                               : 'border-gray-300 focus:ring-2 focus:ring-purple-500'
                           }`}
-                          placeholder="Enter alternative number"
+                          placeholder="Enter alternate number"
                           disabled={editStatus}
                         />
                         {validationErrors.alterMobileNumber && (

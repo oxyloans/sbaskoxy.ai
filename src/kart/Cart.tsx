@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Header from './Header3';
 import Footer from '../components/Footer';
-import Sidebar from './Sidebarrice';
 import { message } from 'antd';
 import { isWithinRadius } from "./LocationCheck";
 
@@ -22,10 +20,10 @@ interface CartItem {
   itemName: string;
   itemPrice: string;
   priceMrp: number | string;
-  itemUrl: string;
+  image: string;
   itemDescription: string;
   units: string;
-  itemQuantity: string;
+  weight: string;
   cartQuantity: string;
   cartId: string;
 }
@@ -81,7 +79,7 @@ const CartPage: React.FC = () => {
     }
   };
   const handleImageClick = (item: CartItem) => {
-    navigate(`/itemsdisplay/${item.itemId}`, { state: { item } });
+    navigate(`/main/itemsdisplay/${item.itemId}`, { state: { item } });
   };
 
   const fetchCartData = async () => {
@@ -268,35 +266,22 @@ const CartPage: React.FC = () => {
       return;
     }
     console.log(selectedAddress);
-    navigate("/checkout", { state: { selectedAddress } })
+    navigate("/main/checkout", { state: { selectedAddress } })
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
 
-      <div className="lg:hidden p-4">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          {isSidebarOpen ? <FaTimes /> : <FaBars />}
-        </button>
-      </div>
 
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
-          </div>
-
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">
               {(!cartData || cartData.length === 0) ? (
                 <div className="flex flex-col items-center justify-center h-full">
                   <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
                   <button
-                    onClick={() => navigate('/buyRice')}
+                    onClick={() => navigate('/main/dashboard/products')}
                     className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
                   >
                     Browse items
@@ -314,7 +299,7 @@ const CartPage: React.FC = () => {
                         onClick={() => handleImageClick(item)}
                       >
                         <img
-                          src={item.itemUrl}
+                          src={item.image}
                           alt={item.itemName}
                           className="w-full h-full object-cover"
                         />
@@ -322,7 +307,7 @@ const CartPage: React.FC = () => {
                       <div>
                         <h3 className="font-bold text-center md:text-left">{item.itemName}</h3>
                         <p className="text-sm text-center md:text-left">
-                          Weight: {item.itemQuantity} {item.units}
+                          Weight: {item.weight} {item.units}
                         </p>
                         <p className="text-sm line-through text-red-500 text-center md:text-left">
                           MRP: ₹{item.priceMrp}
@@ -464,6 +449,7 @@ const CartPage: React.FC = () => {
               <button
                 className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition"
                 onClick={() => handleToProcess()}
+                disabled={!cartData || cartData.length === 0}
               >
                 Proceed to Checkout
               </button>

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Header from "./Header3";
 import Footer from "../components/Footer";
-import Sidebar from "./Sidebarrice";
 import { FaBars, FaTimes, FaHome, FaBriefcase, FaMapMarkerAlt, FaTrash, FaPen } from 'react-icons/fa';
 import { Loader2 } from 'lucide-react';
 import axios from 'axios';
@@ -218,7 +216,6 @@ const ManageAddressesPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
 
       <div className="lg:hidden p-4">
         <button
@@ -233,11 +230,11 @@ const ManageAddressesPage: React.FC = () => {
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
+            {/* <Sidebar /> */}
           </div>
 
           <main className="flex-1">
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex-1 transition-all duration-300">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-gray-800">Manage Address</h2>
                 {!showForm && (

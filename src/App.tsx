@@ -54,8 +54,6 @@ import WhatsappRegister from "./Components1/Auth/WhatsappRegister";
 import CampaignDetails
   from "./Components1/CampaignDetails";
   import AllQueries from "./Pages/AllQueries";
-
-
   import RequireAuth from "./auth/RequireAuth";
   import Ricebags from "./kart/Mainrice";
 import ItemDisplayPage from "./kart/itemsdisplay";
@@ -73,6 +71,11 @@ import ReferralPage from "./kart/Referral";
 import DashboardMain from "./Dashboard/Dashboardmain";
 import FreeRudrakshaPage from "./Dashboard/freerudrakshamain";
 import BMVPDF from "./components/bmvpdf";
+import FreeChatGPTmain from "./Dashboard/FreechatGPTmain";
+import BMVCOINmain from "./Dashboard/BMVcoinmain";
+import Sidebarmain from "./Dashboard/SidebarMain";
+import Headermain from "./Dashboard/HeaderMain";
+import Content1 from "./Dashboard/Content";
 const App: React.FC = () => {
   return (
     <Router>
@@ -112,19 +115,13 @@ const App: React.FC = () => {
             <Route path="freerudraksha" element={<Freerudraksha />} />
             <Route path="campaign/:type" element={<CampaignDetails />} />
             <Route path="ticket-history" element={<TicketHistory />} />
-            <Route path="freesample-steelcontainer" element={<FreeSample />} />
-            <Route path="freeai-genai" element={<FreeAiandGenAi />} />
-            <Route path="studyabroad" element={<StudyAbroad />} />
+            
+            
+            
             <Route path="free-chatgpt" element={<FreeChatGpt />} />
             <Route path="user-profile" element={<UserProfile />} />
             <Route path="bmvcoin" element={<BMVCOIN />} />
-            <Route
-              path="machines-manufacturing"
-              element={<MachinesManufacturingServices />}
-            />
-            <Route path="legalservice" element={<LegalService />} />
-            <Route path="we-are-hiring" element={<HiringService />} />
-            <Route path="myrotary" element={<MyRotaryServices />} />
+            
             <Route path="accommodation-gpt" element={<AccomidationGpt />} />
             <Route
               path="applicationsupport-gpt"
@@ -163,28 +160,47 @@ const App: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
 
           {/* {kartpage routes} */}
-          <Route path="/buyRice" element={<Ricebags />} />
-          <Route path="/itemsdisplay/:itemId" element={<ItemDisplayPage />} />
-          <Route path="/wallet" element={<RequireAuth><MyWalletPage /></RequireAuth>} />
-          <Route path="/mycart" element={<CartPage />} />
-          <Route path="/myorders" element={<RequireAuth><MyOrders /></RequireAuth>} />
-          <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
-          <Route path="/referral" element={<RequireAuth><ReferralPage /></RequireAuth>} />
-          <Route path="/subscription" element={<RequireAuth><SubscriptionPage /></RequireAuth>} />
-          <Route path="/writetous/:id" element={<RequireAuth><WriteToUs /></RequireAuth>} />
-          <Route path="/writetous" element={<RequireAuth><WriteToUs /></RequireAuth>} />
-          <Route path="/tickethistory" element={<RequireAuth><TicketHistoryPage /></RequireAuth>} />
-          <Route path="/checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
-          <Route path="/manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />
+          {/* <Route path="/buyRice" element={<Ricebags />} /> */}
+          
+          
           <Route path="/privacypolicy" element={<PrivacyPolicy/>}/>
           <Route path="/bmvpdf" element={<BMVPDF />} />
+          
          
 
           {/* {Dashboard Main routes} */}
-          <Route path="/dashboard-main" element={<DashboardMain/>}/>
-          <Route path="/services/freerudraksha" element={<FreeRudrakshaPage/>} />
-
-
+          <Route path="/main" element={<RequireAuth><Content1/></RequireAuth>} >
+          <Route
+              index
+              element={<Navigate to="/main/dashboard/services" replace />}
+            />
+          <Route path="dashboard/:tab" element={<DashboardMain />} />
+          <Route path="services/freerudraksha" element={<FreeRudrakshaPage/>} />
+          <Route path="services/freeai-genai" element={<FreeAiandGenAi />} />
+          <Route path="services/studyabroad" element={<StudyAbroad />} />
+          <Route path="services/Freechatgpt" element={<FreeChatGPTmain/>} />
+          <Route path="services/myrotary" element={<MyRotaryServices />} />
+          <Route path="services/bmvcoin" element={<BMVCOINmain/>} />
+          <Route path="services/freesample-steelcontainer" element={<FreeSample />} />
+          <Route
+              path="services/machines-manufacturing"
+              element={<MachinesManufacturingServices />}
+            />
+          <Route path="services/legalservice" element={<LegalService />} />
+          <Route path="services/we-are-hiring" element={<HiringService />} />
+          <Route path="wallet" element={<RequireAuth><MyWalletPage /></RequireAuth>} />
+          <Route path="mycart" element={<CartPage />} />
+          <Route path="myorders" element={<RequireAuth><MyOrders /></RequireAuth>} />
+          <Route path="profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+          <Route path="referral" element={<RequireAuth><ReferralPage /></RequireAuth>} />
+          <Route path="itemsdisplay/:itemId" element={<ItemDisplayPage />} />
+          <Route path="subscription" element={<RequireAuth><SubscriptionPage /></RequireAuth>} />
+          <Route path="writetous/:id" element={<RequireAuth><WriteToUs /></RequireAuth>} />
+          <Route path="writetous" element={<RequireAuth><WriteToUs /></RequireAuth>} />
+          <Route path="tickethistory" element={<RequireAuth><TicketHistoryPage /></RequireAuth>} />
+          <Route path="checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
+          <Route path="manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />
+          </Route>
         </Routes>
       </div>
     </Router>

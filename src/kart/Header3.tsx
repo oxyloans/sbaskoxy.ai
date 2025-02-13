@@ -1,20 +1,13 @@
+// Header.tsx
 import React, { useEffect, useState } from "react";
 import { ShoppingCart, UserCircle } from 'lucide-react';
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import ValidationPopup from './ValidationPopup';
 import AskOxyLogo from "../assets/img/askoxylogostatic.png";
-import buyrice from "../assets/img/buyrice.png";
 
 interface HeaderProps {
   cartCount: number;
-}
-
-interface ProfileData {
-  userFirstName: string;
-  userLastName: string;
-  customerEmail: string;
-  alterMobileNumber: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
@@ -57,36 +50,19 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
 
   const checkProfileCompletion = () => {
     const profileData = localStorage.getItem('profileData');
-    const hasProfileBeenSaved = localStorage.getItem('profileSaved');
-  
-    if (profileData) {
-      const parsedData: ProfileData = JSON.parse(profileData);
-      const isProfileComplete = !!((parsedData.userFirstName) && 
-                                 (parsedData.userLastName) && 
-                                 (parsedData.customerEmail) && 
-                                 (parsedData.alterMobileNumber));
-  
-      if (isProfileComplete) {
-        // If profile is complete, mark it as saved
-        localStorage.setItem('profileSaved', 'true');
-        return true;
-      }
-      
-      // If profile is incomplete and hasn't been saved before, show popup
-      if (!hasProfileBeenSaved) {
-        return false;
-      }
-    } else if (!hasProfileBeenSaved) {
-      // If no profile data exists and profile hasn't been saved before, show popup
-      return false;
-    }
+    console.log("profileData", profileData);
     
-    // Return true if profile has been saved before
-    return !!hasProfileBeenSaved;
+    if (profileData) {
+      const parsedData = JSON.parse(profileData);
+      console.log("parsedData", parsedData);
+      return !!(parsedData.firstName && parsedData.lastName && 
+                parsedData.email && parsedData.alterMobileNumber);
+    }
+    return false;
   };
 
   const handleCartClick = () => {
-    if (checkProfileCompletion()) {
+    if (!checkProfileCompletion()) {
       setShowValidationPopup(true);
     } else {
       handleNavigation('/mycart');
@@ -96,18 +72,6 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
   const handleProfileRedirect = () => {
     setShowValidationPopup(false);
     handleNavigation('/profile');
-  };
-
-  const handleSaveProfile = (profileData: ProfileData) => {
-    // Save profile data to local storage
-    localStorage.setItem('profileData', JSON.stringify(profileData));
-    // Mark profile as saved to prevent future popups
-    localStorage.setItem('profileSaved', 'true');
-  };
-
-  const resetProfileSavedState = () => {
-    localStorage.removeItem('profileSaved');
-    localStorage.removeItem('profileData');
   };
 
   useEffect(() => {
@@ -121,9 +85,6 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
     setCartCount(propCartCount);
   }, [propCartCount]);
 
-  const handleBuyRice = () => {
-    navigate("/buyRice");
-  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchValue(e.target.value);
@@ -166,13 +127,13 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
           </button>
         )}
         <FaSearch className="text-gray-400 ml-2 text-base
-          group-focus-within:text-blue-500 
-          hover:text-blue-500 hover:scale-110 transition-all duration-200" />
+        group-focus-within:text-blue-500 
+        hover:text-blue-500 hover:scale-110 transition-all duration-200" />
       </div>
 
       {(isFocused || searchValue) && (
         <div className="absolute w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 
-          animate-dropdown max-h-64 overflow-y-auto">
+        animate-dropdown max-h-64 overflow-y-auto">
           {searchTexts
             .filter(text => 
               text.toLowerCase().includes(searchValue.toLowerCase())
@@ -181,8 +142,8 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
               <button
                 key={index}
                 className="w-full px-4 py-2 text-left 
-                  hover:bg-blue-50 flex items-center space-x-2 
-                  transition-colors duration-200 hover:text-blue-600"
+                hover:bg-blue-50 flex items-center space-x-2 
+                transition-colors duration-200 hover:text-blue-600"
                 onClick={() => {
                   setSearchValue(text);
                   setIsFocused(false);
@@ -208,19 +169,8 @@ const Header: React.FC<HeaderProps> = ({ cartCount: propCartCount }) => {
                 src={AskOxyLogo} 
                 className="h-8 w-auto sm:h-14 object-contain cursor-pointer"
                 alt="AskOxyLogo"
-                onClick={() => handleNavigation('/dashboard')}
+                onClick={() => handleNavigation('/dashboard-main')}
               />
-
-              <button
-                onClick={handleBuyRice}
-                className="flex items-center bg-transparent"
-              >
-                <img
-                  src={buyrice}
-                  className="h-8 w-auto sm:h-14 object-contain"
-                  alt="BuyRice"
-                />
-              </button>
             </div>
 
             <div className="hidden sm:block flex-grow mx-4">

@@ -3,6 +3,7 @@ import "./StudyAbroad.css";
 import "./DiwaliPage.css";
 import "./Freerudraksha.css";
 import axios from "axios";
+import { ArrowLeft } from 'lucide-react';
 
 import {
   FaMapMarkerAlt,
@@ -225,10 +226,23 @@ const StudyAbroad: React.FC = () => {
           </div>
 
           {/* Buttons on the right */}
-          <div className="flex flex-col md:flex-row gap-4 mb-2 mt-2 items-center justify-end w-full px-4">
+          <div className="flex flex-col md:flex-row gap-4 mb-2 mt-2 items-center justify-between w-full px-4">
             {/* 'I'm Interested' Button */}
 
+            <div className="flex items-center gap-4 flex-start">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <ArrowLeft className="h-6 w-6" />
+                </button>
+                <h1 className="text-2xl font-bold text-purple-600 flex items-center gap-2">
+                  Study Abroad
+                </h1>
+              </div>
+
             {/* Dropdown Menu Button */}
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="relative">
               <button
                 className="bg-[#ea4c89] w-full md:w-auto px-4 py-2  text-white rounded-lg shadow-md hover:bg-[#008CBA] text-sm md:text-base lg:text-lg transition duration-300"
@@ -420,7 +434,7 @@ const StudyAbroad: React.FC = () => {
                 </div>
               </div>
             )}
-
+</div>
             {isprofileOpen && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                 <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-transform scale-105">
@@ -583,7 +597,7 @@ const StudyAbroad: React.FC = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-8 px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-8 px-6 mb-5">
           <div className="p-6 bg-white border rounded-lg shadow-md flex flex-col items-center text-center">
             <FaUniversity className="w-16 h-16 mb-4 text-purple-600" />
             <h3 className="font-bold text-xl text-black mb-2">
@@ -619,208 +633,6 @@ const StudyAbroad: React.FC = () => {
             <p className="text-black text-sm">Lifetime Access to students</p>
           </div>
         </div>
-      </div>
-      <div>
-        <h1 className="text-center mx-4 my-12 text-3xl md:text-5xl font-bold">
-          <span className="text-[#04AA6D]">
-            <span className="text-[#0a6fba]">OXY</span> GROUP
-          </span>{" "}
-          <span className="text-[#FFA400]">COMPANIES</span>
-        </h1>
-        <div className="event-container1">
-          <div className="event-content1">
-            <div className="diwali-images1">
-              <div className="image-container1">
-                <img src={img1} alt="Diwali Diyas" className="diwali-diya" />
-              </div>
-            </div>
-            <div className="event-details">
-              <h1 className="diwali-title1" style={{ color: "#0a6fba" }}>
-                Lend & Earn 1.5% - 2.5% Monthly RoI
-              </h1>
-              <h3
-                className="diwali-subtitle1"
-                style={{ padding: "0px", margin: "0px" }}
-              >
-                OxyLoans.com is an RBI-approved P2P NBFC, a revolutionary
-                fintech platform. We onboard tax-paying Individuals, and HNIs as
-                Lenders. We enable lenders/ investors to exchange funds directly
-                with borrowers. Our proprietary algorithms include credit
-                scoring, underwriting, and loan agreement preparation.
-              </h3>
-              <h3 className="diwali-subtitle1" style={{ fontWeight: "bold" }}>
-                ₹1000000000+<b>DISBURSAL</b> <br></br> 30000+ <b>LENDERS</b>
-                <br></br> 270000+ <b>BORROWERS</b>
-              </h3>
-              <div className="buttons">
-                <a
-                  href="https://oxyloans.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <button className="button demo">Start Lending</button>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="event-container1">
-          <div className="event-content1" style={{ borderColor: "#c26c27" }}>
-            <div className="diwali-images1">
-              <div className="image-container1">
-                <img src={img2} alt="Diwali Diyas" className="diwali-diya" />
-              </div>
-            </div>
-            <div className="event-details">
-              <h1 className="diwali-title1" style={{ color: "#c26c27" }}>
-                Fractional Investments in Lands & Buildings
-              </h1>
-              <h3
-                className="diwali-subtitle1"
-                style={{ padding: "0px", margin: "0px", paddingBottom: "20px" }}
-              >
-                OXYBRICKS is the first Blockchain platform that enables
-                fractional investment in lands & buildings: a Blockchain tech
-                platform that allows principal guarantee, monthly earnings, and
-                property appreciation.
-              </h3>
-
-              <div className="buttons">
-                <a
-                  href="https://oxybricks.world/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <button
-                    className="button demo"
-                    style={{ backgroundColor: "#c26c27" }}
-                  >
-                    Know More
-                  </button>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="event-container1">
-          <div className="event-content1" style={{ borderColor: "#583e99" }}>
-            <div className="diwali-images1">
-              <div className="image-container1">
-                <img src={img4} alt="Diwali Diyas" className="diwali-diya" />
-              </div>
-            </div>
-            <div className="event-details">
-              <h1 className="diwali-title1" style={{ color: "#583e99" }}>
-                All your ideas at one place
-              </h1>
-              <h3
-                className="diwali-subtitle1"
-                style={{ padding: "0px", margin: "0px", paddingBottom: "20px" }}
-              >
-                BMV.Money is an Bridgital Marketplace connecting stakeholders in
-                global immigration services, property management, machinery
-                purchases, startup mentoring, and job orientation programs.
-              </h3>
-
-              <div className="buttons">
-                <a
-                  href="https://bmv.money/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <button
-                    className="button demo"
-                    style={{ backgroundColor: "#583e99" }}
-                  >
-                    Know More
-                  </button>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="event-container1">
-          <div className="event-content1" style={{ borderColor: "#189c9e" }}>
-            <div className="diwali-images1">
-              <div className="image-container1">
-                <img src={img5} alt="Diwali Diyas" className="diwali-diya" />
-              </div>
-            </div>
-            <div className="event-details">
-              <h1 className="diwali-title1" style={{ color: "#189c9e" }}>
-                Find your dream home
-              </h1>
-              <h3
-                className="diwali-subtitle1"
-                style={{ padding: "0px", margin: "0px", paddingBottom: "20px" }}
-              >
-                XPERT HOMES is a leading property management company offering
-                transparent, high-quality services. We help property owners
-                maximize ROI and find verified tenants through our comprehensive
-                360° management solutions.
-              </h3>
-
-              <div className="buttons">
-                <a
-                  href="https://xperthomes.in/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <button
-                    className="button demo"
-                    style={{ backgroundColor: "#189c9e" }}
-                  >
-                    Know More
-                  </button>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Group Section */}
-        {/* <div className="px-6 py-5 bg-[#f1f1f1] md:p-10 rounded-md">
-          <h1
-            className="text-center my-4 text-4xl sm:text-5xl md:text-6xl lg:text-7xl"
-            style={{ fontSize: "clamp(2rem, 8vw, 50px)" }} // Responsively scales font size
-          >
-            <b className="text-green-600">
-              <span className="text-[#0a6fba]">OXY</span> GROUP
-            </b>{" "}
-            <span className="text-[#FFA500]">COMPANIES</span>
-          </h1>
-
-          <div className="relative w-full max-w-[700px] mx-auto overflow-hidden">
-            <button
-              className="absolute z-10 p-2 text-2xl transform -translate-y-1/2 bg-blue-600 text-white rounded-full left-2 top-1/2 hover:bg-blue-700" // Adds blue background and white text color
-              onClick={handlePrev}
-            >
-              ←
-            </button>
-            <div
-              className="flex transition-transform duration-300 ease-in-out"
-              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-            >
-              {images.map((image, idx) => (
-                <div key={idx} className="flex-shrink-0 w-full">
-                  <img
-                    src={image.src}
-                    alt={image.alt}
-                    className="w-full h-auto"
-                  />
-                </div>
-              ))}
-            </div>
-            <button
-              className="absolute z-10 p-2 text-2xl transform -translate-y-1/2 bg-blue-600 text-white rounded-full right-2 top-1/2 hover:bg-blue-700" // Adds blue background and white text color
-              onClick={handleNext}
-            >
-              →
-            </button>
-          </div>
-        </div> */}
       </div>
       <Footer />
     </div>

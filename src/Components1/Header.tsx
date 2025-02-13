@@ -80,8 +80,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
           <Menu size={24} className="text-[#351664] font-bold" />
         </button>
 
-        {/* Sidebar Component */}
-
         {/* Logo Section */}
         <img
                 src={AskOxyLogo} 
@@ -90,18 +88,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 onClick={() => handleNavigation('/dashboard')}
               />
 
-              <button
-                onClick={handleBuyRice}
-                className="flex items-center bg-transparent"
-              >
-                <img
-                  src={buyrice}
-                  className="h-8 w-auto sm:h-14 object-contain"
-                  alt="BuyRice"
-                />
-              </button>
 
-        {/* Profile Dropdown */}
         {/* Profile Dropdown */}
         <div className="relative lg:block">
           {/* Profile Button */}

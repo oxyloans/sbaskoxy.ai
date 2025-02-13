@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { message,Alert, Modal } from 'antd';
-import Header from './Header3';
 import Footer from '../components/Footer';
-import Sidebar from './Sidebarrice';
 import { ArrowLeft, CreditCard, Truck, Tag, ShoppingBag } from 'lucide-react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import decryptEas from './decryptEas';
@@ -138,7 +136,7 @@ const CheckoutPage: React.FC = () => {
     try {
       if (grandTotalAmount === 0) {
         message.error("Please add items to cart");
-        navigate("/buyRice");
+        navigate("/main/dashboard/products");
         return;
       }
   
@@ -175,11 +173,9 @@ const CheckoutPage: React.FC = () => {
             okText: "Yes",
             cancelText: "No",
             onOk() {
-              navigate("/myorder"); // Open link in new tab
+              navigate("/main/myorders"); // Open link in new tab
             },
           });
-          message.success("Order placed successfully");
-          navigate("/myorder");
         } else if (
           selectedPayment === "ONLINE" &&
           response.data.paymentId !== null
@@ -389,22 +385,12 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
 
-      <div className="lg:hidden p-4">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          {isSidebarOpen ? <FaTimes /> : <FaBars />}
-        </button>
-      </div>
+
 
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
-          </div>
+         
 
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">

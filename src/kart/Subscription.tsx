@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Header from "./Header3";
 import Footer from "../components/Footer";
-import Sidebar from "./Sidebarrice";
 import { Menu, X, Check, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FaBars, FaTimes } from 'react-icons/fa';
@@ -422,23 +420,12 @@ const Subscription: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Header cartCount={cartCount} />
       
-      <div className="lg:hidden p-4">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200"
-        >
-          {isSidebarOpen ? <FaTimes /> : <FaBars />}
-        </button>
-      </div>
+     
 
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className={`lg:w-64 ${isSidebarOpen ? 'block' : 'hidden'} lg:block`}>
-            <Sidebar />
-          </div>
-
+          
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="text-center max-w-2xl mx-auto mb-12">
