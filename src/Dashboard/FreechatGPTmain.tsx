@@ -164,7 +164,7 @@ const FreeChatGPTmain: React.FC = () => {
         setShowHistory(false);
         setIsFirstVisit(false);
         console.log("Navigating to /dashboard-main?active=products..."); // Debugging
-        navigate("/dashboard-main?active=products");
+        navigate("/main/dashboard/freegpts");
     };
 
     const handleSend = async (queryInput: string) => {
