@@ -62,7 +62,7 @@ const Content1: React.FC = () => {
   ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
   top-16 md:top-20`} // Less space on mobile, more on larger screens
       >
-        <div className="h-full scrollbar-hide p-4">
+        <div className="h-full scrollbar-hide p-2">
           <Sidebar onCollapse={onCollapse} />
         </div>
       </aside>
