@@ -20,10 +20,9 @@ const FreeRudrakshaPage = () => {
   const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [writeToUsForm, setWriteToUsForm] = useState({
-    name: '',
+    mobilenumber: '',
     email: '',
     message: '',
-    subject: ''
   });
   const [interestedForm, setInterestedForm] = useState({
     name: '',
@@ -76,9 +75,11 @@ const FreeRudrakshaPage = () => {
     </button>
   );
 
+  
+
   // Write To Us API Integration
   const handleWriteToUsSubmit = async () => {
-    if (!writeToUsForm.name || !writeToUsForm.email || !writeToUsForm.message || !writeToUsForm.subject) {
+    if (!writeToUsForm.mobilenumber || !writeToUsForm.email || !writeToUsForm.message ) {
       message.error('Please fill in all required fields');
       return;
     }
@@ -99,7 +100,7 @@ const FreeRudrakshaPage = () => {
       if (response.ok) {
         message.success('Message sent successfully!');
         setIsWriteToUsOpen(false);
-        setWriteToUsForm({ name: '', email: '', message: '', subject: '' });
+        setWriteToUsForm({ mobilenumber: '', email: '', message: '' });
       } else {
         message.error('Failed to send message. Please try again.');
       }
@@ -348,11 +349,11 @@ const FreeRudrakshaPage = () => {
               className="modal-responsive"
             >
               <Form layout="vertical" className="mt-4">
-                <Form.Item label="Name" required>
+                <Form.Item label="Mobile num" required>
                   <Input
-                    value={writeToUsForm.name}
-                    onChange={(e) => setWriteToUsForm({ ...writeToUsForm, name: e.target.value })}
-                    placeholder="Enter your name"
+                    value={writeToUsForm.mobilenumber}
+                    onChange={(e) => setWriteToUsForm({ ...writeToUsForm, mobilenumber: e.target.value })}
+                    placeholder="Enter your mobile number"
                   />
                 </Form.Item>
                 <Form.Item label="Email" required>
@@ -363,18 +364,11 @@ const FreeRudrakshaPage = () => {
                     type="email"
                   />
                 </Form.Item>
-                <Form.Item label="Subject" required>
-                  <Input
-                    value={writeToUsForm.subject}
-                    onChange={(e) => setWriteToUsForm({ ...writeToUsForm, subject: e.target.value })}
-                    placeholder="Enter subject"
-                  />
-                </Form.Item>
                 <Form.Item label="Message" required>
                   <Input.TextArea
                     value={writeToUsForm.message}
                     onChange={(e) => setWriteToUsForm({ ...writeToUsForm, message: e.target.value })}
-                    placeholder="Enter your message"
+                    placeholder="Enter your query"
                     rows={4}
                   />
                 </Form.Item>

@@ -115,7 +115,7 @@ const Ricebags: React.FC = () => {
         setCategories(allCategories);
       } catch (error) {
         console.error("Error fetching categories:", error);
-        message.error("Failed to load categories");
+        // message.error("Failed to load categories");
       } finally {
         setLoading(false);
       }

@@ -41,7 +41,7 @@ const WhatsappRegister = () => {
     const accessToken = localStorage.getItem("accessToken");
 
     if (userId && accessToken) {
-      navigate(location.state?.from || "/dashboard", { replace: true });
+      navigate(location.state?.from || "/main/dashboard/services", { replace: true });
       return;
     }
 

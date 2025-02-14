@@ -175,7 +175,8 @@ const App: React.FC = () => {
               element={<Navigate to="/main/dashboard/services" replace />}
             />
           <Route path="dashboard/:tab" element={<DashboardMain />} />
-          <Route path="services/freerudraksha" element={<FreeRudrakshaPage/>} />
+          {/* <Route path="services/freerudraksha" element={<FreeRudrakshaPage/>} /> */}
+          <Route path="services/freerudraksha" element={<Freerudraksha />} />
           <Route path="services/freeai-genai" element={<FreeAiandGenAi />} />
           <Route path="services/studyabroad" element={<StudyAbroad />} />
           <Route path="services/Freechatgpt" element={<FreeChatGPTmain/>} />

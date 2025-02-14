@@ -98,7 +98,7 @@ const MyRotaryServices = () => {
 
   const handlePopUOk = () => {
     setIsOpen(false);
-    navigate("/dashboard/user-profile");
+    navigate("/main/profile");
   };
 
   const handleWriteToUs = () => {

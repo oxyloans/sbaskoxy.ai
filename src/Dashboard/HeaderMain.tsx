@@ -204,7 +204,7 @@ const Header: React.FC<HeaderProps> = ({
                 src={AskOxyLogo}
                 className="h-8 w-auto sm:h-14 object-contain cursor-pointer"
                 alt="AskOxyLogo"
-                onClick={() => handleNavigation("/dashboard")}
+                onClick={() => handleNavigation("/main")}
               />
             </div>
 

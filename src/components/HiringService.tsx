@@ -46,6 +46,8 @@ const HiringService: React.FC = () => {
   };
 
   const mobileNumber = localStorage.getItem("whatsappNumber");
+  
+  const email = localStorage.getItem("email");
 
   const [formData, setFormData] = useState({
     askOxyOfers: "WEAREHIRING",
@@ -91,13 +93,12 @@ const HiringService: React.FC = () => {
     }
   };
 
-  const email = localStorage.getItem("email");
 
   const navigate = useNavigate();
 
   const handlePopUOk = () => {
     setIsOpen(false);
-    navigate("/dashboard/user-profile");
+    navigate("/main/profile");
   };
 
   const handleWriteToUs = () => {

@@ -138,7 +138,7 @@ const StudyAbroad: React.FC = () => {
 
   const handlePopUOk = () => {
     setIsOpen(false);
-    navigate("/dashboard/user-profile");
+    navigate("/main/profile");
   };
 
   const handleWriteToUs = () => {

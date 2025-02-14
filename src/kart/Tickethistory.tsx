@@ -297,7 +297,7 @@ const TicketHistoryPage: React.FC = () => {
                             {selectedStatus === "PENDING" && (
                               <>
                                 <button
-                                  onClick={() => navigate(`/writetous/${ticket.id}?userQuery=${encodeURIComponent(ticket.query)}`)}
+                                  onClick={() => navigate(`/main/writetous/${ticket.id}?userQuery=${encodeURIComponent(ticket.query)}`)}
                                   className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
                                 >
                                   <FaPen className="text-xs" />
