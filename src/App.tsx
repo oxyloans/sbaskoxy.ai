@@ -51,8 +51,8 @@ import ThankYouPage from "./components/ThankYouPage";
 import BMVCOIN from "./Components1/BMVCOIN";
 import WhatsappLogin from "./Components1/Auth/WhatsappLogin";
 import WhatsappRegister from "./Components1/Auth/WhatsappRegister";
-import CampaignDetails
-  from "./Components1/CampaignDetails";
+// import CampaignDetails
+//   from "./Components1/CampaignDetails";
   import AllQueries from "./Pages/AllQueries";
   import RequireAuth from "./auth/RequireAuth";
   import Ricebags from "./kart/Mainrice";
@@ -113,7 +113,7 @@ const App: React.FC = () => {
 
             {/* Nested Routes */}
             <Route path="freerudraksha" element={<Freerudraksha />} />
-            <Route path="campaign/:type" element={<CampaignDetails />} />
+           {/* <Route path="campaign/:type" element={<CampaignDetails />} />*/} 
             <Route path="ticket-history" element={<TicketHistory />} />
             
             
