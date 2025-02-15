@@ -235,6 +235,7 @@ const Subscription: React.FC = () => {
   const getepayPortal = async (data:any) => {
     console.log("getepayPortal", data);
     const JsonData = JSON.stringify(data);
+    const mer = data.merchantTransactionId
 
     var ciphertext = encryptEas(JsonData);
     var newCipher = ciphertext.toUpperCase();
@@ -266,7 +267,7 @@ const Subscription: React.FC = () => {
         console.log(data);
         data = JSON.parse(data);
         localStorage.setItem("paymentId", data.paymentId)
-        localStorage.setItem("merchantTransactionId", data.merchantTransactionId)
+        localStorage.setItem("merchantTransactionId", mer)
         const paymentUrl = data.paymentUrl; // Assuming API returns a payment link
 
         Modal.confirm({

@@ -2,17 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { message,Alert, Modal } from 'antd';
+// import Header from './Header3';
 import Footer from '../components/Footer';
+// import Sidebar from './Sidebarrice';
 import { ArrowLeft, CreditCard, Truck, Tag, ShoppingBag } from 'lucide-react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import decryptEas from './decryptEas';
 import encryptEas from './encryptEas';
+import Checkbox from 'antd';
 
 interface CartItem {
   itemId: string;
   itemName: string;
   itemPrice: string;
   cartQuantity: string;
+}
+
+interface CartData {
+  deliveryBoyFee: number;
+
 }
 
 interface Address {
@@ -34,13 +42,22 @@ const CheckoutPage: React.FC = () => {
   const { state } = useLocation();
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [useWallet,setUseWallet] = useState(false);
   const [couponCode, setCouponCode] = useState('');
+  const [coupenDetails,setCoupenDetails] = useState<any>(null);
+  const [walletAmount, setWalletAmount] = useState<number>(0);
+  const [walletTotal,setWalletTotal] = useState<number>(0);
+  const [coupenApplied,setCoupenApplied] = useState(false);
   const [cartCount, setCartCount] = useState<number>(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [selectedPayment, setSelectedPayment] = useState<'ONLINE' | 'COD'>('ONLINE');
   const [selectedAddress,setSelectedAddress] = useState<Address>(state?.selectedAddress || null)
   const [grandTotalAmount, setGrandTotalAmount] = useState<number>(0);
-  const [orderId,setOrderId] = useState<string>();
+  const [deliveryBoyFee, setDeliveryBoyFee] = useState<number>(0);
+  const [totalAmount,setTotalAmount]=useState<number>(0);
+  const [walletMessage,setWalletMessage]=useState();
+  const [grandTotal,setGrandTotal]=useState<number>(0);
+   const [orderId,setOrderId] = useState<string>();
   const [profileData,setProfileData] = useState<ProfileData>({
     firstName: '',
     lastName: '',
@@ -48,7 +65,7 @@ const CheckoutPage: React.FC = () => {
     whatsappNumber: '',
   })
   const [merchantTransactionId,setMerchantTransactionId] = useState()
-  const [paymentStatus,setPaymentStatus] = useState(null)
+  const [paymentStatus,setPaymentStatus] = useState()
   const navigate = useNavigate();
 
   const BASE_URL = 'https://meta.oxyglobal.tech/api';
@@ -56,16 +73,17 @@ const CheckoutPage: React.FC = () => {
   const token = localStorage.getItem('accessToken');
   const userData = localStorage.getItem('profileData')
 
-  
+ 
 
 
   useEffect(() => {
     fetchCartData();
-    totalCart()
+    totalCart();
+    getWalletAmount();
     const queryParams = new URLSearchParams(window.location.search);
-  const params = Object.fromEntries(queryParams.entries());
-  const order = params.trans;
-  setOrderId(order)
+    const params = Object.fromEntries(queryParams.entries());
+    const order = params.trans;
+    setOrderId(order)
     if(userData){
       setProfileData(JSON.parse(userData))
     }
@@ -77,10 +95,35 @@ const CheckoutPage: React.FC = () => {
     const paymentId = localStorage.getItem('paymentId')
     if(trans===orderId){
       Requery(paymentId)
-      console.log({paymentId});
     }
   },[orderId])
 
+    // Handle checkbox toggle
+    const handleCheckboxToggle = () => {
+      const newValue = !useWallet;
+      console.log({ newValue });
+      setUseWallet(newValue);
+      getWalletAmount();
+  
+      if (newValue) {
+        Modal.info({
+          title: "Wallet Amount Used",
+          content: `You are using ₹${walletAmount} from your wallet.`,
+          onOk() {
+            console.log("OK clicked");
+          },
+        });
+      } else {
+        // Show alert when the checkbox is unchecked
+        Modal.info({
+          title : "Wallet Amount Deselected",
+          content:`You have removed the usage of ${walletAmount} from your wallet.`,
+          onOk() {
+            console.log("OK clicked");
+          },
+      });
+      }
+    };
 
   const fetchCartData = async () => {
     try {
@@ -99,6 +142,8 @@ const CheckoutPage: React.FC = () => {
   };
 
   const totalCart = async() => {
+    console.log("total cart");
+    
     try {
       const response = await axios.post(
         `${BASE_URL}/cart-service/cart/cartItemData`,{
@@ -109,6 +154,11 @@ const CheckoutPage: React.FC = () => {
         }
       );
       setGrandTotalAmount(parseFloat(response.data.totalSum));
+      const totalDeliveryFee = response.data?.cartResponseList.reduce((sum:number, item :CartData) => sum + item.deliveryBoyFee, 0);
+       console.log({totalDeliveryFee});
+       setDeliveryBoyFee(totalDeliveryFee)
+       setTotalAmount(parseFloat(response.data.totalSum))
+       setGrandTotal(parseFloat(response.data.totalSum))
       
     } catch (error) {
       console.error('Error fetching cart items:', error);
@@ -118,35 +168,104 @@ const CheckoutPage: React.FC = () => {
    
   };
 
-  const calculateSubTotal = () => {
-   const totalCartAmount = cartData.reduce(
-    (acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity),
-    0
-  ).toFixed(2);
-    
-    return totalCartAmount
+  // const calculateSubTotal = () => {
+  //  const totalCartAmount = cartData.reduce(
+  //   (acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity),
+  //   0
+  // ).toFixed(2);
+    // console.log("totalCartAmount",totalCartAmount);
+     // };
+  // function for applying coupon
+  const handleApplyCoupon = () => {
+    // if (!couponCode.trim()) {
+    //   message.warning('Please enter a coupon code');
+    //   return;
+    // }
+    // message.info('Coupon functionality to be implemented');
+
+    const data ={
+      couponCode:couponCode.toUpperCase(),
+      customerId: customerId,
+      subTotal:grandTotalAmount
+    }
+    console.log("data ",data);
+
+    const response = axios.post(
+      BASE_URL+"/order-service/applycoupontocustomer",data,{
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
+      .then((response) => {
+         console.log("coupen applied",response.data);
+         const { discount, grandTotal } = response.data;
+          message.info(response.data.message);
+          setCoupenDetails(discount)
+          setCoupenApplied(response.data.coupenApplied)
+          console.log("coupenapplied state", response.data.couponApplied);
+
+      }).catch((error) => {
+        console.error("Error in applying coupon:", error);
+        message.error("Failed to apply coupon");
+      })
+  };
+  // for removing coupen code
+  const deleteCoupen = () => {
+    setCouponCode("");
+    setCoupenApplied(false);
+    console.log("coupen removed");
+    message.info("coupen removed successfully");
   };
 
-  const handleApplyCoupon = () => {
-    if (!couponCode.trim()) {
-      message.warning('Please enter a coupon code');
-      return;
+  // for getting wallet details
+  const getWalletAmount =()=>{
+    const data ={
+      customerId: customerId
     }
-    message.info('Coupon functionality to be implemented');
-  };
+    const response = axios.post(
+      BASE_URL+"/order-service/applyWalletAmountToCustomer",data,{
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
+      .then((response) => {
+         console.log("wallet amount",response.data);
+        //  setWalletAmount(response.data.usableWalletAmountForOrder);
+        setWalletAmount(500);
+         message.info(response.data.message);
+         setWalletMessage(response.data.message);
+         setWalletTotal(
+          response.data.totalSum - response.data.usableWalletAmountForOrder
+        );
+      }).catch((error) => {
+        console.error("Error in getting wallet amount:", error.response?.data||error.message);
+        message.error("Failed to get wallet amount");
+      })
+  }
 
   const handlePayment = async () => {
     try {
       if (grandTotalAmount === 0) {
         message.error("Please add items to cart");
-        navigate("/main/dashboard/products");
+        navigate("/main/dashboard/product");
         return;
       }
   
       setLoading(true); // Prevent multiple clicks
   
       console.log({ selectedPayment });
-  
+      let wallet;
+      if (useWallet) {
+        wallet = walletAmount;
+      } else {
+        wallet = null;
+      }
+      let coupon, coupenAmount;
+      if (coupenApplied && coupenDetails > 0) {
+        coupon = couponCode.toUpperCase();
+        coupenAmount = coupenDetails;
+      } else {
+        coupon = null;
+        coupenAmount = 0;
+      }
       const response = await axios.post(
         BASE_URL + "/order-service/orderPlacedPaymet",
         {
@@ -157,9 +276,10 @@ const CheckoutPage: React.FC = () => {
           landMark: selectedAddress.landMark,
           orderStatus: selectedPayment,
           pincode: selectedAddress.pincode,
-          walletAmount: 0,
-          couponCodeUsed: null,
-          couponCodeValue: 0,
+          walletAmount: wallet,
+          couponCodeUsed: coupon,
+          couponCodeValue: coupenDetails,
+          deliveryBoyFee: deliveryBoyFee,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -173,10 +293,10 @@ const CheckoutPage: React.FC = () => {
           Modal.success({
             title: "Successfull",
             content: "Order placed successfully",
-            okText: "Yes",
+            okText: "Ok",
             cancelText: "No",
             onOk() {
-              navigate("/main/myorders"); // Open link in new tab
+              navigate("/main/myorders");
             },
           });
         } else if (
@@ -232,6 +352,7 @@ const CheckoutPage: React.FC = () => {
   const getepayPortal = async (data:any) => {
     console.log("getepayPortal", data);
     const JsonData = JSON.stringify(data);
+    const mer = data.merchantTransactionId
 
     var ciphertext = encryptEas(JsonData);
     var newCipher = ciphertext.toUpperCase();
@@ -263,7 +384,7 @@ const CheckoutPage: React.FC = () => {
         console.log(data);
         data = JSON.parse(data);
         localStorage.setItem("paymentId", data.paymentId)
-        localStorage.setItem("merchantTransactionId", data.merchantTransactionId)
+        localStorage.setItem("merchantTransactionId", mer)
         const paymentUrl = data.paymentUrl; // Assuming API returns a payment link
 
         Modal.confirm({
@@ -329,7 +450,7 @@ const CheckoutPage: React.FC = () => {
       fetch(
         "https://portal.getepay.in:8443/getepayPortal/pg/invoiceStatus",
         {
-          method: "POST",
+        method: "POST",
         headers: myHeaders,
         body: raw,
         redirect: "follow",
@@ -365,20 +486,20 @@ const CheckoutPage: React.FC = () => {
                 },
               })
                 .then((secondResponse) => {
-                  console.log(
-                    "Order Placed with Payment API:",
-                    secondResponse.data
-                  );
-                  localStorage.removeItem('paymentId')
-                  localStorage.removeItem('merchantTransactionId')
-                   Modal.success({
-                        content: "Order placed Successfully",
-                        onOk: () => {
-                          navigate("/main/myorders");
-                        },
-                      })
-                  // setLoading(false);
-                })
+                                  console.log(
+                                    "Order Placed with Payment API:",
+                                    secondResponse.data
+                                  );
+                                  localStorage.removeItem('paymentId')
+                                  localStorage.removeItem('merchantTransactionId')
+                                   Modal.success({
+                                        content: "Order placed Successfully",
+                                        onOk: () => {
+                                          navigate("/main/myorders");
+                                        },
+                                      })
+                                  // setLoading(false);
+                                })
                 .catch((error) => {
                   console.error("Error in payment confirmation:", error);
                 });
@@ -392,17 +513,49 @@ const CheckoutPage: React.FC = () => {
     //   clearInterval(intervalId)
     // }
   }
-  
+  function grandTotalfunc() {
+
+    // message.success("hai");
+    if (coupenApplied === true && useWallet === true) {
+      // Alert.alert("Coupen and useWallet Applied",(grandTotal-billAmount))
+      setGrandTotalAmount(grandTotal - (coupenDetails + walletAmount)+deliveryBoyFee);
+      console.log(
+        "grans total after wallet and coupen",
+        grandTotal,
+        coupenDetails,
+        walletAmount,
+        grandTotal - (coupenDetails + walletAmount)
+      );
+    } else if (coupenApplied === true || useWallet === true) {
+      if (coupenApplied === true) {
+        setGrandTotalAmount((grandTotal+deliveryBoyFee) - coupenDetails);
+        // Alert.alert("Coupen Applied",grandTotal)
+        console.log({ grandTotal });
+
+        console.log(grandTotal - coupenDetails);
+      }
+      if (useWallet === true) {
+        setGrandTotalAmount(walletTotal+deliveryBoyFee);
+        console.log(walletAmount);
+         
+        // Alert.alert("Wallet Applied",(grandTotal-walletAmount))
+      }
+    } else {
+      setGrandTotalAmount(totalAmount+deliveryBoyFee);
+      // Alert.alert("None",totalAmount)
+    }
+  }
+
+  useEffect(() => {
+    grandTotalfunc();
+  }, [coupenApplied, useWallet, grandTotalAmount,deliveryBoyFee]);
 
 
   return (
-    <div className="flex flex-col min-h-screen">
-
-
+    <div className="flex flex-col min-h-screen bg-gray-50">
 
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-         
 
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">
@@ -443,16 +596,46 @@ const CheckoutPage: React.FC = () => {
                         >
                           Apply
                         </button>
+                        {coupenApplied==true &&(
+                            <button
+                            onClick={deleteCoupen}
+                            className="bg-orange-500 text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-orange-600 transition"
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
+                      {walletAmount > 0 ? (
+                      <div className="walletContainer">
+                       <div className="walletHeader">
+                        <input
+                           type="checkbox"
+                          checked={useWallet}
+                         onChange={handleCheckboxToggle}
+                         className="checkbox"
+                         />
+                       <span className="checkboxLabel">Use Wallet Balance</span>
+                     </div>
+                 <p className="walletMessage">
+                     You can use up to <span className="highlight">₹{walletAmount}</span> from your wallet for this order.
+                   </p>
+                 </div>
+                ) : (
+                   <div className="wallet">
+                    <span className="label">Note:</span>
+                   <span className="message">{walletMessage}</span>
+                   </div>
+                    )}
+
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-xl shadow-sm p-4">
+                  {/* <div className="bg-white rounded-xl shadow-sm p-4">
                     <div className="flex items-center text-sm text-gray-600">
                       <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
                       Note: Wallet usage not applicable for this order
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div className="p-4 border-b border-gray-100">
@@ -493,16 +676,27 @@ const CheckoutPage: React.FC = () => {
                     <div className="p-4 space-y-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Items Total</span>
-                        <span className="font-medium">₹{calculateSubTotal()}</span>
+                        <span className="font-medium">₹{grandTotalAmount}</span>
                       </div>
+                      {coupenApplied==true &&(
                       <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Coupon Applied</span>
+                        <span className="font-medium text-green-600">{coupenDetails}</span>
+                      </div>)}
+                      {useWallet && (
+                       <div className="paymentRow">
+                      <span className="detailsLabel">from Wallet</span>
+                      <span className="detailsValue">-₹{walletAmount}</span>
+                        </div>
+                       )}
+                     <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Delivery Fee</span>
                         <span className="font-medium text-green-600">FREE</span>
                       </div>
                       <div className="border-t border-gray-100 pt-3 mt-3">
                         <div className="flex justify-between items-center">
                           <span className="font-semibold">Grand Total</span>
-                          <span className="text-lg font-bold text-green-600">₹{calculateSubTotal()}</span>
+                          <span className="text-lg font-bold text-green-600">₹{grandTotalAmount}</span>
                         </div>
                       </div>
                     </div>
@@ -517,7 +711,7 @@ const CheckoutPage: React.FC = () => {
                         ) : (
                           <span className="flex items-center justify-center gap-2">
                             <span>Proceed to Pay</span>
-                            <span className="font-bold">₹{calculateSubTotal()}</span>
+                            <span className="font-bold">₹{grandTotalAmount}</span>
                           </span>
                         )}
                       </button>

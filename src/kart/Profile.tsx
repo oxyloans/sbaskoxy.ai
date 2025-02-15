@@ -352,10 +352,11 @@ const ProfilePage = () => {
                                             type="text"
                                             name="userFirstName"
                                             value={formData.userFirstName}
+                                            pattern="^[A-Za-z]+$"
                                             onChange={(e) => setFormData({ ...formData, userFirstName: e.target.value })}
                                             className={`w-full px-4 py-3 rounded-lg border ${validationErrors.userFirstName
-                                                ? 'border-red-500 ring-1 ring-red-500'
-                                                : 'border-gray-300 focus:ring-2 focus:ring-purple-500'
+                                                    ? 'border-red-500 ring-1 ring-red-500'
+                                                    : 'border-gray-300 focus:ring-2 focus:ring-purple-500'
                                                 }`}
                                             placeholder="Enter your first name"
                                             disabled={editStatus}
@@ -373,6 +374,7 @@ const ProfilePage = () => {
                                             type="text"
                                             name="userLastName"
                                             value={formData.userLastName}
+                                            pattern="^[A-Za-z]+$"
                                             onChange={(e) => setFormData({ ...formData, userLastName: e.target.value })}
                                             className={`w-full px-4 py-3 rounded-lg border ${validationErrors.userLastName
                                                 ? 'border-red-500 ring-1 ring-red-500'
@@ -686,11 +688,12 @@ const ProfilePage = () => {
                                         OK
                                     </button>
                                 </div>
-                                <Footer />
+                                
                             </div>
                         </div>
                     )
                 }
+                <Footer />
             </div >
         </div>
 
