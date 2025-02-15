@@ -259,7 +259,7 @@ const DashboardMain: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="bg-white rounded-xl shadow-sm">
         <div className="p-4 lg:p-6">
           {activeTab === "services" && renderItems(services)}

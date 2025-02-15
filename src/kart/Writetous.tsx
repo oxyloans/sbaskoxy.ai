@@ -236,7 +236,7 @@ const WriteToUs: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen">
       <CustomAlert
         isOpen={showProfileAlert}
         onClose={() => setShowProfileAlert(false)}

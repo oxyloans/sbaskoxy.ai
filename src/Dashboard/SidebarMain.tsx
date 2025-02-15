@@ -15,14 +15,18 @@ import {
 
 interface SidebarProps {
   onCollapse: (collapsed: boolean) => void;
+  onItemClick?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleSignout = () => {
+    if (onItemClick) {
+      onItemClick();
+    }
     localStorage.removeItem("userId");
     localStorage.removeItem("email");
     localStorage.clear();
@@ -97,6 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse }) => {
             <Link
               key={index}
               to={item.to}
+              onClick={() => onItemClick && onItemClick()}
               className={`relative flex items-center rounded-xl transition-all duration-200 
                 ${isCollapsed ? "w-12 h-12 justify-center" : "h-12 px-4"}
                 ${
