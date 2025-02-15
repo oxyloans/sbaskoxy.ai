@@ -152,7 +152,7 @@ const ReferralPage: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen">
       <div className="flex-1 p-4 lg:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Stats Section */}

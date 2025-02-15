@@ -177,6 +177,10 @@ const Subscription: React.FC = () => {
     }
     );
     if(response.data.paymentId){
+      const number = localStorage.getItem('whatsappNumber')
+      const withoutCountryCode = number?.replace("+91", "");
+      console.log({withoutCountryCode});
+      
       const data = {
         mid: "1152305",
         // amount: amount,
@@ -184,7 +188,7 @@ const Subscription: React.FC = () => {
         merchantTransactionId: response.data.paymentId,
         transactionDate: new Date(),
         terminalId: "getepay.merchant128638@icici",
-        udf1: localStorage.getItem('whatsappNumber'),
+        udf1: withoutCountryCode,
         udf2: `${profileData.userFirstName}  ${profileData.userLastName}`,
         udf3: profileData.customerEmail,
         udf4: "",

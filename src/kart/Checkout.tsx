@@ -180,6 +180,9 @@ const CheckoutPage: React.FC = () => {
           selectedPayment === "ONLINE" &&
           response.data.paymentId !== null
         ) {
+          const number = localStorage.getItem('whatsappNumber')
+      const withoutCountryCode = number?.replace("+91", "");
+      console.log({withoutCountryCode});
           const data = {
             mid: "1152305",
             // amount: grandTotalAmount,
@@ -187,7 +190,7 @@ const CheckoutPage: React.FC = () => {
             merchantTransactionId: response.data.paymentId,
             transactionDate: new Date(),
             terminalId: "getepay.merchant128638@icici",
-            udf1: profileData.whatsappNumber,
+            udf1: withoutCountryCode,
             udf2: `${profileData.firstName}  ${profileData.lastName}`,
             udf3: profileData.email,
             udf4: "",
