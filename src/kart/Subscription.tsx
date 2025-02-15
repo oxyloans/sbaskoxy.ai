@@ -74,18 +74,18 @@ const SubscriptionCard: React.FC<{
     className={`relative rounded-xl border ${
       isSelected 
         ? 'border-purple-600 ring-2 ring-purple-600 ring-opacity-50' 
-        : plan.status 
-          ? 'border-purple-400 shadow-purple-100' 
+        // : plan.status 
+        //   ? 'border-purple-400 shadow-purple-100' 
           : 'border-gray-200'
     } bg-white shadow-lg transition-all duration-300 hover:shadow-xl flex flex-col h-full transform hover:-translate-y-1`}
   >
-    {plan.status && (
+    {/* {plan.status && (
       <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
         <span className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-1 rounded-full text-sm font-medium shadow-md">
           Most Popular
         </span>
       </div>
-    )}
+    )} */}
 
     <div className="p-6 flex-grow">
       <div className="text-center space-y-4">
@@ -110,8 +110,8 @@ const SubscriptionCard: React.FC<{
   className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 
     ${isSelected || planDetails?.status
       ? 'bg-purple-700 text-white shadow-lg cursor-not-allowed'
-      : plan.status
-        ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
+      // : plan.status
+      //   ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
         : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
     } transform hover:scale-[1.02]`}
   disabled={isSelected || planDetails?.status}
@@ -148,25 +148,38 @@ const Subscription: React.FC = () => {
     userLastName: '',
     customerEmail: '',
     })
-     const [paymentStatus,setPaymentStatus] = useState()
+     const [paymentStatus,setPaymentStatus] = useState(null)
+     const [subscriptionId,setSubscriptionId]=useState<string>()
   const activeSubscription = true;
   const navigate = useNavigate();
   const BASEURL = "https://meta.oxyglobal.tech/api";
   const token = localStorage.getItem('accessToken');
 
-  const queryParams = new URLSearchParams(window.location.search);
+  
+
+
+  useEffect(() => {
+    getPlans();
+    userPlanDetails();
+    const queryParams = new URLSearchParams(window.location.search);
   const params = Object.fromEntries(queryParams.entries());
   const subscriptionID = params.trans;
-
+  setSubscriptionId(subscriptionID)
+    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
+    const userData = localStorage.getItem('profileData')
+    if(userData){
+      setProfileData(JSON.parse(userData))
+    }
+  }, []);
   
 
     useEffect(()=>{
       const trans = localStorage.getItem('merchantTransactionId')
       const paymentId = localStorage.getItem('paymentId')
-      if(trans===subscriptionID){
+      if(trans===subscriptionId){
         Requery(paymentId)
       }
-    },[subscriptionID])
+    },[subscriptionId])
 
   const handleSubscribe = async(planId: string, amount: number) => {
     setSelectedPlan(planId);
@@ -198,8 +211,8 @@ const Subscription: React.FC = () => {
         udf8: "",
         udf9: "",
         udf10: "",
-        ru: `https://sandbox.askoxy.ai/subscription?trans=${response.data.paymentId}`,
-        callbackUrl: `https://sandbox.askoxy.ai/subscription?trans=${response.data.paymentId}`,
+        ru: `https://sandbox.askoxy.ai/main/subscription?trans=${response.data.paymentId}`,
+        callbackUrl: `https://sandbox.askoxy.ai/main/subscription?trans=${response.data.paymentId}`,
         currency: "INR",
         paymentMode: "ALL",
         bankId: "",
@@ -366,7 +379,7 @@ const Subscription: React.FC = () => {
                   Modal.success({
                     content: "Subcription Added Successfully",
                     onOk: () => {
-                      navigate("/wallet");
+                      navigate("/main/wallet");
                     },
                   })
                   localStorage.removeItem('paymentId')
@@ -409,15 +422,7 @@ const Subscription: React.FC = () => {
     }
   }
 
-  useEffect(() => {
-    getPlans();
-    userPlanDetails();
-    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
-    const userData = localStorage.getItem('profileData')
-    if(userData){
-      setProfileData(JSON.parse(userData))
-    }
-  }, []);
+
 
 
 

@@ -40,6 +40,7 @@ const CheckoutPage: React.FC = () => {
   const [selectedPayment, setSelectedPayment] = useState<'ONLINE' | 'COD'>('ONLINE');
   const [selectedAddress,setSelectedAddress] = useState<Address>(state?.selectedAddress || null)
   const [grandTotalAmount, setGrandTotalAmount] = useState<number>(0);
+  const [orderId,setOrderId] = useState<string>();
   const [profileData,setProfileData] = useState<ProfileData>({
     firstName: '',
     lastName: '',
@@ -47,7 +48,7 @@ const CheckoutPage: React.FC = () => {
     whatsappNumber: '',
   })
   const [merchantTransactionId,setMerchantTransactionId] = useState()
-  const [paymentStatus,setPaymentStatus] = useState()
+  const [paymentStatus,setPaymentStatus] = useState(null)
   const navigate = useNavigate();
 
   const BASE_URL = 'https://meta.oxyglobal.tech/api';
@@ -55,15 +56,16 @@ const CheckoutPage: React.FC = () => {
   const token = localStorage.getItem('accessToken');
   const userData = localStorage.getItem('profileData')
 
-  const queryParams = new URLSearchParams(window.location.search);
-  const params = Object.fromEntries(queryParams.entries());
-  const orderId = params.trans;
+  
 
 
   useEffect(() => {
     fetchCartData();
     totalCart()
-    
+    const queryParams = new URLSearchParams(window.location.search);
+  const params = Object.fromEntries(queryParams.entries());
+  const order = params.trans;
+  setOrderId(order)
     if(userData){
       setProfileData(JSON.parse(userData))
     }
@@ -75,6 +77,7 @@ const CheckoutPage: React.FC = () => {
     const paymentId = localStorage.getItem('paymentId')
     if(trans===orderId){
       Requery(paymentId)
+      console.log({paymentId});
     }
   },[orderId])
 
@@ -200,8 +203,8 @@ const CheckoutPage: React.FC = () => {
             udf8: "",
             udf9: "",
             udf10: "",
-            ru: "https://sandbox.askoxy.ai/checkout?trans=" + response.data.paymentId,
-            callbackUrl: `https://sandbox.askoxy.ai/checkout?trans=${response.data.paymentId}`,
+            ru: "https://sandbox.askoxy.ai/main/checkout?trans=" + response.data.paymentId,
+            callbackUrl: `https://sandbox.askoxy.ai/main/checkout?trans=${response.data.paymentId}`,
             currency: "INR",
             paymentMode: "ALL",
             bankId: "",
@@ -368,6 +371,12 @@ const CheckoutPage: React.FC = () => {
                   );
                   localStorage.removeItem('paymentId')
                   localStorage.removeItem('merchantTransactionId')
+                   Modal.success({
+                        content: "Order placed Successfully",
+                        onOk: () => {
+                          navigate("/main/myorders");
+                        },
+                      })
                   // setLoading(false);
                 })
                 .catch((error) => {

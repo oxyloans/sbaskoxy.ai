@@ -13,6 +13,8 @@ import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
 import Footer from '../components/Footer';
 import axios from 'axios';
 import 'react-phone-number-input/style.css';
+import { Modal } from 'antd';
+import { Navigate } from 'react-router-dom';
 
 interface RefereeDetail {
   id: string;
@@ -85,7 +87,7 @@ const ReferralPage: React.FC = () => {
   };
 
   const handleShare = (action: 'whatsapp' | 'copy') => {
-    setShareAction(action);
+    // setShareAction(action);
     setPhoneNumber(undefined);
     setError('');
     setIsModalOpen(true);
@@ -99,7 +101,7 @@ const ReferralPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      await axios.post(
+    const response =  await axios.post(
         'https://meta.oxyglobal.tech/api/user-service/inviteaUser',
         {
           referealId: customerId,
@@ -113,19 +115,34 @@ const ReferralPage: React.FC = () => {
         }
       );
 
-      if (shareAction === 'whatsapp') {
-        const shareText = `Hey! I'm inviting you to join AskOxy.ai - Use my referral link to sign up: ${referralLink}`;
-        window.open(`https://wa.me/${phoneNumber.replace('+', '')}?text=${encodeURIComponent(shareText)}`, '_blank');
-      } else if (shareAction === 'copy') {
-        await navigator.clipboard.writeText(referralLink);
-        alert('Referral link copied!');
-      }
+      // if (shareAction === 'whatsapp') {
+      //   const shareText = `Hey! I'm inviting you to join AskOxy.ai - Use my referral link to sign up: ${referralLink}`;
+      //   window.open(`https://wa.me/${phoneNumber.replace('+', '')}?text=${encodeURIComponent(shareText)}`, '_blank');
+      // } else if (shareAction === 'copy') {
+      //   await navigator.clipboard.writeText(referralLink);
+      //   alert('Referral link copied!');
+      // }
 
       setIsModalOpen(false);
       fetchRefereeDetails();
+      Modal.success({
+        content: response.data.message,
+        onOk: () => {
+          
+        },
+      })
     } catch (error) {
       console.error('Error inviting user:', error);
+      if(error){
+      Modal.error({
+        content: 'An invitation has already been sent to this user.',
+        onOk: () => {
+
+        },
+      })
+    }else{
       setError('Failed to invite user. Please try again.');
+    }
     } finally {
       setIsLoading(false);
     }

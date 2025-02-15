@@ -188,6 +188,11 @@ const WhatsappLogin = () => {
         setShowSuccessPopup(true);
         localStorage.setItem("userId", response.data.userId);
         localStorage.setItem("accessToken", response.data.accessToken);
+        localStorage.removeItem(
+          "mobileOtpSession"
+        );
+        localStorage.removeItem("salt");
+        localStorage.removeItem("expiryTime");
         setMessage("Login Successful");
         setTimeout(() => navigate(location.state?.from || "/main/dashboard/services"), 500);
         setTimeout(() => window.location.reload(), 1000);

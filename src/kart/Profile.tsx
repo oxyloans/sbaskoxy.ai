@@ -313,11 +313,8 @@ const ProfilePage = () => {
 
                 {/* Main Content */}
                 <div className="pt-4 lg:pt-0 px-4 lg:px-6">
-
-                
-                    <div className="max-w-7xl">
-                        {/* Desktop Navigation */}
-                        <div className="hidden lg:block border-b border-gray-200 mb-6">
+{/* Desktop Navigation */}
+<div className="border-b border-gray-200 mb-6">
                             <div className="flex space-x-8">
                                 <button
                                     className={`pb-4 px-4 ${activeTab === 'personal'
@@ -339,6 +336,9 @@ const ProfilePage = () => {
                                 </button>
                             </div>
                         </div>
+                
+                    <div className="max-w-7xl">
+                        
 
                         {/* Personal Information Form */}
                         {activeTab === 'personal' && (
