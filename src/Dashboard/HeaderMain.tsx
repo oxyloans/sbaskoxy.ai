@@ -1,10 +1,15 @@
 // Header.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useContext } from "react";
 import { ShoppingCart, UserCircle } from "lucide-react";
 import { FaBars, FaSearch, FaTimes } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import ValidationPopup from "../kart/ValidationPopup";
 import AskOxyLogo from "../assets/img/askoxylogostatic.png";
+import { CartContext } from "../until/CartContext";
+import axios from "axios";
+
+
+const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface HeaderProps {
   cartCount: number;
@@ -17,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [cartCount, setCartCount] = useState(propCartCount);
+  // const [cartCount, setCartCount] = useState(propCartCount);
   const [searchValue, setSearchValue] = useState("");
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
@@ -32,6 +37,9 @@ const Header: React.FC<HeaderProps> = ({
     IsMobile5((prev: boolean) => !prev);
   };
 
+  const token = localStorage.getItem("accessToken");
+  const customerId = localStorage.getItem("userId");
+
   const handleToggle = () => {
     setIsToggled(!isToggled);
   };
@@ -42,6 +50,14 @@ const Header: React.FC<HeaderProps> = ({
     "Brown Rice",
     "HMT Rice",
   ];
+
+  const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error("CartDisplay must be used within a CartProvider");
+  }
+
+  const { count,setCount } = context;
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -60,6 +76,20 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleNavigation = (path: string) => {
     navigate(path);
+  };
+
+  const fetchCartData = async () => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/cart-service/cart/customersCartItems?customerId=${customerId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setCount(response.data.length);
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+    }
   };
 
   const checkProfileCompletion = () => {
@@ -92,16 +122,6 @@ const Header: React.FC<HeaderProps> = ({
     handleNavigation("/main/profile");
   };
 
-  useEffect(() => {
-    const count = localStorage.getItem("cartCount");
-    if (count) {
-      setCartCount(parseInt(count));
-    }
-  }, []);
-
-  useEffect(() => {
-    setCartCount(propCartCount);
-  }, [propCartCount]);
 
 
 
@@ -289,9 +309,9 @@ const Header: React.FC<HeaderProps> = ({
                 }`}
                 />
                 <span className="hidden sm:inline text-sm">Cart</span>
-                {cartCount > 0 && (
+                {count > 0 && (
                   <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full w-3 h-3 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs">
-                    {cartCount}
+                    {count}
                   </span>
                 )}
               </button>

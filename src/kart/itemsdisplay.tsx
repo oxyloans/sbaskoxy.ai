@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useContext } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message } from 'antd';
@@ -9,6 +9,7 @@ import {
 import ValidationPopup from "./ValidationPopup";
 import Footer from "../components/Footer";
 import { parse } from "path";
+import { CartContext } from "../until/CartContext";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
@@ -50,7 +51,6 @@ const ItemDisplayPage = () => {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [showValidationPopup, setShowValidationPopup] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
   const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -58,7 +58,13 @@ const ItemDisplayPage = () => {
   const token = localStorage.getItem("accessToken");
   const [showChatSection, setShowChatSection] = useState(false);
 
+  const context = useContext(CartContext);
 
+  if (!context) {
+    throw new Error("CartDisplay must be used within a CartProvider");
+  }
+
+  const { count,setCount } = context;
  
   const apiKey =""
 
@@ -122,13 +128,11 @@ const ItemDisplayPage = () => {
           },
           {}
         );
-        setCartCount(response.data.customerCartResponseList.length);
         setCartItems(cartItemsMap);
-        localStorage.setItem("cartCount", response.data.customerCartResponseList.length.toString());
+        setCount(response.data?.customerCartResponseList?.length);
       } else {
         setCartItems({});
-        setCartCount(0);
-        localStorage.setItem("cartCount", "0");
+        setCount(0);
       }
       setCartData(response.data.customerCartResponseList);
     } catch (error) {

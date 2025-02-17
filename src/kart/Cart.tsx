@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Footer from '../components/Footer';
-import { message } from 'antd';
+import { Loader2, X } from 'lucide-react';
 import { isWithinRadius } from "./LocationCheck";
+import { message } from 'antd';
+import Footer from '../components/Footer';
+import { CartContext } from '../until/CartContext';
 
 interface Address {
   id?: string;
@@ -36,17 +37,27 @@ interface AddressFormData {
   addressType: 'Home' | 'Work' | 'Others';
 }
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 const CartPage: React.FC = () => {
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
-  const [cartCount, setCartCount] = useState<number>(0);
   const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>({});
-  const [selectedItemDetails, setSelectedItemDetails] = useState<CartItem | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [formData, setFormData] = useState<AddressFormData>({
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [addressFormData, setAddressFormData] = useState<AddressFormData>({
     flatNo: '',
     landMark: '',
     address: '',
@@ -54,32 +65,36 @@ const CartPage: React.FC = () => {
     addressType: 'Home',
   });
 
+  const [addressFormErrors, setAddressFormErrors] = useState({
+    flatNo: '',
+    landmark: '',
+    address: '',
+    pincode: '',
+  });
+
   const navigate = useNavigate();
   const BASE_URL = 'https://meta.oxyglobal.tech/api';
   const customerId = localStorage.getItem('userId');
   const token = localStorage.getItem('accessToken');
 
-  useEffect(() => {
-    fetchCartData();
-    fetchAddresses();
-  }, []);
+  const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error("CartDisplay must be used within a CartProvider");
+  }
+
+  const { setCount } = context;
 
   const fetchAddresses = async () => {
     try {
-      // setIsLoading(true);
       const response = await axios.get(`${BASE_URL}/user-service/getAllAdd?customerId=${customerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAddresses(response.data);
-      // setError('');
+      setSelectedAddress(response.data[0] || null)
     } catch (error) {
       console.error("Error fetching addresses:", error);
-    } finally {
-      // setIsLoading(false);
     }
-  };
-  const handleImageClick = (item: CartItem) => {
-    navigate(`/main/itemsdisplay/${item.itemId}`, { state: { item } });
   };
 
   const fetchCartData = async () => {
@@ -102,21 +117,17 @@ const CartPage: React.FC = () => {
           {}
         );
         setCartItems(cartItemsMap);
-        setCartCount(response.data.customerCartResponseList.length);
-        localStorage.setItem('cartCount', response.data.customerCartResponseList.length.toString());
+        setCount(response.data?.customerCartResponseList?.length)
       } else {
         setCartItems({});
-        localStorage.setItem('cartCount', '0');
-        setCartCount(0);
+        setCount(0)
       }
       setCartData(response.data?.customerCartResponseList || []);
     } catch (error) {
       console.error('Error fetching cart items:', error);
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const getCoordinates = async (address: string) => {
@@ -126,56 +137,84 @@ const CartPage: React.FC = () => {
       const response = await axios.get(url);
       return response.data.results[0]?.geometry.location;
     } catch (error) {
-      console.error("Error fetching coordinates:", error);
       return null;
     }
   };
 
+  const validateAddressForm = () => {
+    const errors = {
+      flatNo: '',
+      landmark: '',
+      address: '',
+      pincode: '',
+    };
 
+    if (!addressFormData.flatNo.trim()) errors.flatNo = 'Flat/House number is required';
+    if (!addressFormData.landMark.trim()) errors.landmark = 'Landmark is required';
+    if (!addressFormData.address.trim()) errors.address = 'Address is required';
+    if (!addressFormData.pincode.trim()) errors.pincode = 'PIN code is required';
+    else if (!/^\d{6}$/.test(addressFormData.pincode)) errors.pincode = 'Please enter a valid 6-digit PIN code';
 
-  const handleAddAddress = async () => {
+    setAddressFormErrors(errors);
+    return !Object.values(errors).some(error => error);
+  };
+
+  const handleAddressSubmit = async (): Promise<void> => {
+    if (!validateAddressForm()) return;
+
     try {
-      // setIsLoading(true);
-      const fullAddress = formData.flatNo + ',' + formData.landMark + ', ' + formData.address + ', ' + formData.pincode;
+      setIsLoading(true);
+      setError('');
+      setSuccessMessage('');
+
+      const fullAddress = `${addressFormData.flatNo}, ${addressFormData.landMark}, ${addressFormData.address}, ${addressFormData.pincode}`;
       const coordinates = await getCoordinates(fullAddress);
 
       if (!coordinates) {
-        // setError('Unable to find location coordinates. Please check the address.');
-        return;
-      }
-      const WithinRadius = await isWithinRadius(coordinates);
-      console.log(WithinRadius);
-      if (!WithinRadius) {
-        // setError('Sorry, we do not deliver to this location');
+        setError('Unable to find location coordinates');
         return;
       }
 
-      const { lat, lng } = coordinates;
+      const withinRadius = await isWithinRadius(coordinates);
+      if (!withinRadius) {
+        setError('Sorry, we do not deliver to this location');
+        return;
+      }
+
       const data = {
         userId: customerId,
-        flatNo: formData.flatNo,
-        landMark: formData.landMark,
-        address: formData.address,
-        pincode: formData.pincode,
-        addressType: formData.addressType,
-        latitude: lat.toString(),
-        longitude: lng.toString(),
+        flatNo: addressFormData.flatNo,
+        landMark: addressFormData.landMark,
+        address: addressFormData.address,
+        pincode: addressFormData.pincode,
+        addressType: addressFormData.addressType,
+        latitude: coordinates.lat.toString(),
+        longitude: coordinates.lng.toString(),
       };
 
-      const response = await axios.post(`${BASE_URL}/user-service/addAddress`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.data) {
-        await fetchAddresses(); // Refresh the addresses list
-        setShowAddressForm(false)
+      if (editingAddressId) {
+        await axios.put(`${BASE_URL}/user-service/updateAddress/${editingAddressId}`, data, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSuccessMessage('Address updated successfully!');
+      } else {
+        await axios.post(`${BASE_URL}/user-service/addAddress`, data, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSuccessMessage('Address added successfully!');
       }
-    } catch (error) {
-      // setError('Failed to add address. Please try again.');
-      console.error("Error adding address:", error);
+
+      setError('');
+      await fetchAddresses();
+      setTimeout(resetAddressForm, 3000);
+    } catch (err) {
+      setSuccessMessage('');
+      const apiError = err as ApiError;
+      setError(apiError.response?.data?.message || 'Failed to save address');
     } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleIncrease = async (item: CartItem) => {
     setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
@@ -260,29 +299,65 @@ const CartPage: React.FC = () => {
     }
   };
 
+  const resetAddressForm = () => {
+    setAddressFormData({
+      flatNo: '',
+      landMark: '',
+      address: '',
+      pincode: '',
+      addressType: 'Home',
+    });
+    setAddressFormErrors({
+      flatNo: '',
+      landmark: '',
+      address: '',
+      pincode: '',
+    });
+    setEditingAddressId(null);
+    setShowAddressForm(false);
+  };
+
   const handleToProcess = () => {
     if (!selectedAddress) {
       message.error("Please select an address");
       return;
     }
-    console.log(selectedAddress);
-    navigate("/main/checkout", { state: { selectedAddress } })
-  }
+    navigate("/main/checkout", { state: { selectedAddress } });
+  };
+
+  const handleAddressModalClose = () => {
+    setIsAddressModalOpen(false);
+    setEditingAddressId(null);
+    setAddressFormData({
+      flatNo: '',
+      landMark: '',
+      address: '',
+      pincode: '',
+      addressType: 'Home',
+    });
+  };
+
+  useEffect(() => {
+    fetchCartData();
+    fetchAddresses();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
-
-
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">
-              {(!cartData || cartData.length === 0) ? (
-                <div className="flex flex-col items-center justify-center h-full">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                </div>
+              ) : !cartData || cartData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64">
                   <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
                   <button
                     onClick={() => navigate('/main/dashboard/products')}
-                    className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+                    className="bg-purple-500 text-white px-6 py-2 rounded-md hover:bg-purple-700"
                   >
                     Browse items
                   </button>
@@ -296,7 +371,7 @@ const CartPage: React.FC = () => {
                     <div className="flex items-center space-x-4">
                       <div
                         className="w-20 h-20 bg-gray-200 cursor-pointer"
-                        onClick={() => handleImageClick(item)}
+                        onClick={() => navigate(`/main/itemsdisplay/${item.itemId}`, { state: { item } })}
                       >
                         <img
                           src={item.image}
@@ -347,137 +422,178 @@ const CartPage: React.FC = () => {
             </div>
           </main>
 
-          <div className="w-full lg:w-1/4 bg-white shadow-lg rounded-lg p-4 md:p-6 mb-4 lg:mb-0 lg:ml-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">Cart Summary</h2>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-medium mb-1">Select Address</label>
-              <select
-                value={selectedAddress?.address || ""}
-                onChange={(e) => {
-                  const selected = addresses.find((addr) => addr.address === e.target.value);
-                  setSelectedAddress(selected || null);
-                }}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Choose an Address</option>
-                {addresses.map((address, index) => (
-                  <option key={index} value={address.address}>
-                    {address.flatNo}, {address.address}, {address.landMark},{address.pincode}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => setShowAddressForm(true)}
-                className="mt-3 w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
-              >
-                + Add New Address
-              </button>
+          <div className="w-full lg:w-1/4">
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h2 className="text-xl font-bold mb-4">Delivery Address</h2>
+              {selectedAddress === null? <p>No addresses found.</p>:<span className="flex justify-between mb-2 text-gray-700">{selectedAddress.flatNo}, {selectedAddress.address}, {selectedAddress.landMark},{selectedAddress.pincode}</span>}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-1">Select Address</label>
+                <select
+                  value={selectedAddress?.address || ""}
+                  onChange={(e) => {
+                    const selected = addresses.find((addr) => addr.address === e.target.value);
+                    setSelectedAddress(selected || null);
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Choose an Address</option>
+                  {addresses.map((address, index) => (
+                    <option key={index} value={address.address}>
+                      {address.flatNo}, {address.address}, {address.landMark},{address.pincode}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => setIsAddressModalOpen(true)}
+                  className="mt-3 w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
+                >
+                  + Add New Address
+                </button>
+              </div>
             </div>
 
-            {showAddressForm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                <div className="bg-white p-6 rounded-lg w-full max-w-md">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-3">Add New Address</h3>
-                  <input
-                    type="text"
-                    placeholder="Flat No"
-                    name="flatNo"
-                    value={formData.flatNo}
-                    onChange={handleInputChange}
-                    className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="border-t border-gray-200 mt-4 pt-4">
+                <div className="flex justify-between mb-2 text-gray-700">
+                  <span>Subtotal</span>
+                  <span className="font-semibold">
+                    ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
+                  </span>
+                </div>
+                <div className="flex justify-between mb-2 text-gray-700">
+                  <span>Shipping</span>
+                  <span className="font-semibold">₹0.00</span>
+                </div>
+                <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
+                  <span>Total</span>
+                  <span>
+                    ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
+                  </span>
+                </div>
+                <button
+                  className="w-full bg-purple-500 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition"
+                  onClick={() => handleToProcess()}
+                  disabled={!cartData || cartData.length === 0}
+                >
+                  Proceed to Checkout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Custom Modal */}
+        {isAddressModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">
+                  {editingAddressId ? 'Edit Address' : 'Add New Address'}
+                </h2>
+                <button
+                  onClick={handleAddressModalClose}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Flat/House No"
+                  value={addressFormData.flatNo}
+                  onChange={(e) =>
+                    setAddressFormData((prev) => ({ ...prev, flatNo: e.target.value }))
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {addressFormErrors.flatNo && (
+                    <p className="text-red-500 text-sm">{addressFormErrors.flatNo}</p>
+                  )}
+  
                   <input
                     type="text"
                     placeholder="Landmark"
-                    name="landMark"
-                    value={formData.landMark}
-                    onChange={handleInputChange}
-                    className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+                    value={addressFormData.landMark}
+                    onChange={(e) =>
+                      setAddressFormData((prev) => ({ ...prev, landMark: e.target.value }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {addressFormErrors.landmark && (
+                    <p className="text-red-500 text-sm">{addressFormErrors.landmark}</p>
+                  )}
+  
                   <input
                     type="text"
                     placeholder="Address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+                    value={addressFormData.address}
+                    onChange={(e) =>
+                      setAddressFormData((prev) => ({ ...prev, address: e.target.value }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {addressFormErrors.address && (
+                    <p className="text-red-500 text-sm">{addressFormErrors.address}</p>
+                  )}
+  
                   <input
                     type="text"
-                    placeholder="Pincode"
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleInputChange}
-                    className="w-full p-2 mb-2 border border-gray-300 rounded-md"
+                    placeholder="PIN Code"
+                    value={addressFormData.pincode}
+                    onChange={(e) =>
+                      setAddressFormData((prev) => ({ ...prev, pincode: e.target.value }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <div className="flex flex-col sm:flex-row gap-2 justify-end">
-                    <button
-                      onClick={handleAddAddress}
-                      className="w-full sm:w-auto bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
-                    >
-                      Save Address
-                    </button>
-                    <button
-                      onClick={() => setShowAddressForm(false)}
-                      className="w-full sm:w-auto bg-gray-400 text-white py-2 px-4 rounded-lg hover:bg-gray-500 transition"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  {addressFormErrors.pincode && (
+                    <p className="text-red-500 text-sm">{addressFormErrors.pincode}</p>
+                  )}
+  
+                  <select
+                    value={addressFormData.addressType}
+                    onChange={(e) =>
+                      setAddressFormData((prev) => ({
+                        ...prev,
+                        addressType: e.target.value as 'Home' | 'Work' | 'Others',
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Home">Home</option>
+                    <option value="Work">Work</option>
+                    <option value="Others">Others</option>
+                  </select>
+                </div>
+  
+                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                {successMessage && (
+                  <p className="text-green-500 text-sm mt-2">{successMessage}</p>
+                )}
+  
+                <div className="mt-6 flex justify-end space-x-4">
+                  <button
+                    onClick={handleAddressModalClose}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddressSubmit}
+                    className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                  >
+                    {editingAddressId ? 'Update Address' : 'Save Address'}
+                  </button>
                 </div>
               </div>
-            )}
-
-            <div className="border-t border-gray-200 mt-4 pt-4">
-              <div className="flex justify-between mb-2 text-gray-700">
-                <span>Subtotal</span>
-                <span className="font-semibold">
-                  ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
-                </span>
-              </div>
-              <div className="flex justify-between mb-2 text-gray-700">
-                <span>Shipping</span>
-                <span className="font-semibold">₹0.00</span>
-              </div>
-              <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
-                <span>Total</span>
-                <span>
-                  ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
-                </span>
-              </div>
-              <button
-                className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition"
-                onClick={() => handleToProcess()}
-                disabled={!cartData || cartData.length === 0}
-              >
-                Proceed to Checkout
-              </button>
             </div>
-          </div>
+          )}
         </div>
-        </div>
-
-
-        {/* Item Details Modal */}
-        {/* {selectedItemDetails && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white p-6 rounded-lg w-96">
-              <h2 className="text-xl font-bold">{selectedItemDetails.itemName}</h2>
-              <p className="mt-4">{selectedItemDetails.itemDescription}</p>
-              <button
-                className="mt-4 bg-gray-500 text-white px-4 py-2 rounded-md"
-                onClick={() => setSelectedItemDetails(null)} // Close the details view
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )} */}
-
+  
         <Footer />
       </div>
-      );
-};
-
-export default CartPage;
+    );
+  };
+  
+  export default CartPage;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState ,useContext} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { message,Alert, Modal } from 'antd';
@@ -10,6 +10,7 @@ import { FaBars, FaTimes } from 'react-icons/fa';
 import decryptEas from './decryptEas';
 import encryptEas from './encryptEas';
 import Checkbox from 'antd';
+import { CartContext } from '../until/CartContext';
 
 interface CartItem {
   itemId: string;
@@ -48,8 +49,6 @@ const CheckoutPage: React.FC = () => {
   const [walletAmount, setWalletAmount] = useState<number>(0);
   const [walletTotal,setWalletTotal] = useState<number>(0);
   const [coupenApplied,setCoupenApplied] = useState(false);
-  const [cartCount, setCartCount] = useState<number>(0);
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [selectedPayment, setSelectedPayment] = useState<'ONLINE' | 'COD'>('ONLINE');
   const [selectedAddress,setSelectedAddress] = useState<Address>(state?.selectedAddress || null)
   const [grandTotalAmount, setGrandTotalAmount] = useState<number>(0);
@@ -65,7 +64,7 @@ const CheckoutPage: React.FC = () => {
     whatsappNumber: '',
   })
   const [merchantTransactionId,setMerchantTransactionId] = useState()
-  const [paymentStatus,setPaymentStatus] = useState()
+  const [paymentStatus,setPaymentStatus] = useState(null)
   const navigate = useNavigate();
 
   const BASE_URL = 'https://meta.oxyglobal.tech/api';
@@ -73,7 +72,13 @@ const CheckoutPage: React.FC = () => {
   const token = localStorage.getItem('accessToken');
   const userData = localStorage.getItem('profileData')
 
- 
+  const context = useContext(CartContext);
+
+  if (!context) {
+    throw new Error("CartDisplay must be used within a CartProvider");
+  }
+
+  const { count,setCount } = context;
 
 
   useEffect(() => {
@@ -87,12 +92,12 @@ const CheckoutPage: React.FC = () => {
     if(userData){
       setProfileData(JSON.parse(userData))
     }
-    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
   }, []);
 
   useEffect(()=>{
     const trans = localStorage.getItem('merchantTransactionId')
     const paymentId = localStorage.getItem('paymentId')
+    console.log(trans===orderId);
     if(trans===orderId){
       Requery(paymentId)
     }
@@ -111,6 +116,7 @@ const CheckoutPage: React.FC = () => {
           content: `You are using ₹${walletAmount} from your wallet.`,
           onOk() {
             console.log("OK clicked");
+            grandTotalfunc();
           },
         });
       } else {
@@ -134,7 +140,7 @@ const CheckoutPage: React.FC = () => {
         }
       );
       setCartData(response.data?.customerCartResponseList || []);
-      
+      setCount(response.data?.customerCartResponseList?.length || 0);
     } catch (error) {
       console.error('Error fetching cart items:', error);
       message.error('Failed to fetch cart items');
@@ -228,9 +234,9 @@ const CheckoutPage: React.FC = () => {
     )
       .then((response) => {
          console.log("wallet amount",response.data);
-        //  setWalletAmount(response.data.usableWalletAmountForOrder);
-        setWalletAmount(500);
-         message.info(response.data.message);
+         setWalletAmount(response.data.usableWalletAmountForOrder);
+        // setWalletAmount(500);
+        //  message.info(response.data.message);
          setWalletMessage(response.data.message);
          setWalletTotal(
           response.data.totalSum - response.data.usableWalletAmountForOrder
@@ -290,6 +296,7 @@ const CheckoutPage: React.FC = () => {
   
       if (response.status === 200 && response.data) {
         if (selectedPayment === "COD" && response.data.paymentId === null) {
+          fetchCartData();
           Modal.success({
             title: "Successfull",
             content: "Order placed successfully",
@@ -297,6 +304,7 @@ const CheckoutPage: React.FC = () => {
             cancelText: "No",
             onOk() {
               navigate("/main/myorders");
+              fetchCartData();
             },
           });
         } else if (
@@ -403,12 +411,13 @@ const CheckoutPage: React.FC = () => {
 
   function Requery(paymentId:any) {
     setLoading(false);
+    console.log("requery");
     if (
       paymentStatus === "PENDING" ||
       paymentStatus === "" ||
       paymentStatus === null
     ) {
-      // console.log("Before.....",paymentId)
+      console.log("Before.....",paymentId)
 
       const Config = {
         "Getepay Mid": 1152305,
@@ -492,10 +501,12 @@ const CheckoutPage: React.FC = () => {
                                   );
                                   localStorage.removeItem('paymentId')
                                   localStorage.removeItem('merchantTransactionId')
+                                  fetchCartData();
                                    Modal.success({
                                         content: "Order placed Successfully",
                                         onOk: () => {
                                           navigate("/main/myorders");
+                                          fetchCartData();
                                         },
                                       })
                                   // setLoading(false);
@@ -514,7 +525,6 @@ const CheckoutPage: React.FC = () => {
     // }
   }
   function grandTotalfunc() {
-
     // message.success("hai");
     if (coupenApplied === true && useWallet === true) {
       // Alert.alert("Coupen and useWallet Applied",(grandTotal-billAmount))
@@ -535,6 +545,7 @@ const CheckoutPage: React.FC = () => {
         console.log(grandTotal - coupenDetails);
       }
       if (useWallet === true) {
+
         setGrandTotalAmount(walletTotal+deliveryBoyFee);
         console.log(walletAmount);
          
@@ -605,7 +616,12 @@ const CheckoutPage: React.FC = () => {
                           </button>
                         )}
                       </div>
-                      {walletAmount > 0 ? (
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl shadow-sm p-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                    {walletAmount > 0 ? (
                       <div className="walletContainer">
                        <div className="walletHeader">
                         <input
@@ -621,21 +637,13 @@ const CheckoutPage: React.FC = () => {
                    </p>
                  </div>
                 ) : (
-                   <div className="wallet">
-                    <span className="label">Note:</span>
-                   <span className="message">{walletMessage}</span>
+                   <div>
+                    <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
+                      Note: {walletMessage}
                    </div>
                     )}
-
                     </div>
                   </div>
-
-                  {/* <div className="bg-white rounded-xl shadow-sm p-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
-                      Note: Wallet usage not applicable for this order
-                    </div>
-                  </div> */}
 
                   <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div className="p-4 border-b border-gray-100">
@@ -676,7 +684,7 @@ const CheckoutPage: React.FC = () => {
                     <div className="p-4 space-y-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Items Total</span>
-                        <span className="font-medium">₹{grandTotalAmount}</span>
+                        <span className="font-medium">₹{grandTotal}</span>
                       </div>
                       {coupenApplied==true &&(
                       <div className="flex justify-between text-sm">
@@ -684,9 +692,9 @@ const CheckoutPage: React.FC = () => {
                         <span className="font-medium text-green-600">{coupenDetails}</span>
                       </div>)}
                       {useWallet && (
-                       <div className="paymentRow">
-                      <span className="detailsLabel">from Wallet</span>
-                      <span className="detailsValue">-₹{walletAmount}</span>
+                       <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">from Wallet</span>
+                      <span className="font-medium text-green-600">-₹{walletAmount}</span>
                         </div>
                        )}
                      <div className="flex justify-between text-sm">

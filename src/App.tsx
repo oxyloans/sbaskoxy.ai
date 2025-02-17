@@ -5,6 +5,7 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
+import CartProvider from "./until/CartProvider";
 import Example from "./components/Example";
 
 import Landingpage from "./components/Landingpage";
@@ -78,6 +79,7 @@ import Headermain from "./Dashboard/HeaderMain";
 import Content1 from "./Dashboard/Content";
 const App: React.FC = () => {
   return (
+    <CartProvider>
     <Router>
       <ScrollToTop />
       <div className="App">
@@ -205,6 +207,7 @@ const App: React.FC = () => {
         </Routes>
       </div>
     </Router>
+  </CartProvider>
   );
 };
 

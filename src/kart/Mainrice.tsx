@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef,useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
@@ -9,6 +9,7 @@ import Categories from "./categories";
 import rice1 from "../assets/img/ricecard1.png";
 import rice2 from "../assets/img/ricecard2.png";
 import rice3 from "../assets/img/ricecard3.png";
+import { CartContext } from "../until/CartContext";
 
 interface Item {
   itemName: string;
@@ -30,10 +31,17 @@ const Ricebags: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [cart, setCart] = useState<{ [key: string]: number }>({});
   const [customerId, setCustomerId] = useState<string>("");
-  const [cartCount, setCartCount] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const context = useContext(CartContext);
+  
+    if (!context) {
+      throw new Error("CartDisplay must be used within a CartProvider");
+    }
+  
+    const { count,setCount } = context;
 
   const navigate = useNavigate();
   const minSwipeDistance = 50;
@@ -237,7 +245,7 @@ const Ricebags: React.FC = () => {
             onItemClick={handleItemClick}
             updateCart={setCart}
             customerId={customerId}
-            updateCartCount={setCartCount}
+            updateCartCount={setCount}
           />
         </div>
       </main>
