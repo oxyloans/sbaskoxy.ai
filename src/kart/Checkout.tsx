@@ -314,6 +314,7 @@ const CheckoutPage: React.FC = () => {
           const number = localStorage.getItem('whatsappNumber')
       const withoutCountryCode = number?.replace("+91", "");
       console.log({withoutCountryCode});
+      sessionStorage.setItem('address',JSON.stringify(selectedAddress))
           const data = {
             mid: "1152305",
             // amount: grandTotalAmount,
@@ -482,6 +483,14 @@ const CheckoutPage: React.FC = () => {
               data.paymentStatus == "FAILURE"
             ) {
               // clearInterval(intervalId); 294182409
+              if (data.paymentStatus === "FAILURE") {
+                const add = sessionStorage.getItem("address");
+                
+                if (add) {
+                  setSelectedAddress(JSON.parse(add) as Address); // Ensure it's parsed as Address
+                }
+              }
+              
               axios({
                 method: "POST",
                 url: BASE_URL + "/order-service/orderPlacedPaymet",

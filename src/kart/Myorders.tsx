@@ -245,7 +245,7 @@ const MyOrders: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Payment</span>
-                      <span className="font-medium">{order.paymentType === 1 ? "Online" : "COD"}</span>
+                      <span className="font-medium">{order.paymentType === 2 ? "Online" : "COD"}</span>
                     </div>
                   </div>
                 </div>
@@ -340,7 +340,7 @@ const MyOrders: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Payment Method</span>
-                      <span>{selectedOrder.paymentType === 1 ? "Online" : "COD"}</span>
+                      <span>{selectedOrder.paymentType === 2 ? "Online" : "COD"}</span>
                     </div>
                     <div className="border-t border-purple-200 pt-2 mt-2">
                       <div className="flex justify-between font-semibold text-lg">
