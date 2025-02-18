@@ -128,8 +128,13 @@ const ItemDisplayPage = () => {
           },
           {}
         );
+        // Fix: Use cartItemsMap and correct syntax
+        const totalQuantity = Object.values(cartItemsMap as Record<string, number>).reduce(
+          (sum, qty) => sum + qty, 
+          0
+        );
         setCartItems(cartItemsMap);
-        setCount(response.data?.customerCartResponseList?.length);
+        setCount(totalQuantity);
       } else {
         setCartItems({});
         setCount(0);

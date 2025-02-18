@@ -1,17 +1,18 @@
 {
   "files": {
-    "main.css": "/static/css/main.6ab81b18.css",
-    "main.js": "/static/js/main.d1a2d0d1.js",
+    "main.css": "/static/css/main.2cec2097.css",
+    "main.js": "/static/js/main.15b278f1.js",
     "static/js/453.dbef4809.chunk.js": "/static/js/453.dbef4809.chunk.js",
     "static/media/WEBSITE (1).png": "/static/media/WEBSITE (1).08fd6c066321613c5c2e.png",
     "static/media/1.3.png": "/static/media/1.3.b07ed907b217a6c9cb49.png",
     "static/media/1.4.png": "/static/media/1.4.166de0a0764cb3c15d6e.png",
     "static/media/legail.jpg": "/static/media/legail.a81c29ec774c5ce846e7.jpg",
     "static/media/1.5.png": "/static/media/1.5.90c0cea7da0f7d28edf4.png",
+    "static/media/ricecard2.png": "/static/media/ricecard2.24e1eb2c6228131298e6.png",
     "static/media/1.2.png": "/static/media/1.2.3fda519193f532efdc2d.png",
     "static/media/1.1.png": "/static/media/1.1.a365169679f2c47648ca.png",
+    "static/media/ricecard1.png": "/static/media/ricecard1.24e05541236f1f34aafa.png",
     "static/media/R1.png": "/static/media/R1.c5abc3bb1aa03be79519.png",
-    "static/media/ricecard2.png": "/static/media/ricecard2.a2b143e0fb8abf611ab3.png",
     "static/media/R2.png": "/static/media/R2.3cd78d49f9e9f3813127.png",
     "static/media/legal.png": "/static/media/legal.dd57ac21e6673f622ae7.png",
     "static/media/genai.png": "/static/media/genai.f75b009be753986cc852.png",
@@ -19,7 +20,6 @@
     "static/media/bmvcoin.png": "/static/media/bmvcoin.d4b8d7a173edac896cdc.png",
     "static/media/myrotray (1).png": "/static/media/myrotray (1).14d5675c56b16bdb7bd2.png",
     "static/media/machines.png": "/static/media/machines.8a2c5d9604b7fe5261f4.png",
-    "static/media/ricecard1.png": "/static/media/ricecard1.909f61db0651f5da7a7a.png",
     "static/media/manufacturing.png": "/static/media/manufacturing.a9c453bbcc19cc62b890.png",
     "static/media/games.png": "/static/media/games.a8a1f4e472b2b491412b.png",
     "static/media/jsr.png": "/static/media/jsr.64de972fa7a43ac39c6f.png",
@@ -27,7 +27,6 @@
     "static/media/fivestar.png": "/static/media/fivestar.0bd3f1470c7d62af722a.png",
     "static/media/gajrajever.png": "/static/media/gajrajever.c775e11363169c5c2a27.png",
     "static/media/Kurnool.png": "/static/media/Kurnool.ffdc2bb600535a25d85b.png",
-    "static/media/ricecard3.png": "/static/media/ricecard3.ccd5f4ffb6094519786a.png",
     "static/media/cowbrand.png": "/static/media/cowbrand.99bc4772c7a7afcf761a.png",
     "static/media/joker.png": "/static/media/joker.17564089925dbf6c8207.png",
     "static/media/wearehiring.png": "/static/media/wearehiring.c29a887ac83bca5d7bd6.png",
@@ -35,6 +34,7 @@
     "static/media/sreemaateja.png": "/static/media/sreemaateja.773d5f56ee2ba0084c31.png",
     "static/media/rri.png": "/static/media/rri.3ae107d301f6d8ee767b.png",
     "static/media/freeaiandgenai.png": "/static/media/freeaiandgenai.1d1acc8f9d05b67f3707.png",
+    "static/media/ricecard3.png": "/static/media/ricecard3.2adbd7a51d54de5862b3.png",
     "static/media/shubodayam.png": "/static/media/shubodayam.6b2f1f5d436124e61db2.png",
     "static/media/1.6.png": "/static/media/1.6.5a2d3cc5eaeccdf31263.png",
     "static/media/askoxylogostatic.png": "/static/media/askoxylogostatic.3e03c861742645ba9a15.png",
@@ -104,12 +104,12 @@
     "static/media/slick.ttf": "/static/media/slick.c94f7671dcc99dce43e2.ttf",
     "index.html": "/index.html",
     "static/media/slick.woff": "/static/media/slick.295183786cd8a1389865.woff",
-    "main.6ab81b18.css.map": "/static/css/main.6ab81b18.css.map",
-    "main.d1a2d0d1.js.map": "/static/js/main.d1a2d0d1.js.map",
+    "main.2cec2097.css.map": "/static/css/main.2cec2097.css.map",
+    "main.15b278f1.js.map": "/static/js/main.15b278f1.js.map",
     "453.dbef4809.chunk.js.map": "/static/js/453.dbef4809.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.6ab81b18.css",
-    "static/js/main.d1a2d0d1.js"
+    "static/css/main.2cec2097.css",
+    "static/js/main.15b278f1.js"
   ]
 }

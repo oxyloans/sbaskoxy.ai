@@ -15,10 +15,17 @@ interface Item {
   itemMrp: number | string;
 }
 
+interface SubCategory {
+  id: string;
+  name: string;
+  image?: string | null;
+}
+
 interface Category {
   categoryName: string;
-  categoryImage: String | null;
+  categoryImage: string | null;
   itemsResponseDtoList: Item[];
+  subCategories?: SubCategory[];
 }
 
 interface CategoriesProps {
@@ -52,6 +59,7 @@ const Categories: React.FC<CategoriesProps> = ({
 }) => {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const fetchCartData = async () => {
@@ -70,10 +78,19 @@ const Categories: React.FC<CategoriesProps> = ({
           },
           {}
         );
+    
         localStorage.setItem("cartCount", response.data?.customerCartResponseList.length.toString());
+        console.log({ cartItemsMap });
+    
+        // Fix: Use cartItemsMap and correct syntax
+        const totalQuantity = Object.values(cartItemsMap as Record<string, number>).reduce(
+          (sum, qty) => sum + qty, 
+          0
+        );
         setCartItems(cartItemsMap);
-        updateCartCount(response.data?.customerCartResponseList.length);
-      } else {
+        updateCartCount(totalQuantity);
+    }
+     else {
         setCartItems({});
         localStorage.setItem("cartCount", "0");
         updateCartCount(0);
@@ -88,6 +105,11 @@ const Categories: React.FC<CategoriesProps> = ({
   useEffect(() => {
     fetchCartData();
   }, []);
+
+  useEffect(() => {
+    // Reset subcategory when category changes
+    setActiveSubCategory(null);
+  }, [activeCategory]);
 
   const handleAddToCart = async (item: Item) => {
     const accessToken = localStorage.getItem("accessToken");
@@ -138,17 +160,29 @@ const Categories: React.FC<CategoriesProps> = ({
   };
 
   const getCurrentCategoryItems = () => {
-    if (!activeCategory || activeCategory === "All Categories") {
-      return categories.flatMap(cat => cat.itemsResponseDtoList);
+    const currentCategory = categories.find(cat => cat.categoryName === activeCategory) || categories[0];
+    if (!currentCategory) return [];
+    
+    // If no subcategory is selected, show all items
+    if (!activeSubCategory) {
+      return currentCategory.itemsResponseDtoList;
     }
+    
+    // Filter items based on subcategory (you'll need to add subcategory ID to your items)
+    // This is a placeholder - adjust according to your actual data structure
+    return currentCategory.itemsResponseDtoList;
+  };
+
+  const getCurrentSubCategories = () => {
+    if (!activeCategory) return [];
     const category = categories.find(cat => cat.categoryName === activeCategory);
-    return category ? category.itemsResponseDtoList : [];
+    return category?.subCategories || [];
   };
 
   return (
     <div className="bg-white shadow-lg px-3 sm:px-6 lg:px-6 py-3">
       {/* Category Tabs */}
-      <div className="mb-8 overflow-x-auto scrollbar-hide">
+      <div className="mb-4 overflow-x-auto scrollbar-hide">
         <div className="flex space-x-4 pb-4">
           {categories.map((category, index) => (
             <motion.button
@@ -165,7 +199,7 @@ const Categories: React.FC<CategoriesProps> = ({
               <div className="flex items-center space-x-2">
                 {category.categoryImage && (
                   <img
-                    src={category.categoryImage as string}
+                    src={category.categoryImage}
                     alt=""
                     className="w-5 h-5 rounded-full"
                   />
@@ -177,10 +211,54 @@ const Categories: React.FC<CategoriesProps> = ({
         </div>
       </div>
 
+      {/* Subcategories */}
+      {getCurrentSubCategories().length > 0 && (
+        <div className="mb-6 overflow-x-auto scrollbar-hide">
+          <div className="flex space-x-3 pb-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                !activeSubCategory
+                  ? "bg-purple-100 text-purple-700"
+                  : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+              }`}
+              onClick={() => setActiveSubCategory(null)}
+            >
+              All
+            </motion.button>
+            {getCurrentSubCategories().map((subCategory, index) => (
+              <motion.button
+                key={subCategory.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  activeSubCategory === subCategory.id
+                    ? "bg-purple-100 text-purple-700"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveSubCategory(subCategory.id)}
+              >
+                <div className="flex items-center space-x-2">
+                  {subCategory.image && (
+                    <img
+                      src={subCategory.image}
+                      alt=""
+                      className="w-4 h-4 rounded-full"
+                    />
+                  )}
+                  <span>{subCategory.name}</span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Items Grid */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={activeCategory}
+          key={`${activeCategory}-${activeSubCategory}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -200,7 +278,7 @@ const Categories: React.FC<CategoriesProps> = ({
               >
                 <div className="aspect-square mb-3 overflow-hidden rounded-lg bg-purple-50">
                   <img
-                    src={item.itemImage  ?? "https://via.placeholder.com/150"}
+                    src={item.itemImage ?? "https://via.placeholder.com/150"}
                     alt={item.itemName}
                     className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
                   />

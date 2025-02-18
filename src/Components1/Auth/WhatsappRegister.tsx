@@ -209,7 +209,10 @@ const WhatsappRegister = () => {
         localStorage.setItem("accessToken", response.data.accessToken);
         setMessage("Registration Successful");
         localStorage.removeItem("refferrerId");
-        setTimeout(() => navigate(location.state?.from || "/dashboard"), 500);
+        localStorage.removeItem("mobileOtpSession");
+        localStorage.removeItem("salt");
+        localStorage.removeItem("expiryTime");
+        setTimeout(() => navigate(location.state?.from || "/main/dashboard/services"), 500);
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (err) {

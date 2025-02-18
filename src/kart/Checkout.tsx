@@ -139,8 +139,26 @@ const CheckoutPage: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setCartData(response.data?.customerCartResponseList || []);
-      setCount(response.data?.customerCartResponseList?.length || 0);
+      if (response.data.customerCartResponseList) {
+        const cartItemsMap = response.data.customerCartResponseList.reduce(
+          (acc: { [key: string]: number }, item: CartItem) => {
+            acc[item.itemId] = parseInt(item.cartQuantity);
+            return acc;
+          },
+          {}
+        );
+        // Fix: Use cartItemsMap and correct syntax
+        const totalQuantity = Object.values(cartItemsMap as Record<string, number>).reduce(
+          (sum, qty) => sum + qty, 
+          0
+        );
+        setCartData(response.data?.customerCartResponseList || []);
+        setCount(totalQuantity)
+      } else {
+        setCartData([]);
+        setCount(0)
+      }
+     
     } catch (error) {
       console.error('Error fetching cart items:', error);
       message.error('Failed to fetch cart items');
