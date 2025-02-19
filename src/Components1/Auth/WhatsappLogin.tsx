@@ -39,7 +39,7 @@ const WhatsappLogin = () => {
     const userId = localStorage.getItem("userId");
     const accessToken = localStorage.getItem("accessToken");
     if (userId && accessToken) {
-      navigate(location.state?.from || "/main/dashboard/services", { replace: true });
+      navigate(location.state?.from || "/main/dashboard/products", { replace: true });
     }
   }, [navigate, location]);
 
@@ -137,7 +137,7 @@ const WhatsappLogin = () => {
           localStorage.setItem("userId", response.data.userId);
           localStorage.setItem("accessToken", response.data.accessToken);
           setTimeout(
-            () => navigate(location.state?.from || "/main/dashboard/services"),
+            () => navigate(location.state?.from || "/main/dashboard/products"),
             2000
           );
         } else {
@@ -194,7 +194,7 @@ const WhatsappLogin = () => {
         localStorage.removeItem("salt");
         localStorage.removeItem("expiryTime");
         setMessage("Login Successful");
-        setTimeout(() => navigate(location.state?.from || "/main/dashboard/services"), 500);
+        setTimeout(() => navigate(location.state?.from || "/main/dashboard/products"), 500);
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (err) {

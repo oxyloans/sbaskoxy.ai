@@ -1,11 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Loader2, X } from 'lucide-react';
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Loader2, X } from "lucide-react";
 import { isWithinRadius } from "./LocationCheck";
-import { message } from 'antd';
-import Footer from '../components/Footer';
-import { CartContext } from '../until/CartContext';
+import { Button, message, Modal } from "antd";
+import Footer from "../components/Footer";
+import { CartContext } from "../until/CartContext";
 
 interface Address {
   id?: string;
@@ -13,7 +13,7 @@ interface Address {
   landMark: string;
   address: string;
   pincode: string;
-  addressType: 'Home' | 'Work' | 'Others';
+  addressType: "Home" | "Work" | "Others";
 }
 
 interface CartItem {
@@ -27,6 +27,7 @@ interface CartItem {
   weight: string;
   cartQuantity: string;
   cartId: string;
+  quantity: number;
 }
 
 interface AddressFormData {
@@ -34,7 +35,7 @@ interface AddressFormData {
   landMark: string;
   address: string;
   pincode: string;
-  addressType: 'Home' | 'Work' | 'Others';
+  addressType: "Home" | "Work" | "Others";
 }
 
 interface ApiError {
@@ -48,34 +49,37 @@ interface ApiError {
 const CartPage: React.FC = () => {
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
-  const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>({});
+  const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>(
+    {}
+  );
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
-  const [error, setError] = useState<string>('');
-  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [error, setError] = useState<string>("");
+  const [checkoutError, setCheckoutError] = useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = useState<string>("");
   const [addressFormData, setAddressFormData] = useState<AddressFormData>({
-    flatNo: '',
-    landMark: '',
-    address: '',
-    pincode: '',
-    addressType: 'Home',
+    flatNo: "",
+    landMark: "",
+    address: "",
+    pincode: "",
+    addressType: "Home",
   });
 
   const [addressFormErrors, setAddressFormErrors] = useState({
-    flatNo: '',
-    landmark: '',
-    address: '',
-    pincode: '',
+    flatNo: "",
+    landmark: "",
+    address: "",
+    pincode: "",
   });
 
   const navigate = useNavigate();
-  const BASE_URL = 'https://meta.oxyglobal.tech/api';
-  const customerId = localStorage.getItem('userId');
-  const token = localStorage.getItem('accessToken');
+  const BASE_URL = "https://meta.oxyglobal.tech/api";
+  const customerId = localStorage.getItem("userId");
+  const token = localStorage.getItem("accessToken");
 
   const context = useContext(CartContext);
 
@@ -87,11 +91,14 @@ const CartPage: React.FC = () => {
 
   const fetchAddresses = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/user-service/getAllAdd?customerId=${customerId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `${BASE_URL}/user-service/getAllAdd?customerId=${customerId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setAddresses(response.data);
-      setSelectedAddress(response.data[0] || null)
+      setSelectedAddress(response.data[0] || null);
     } catch (error) {
       console.error("Error fetching addresses:", error);
     }
@@ -116,20 +123,24 @@ const CartPage: React.FC = () => {
           },
           {}
         );
-        // Fix: Use cartItemsMap and correct syntax
-        const totalQuantity = Object.values(cartItemsMap as Record<string, number>).reduce(
-          (sum, qty) => sum + qty, 
-          0
-        );
         setCartItems(cartItemsMap);
-        setCount(totalQuantity)
+        setCount(response.data?.customerCartResponseList?.length);
       } else {
         setCartItems({});
-        setCount(0)
+        setCount(0);
+      }
+      const outOfStockItems = response.data?.customerCartResponseList.filter((item:CartItem) => item.quantity === 0);
+
+      if (outOfStockItems.length > 0) {
+        console.log("Out of Stock Items:", outOfStockItems);
+        setCheckoutError(true);
+      } else {
+        console.log("All items are in stock.",outOfStockItems);
+        setCheckoutError(false);
       }
       setCartData(response.data?.customerCartResponseList || []);
     } catch (error) {
-      console.error('Error fetching cart items:', error);
+      console.error("Error fetching cart items:", error);
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +149,9 @@ const CartPage: React.FC = () => {
   const getCoordinates = async (address: string) => {
     try {
       const API_KEY = "AIzaSyAM29otTWBIAefQe6mb7f617BbnXTHtN0M";
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${API_KEY}`;
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        address
+      )}&key=${API_KEY}`;
       const response = await axios.get(url);
       return response.data.results[0]?.geometry.location;
     } catch (error) {
@@ -148,20 +161,24 @@ const CartPage: React.FC = () => {
 
   const validateAddressForm = () => {
     const errors = {
-      flatNo: '',
-      landmark: '',
-      address: '',
-      pincode: '',
+      flatNo: "",
+      landmark: "",
+      address: "",
+      pincode: "",
     };
 
-    if (!addressFormData.flatNo.trim()) errors.flatNo = 'Flat/House number is required';
-    if (!addressFormData.landMark.trim()) errors.landmark = 'Landmark is required';
-    if (!addressFormData.address.trim()) errors.address = 'Address is required';
-    if (!addressFormData.pincode.trim()) errors.pincode = 'PIN code is required';
-    else if (!/^\d{6}$/.test(addressFormData.pincode)) errors.pincode = 'Please enter a valid 6-digit PIN code';
+    if (!addressFormData.flatNo.trim())
+      errors.flatNo = "Flat/House number is required";
+    if (!addressFormData.landMark.trim())
+      errors.landmark = "Landmark is required";
+    if (!addressFormData.address.trim()) errors.address = "Address is required";
+    if (!addressFormData.pincode.trim())
+      errors.pincode = "PIN code is required";
+    else if (!/^\d{6}$/.test(addressFormData.pincode))
+      errors.pincode = "Please enter a valid 6-digit PIN code";
 
     setAddressFormErrors(errors);
-    return !Object.values(errors).some(error => error);
+    return !Object.values(errors).some((error) => error);
   };
 
   const handleAddressSubmit = async (): Promise<void> => {
@@ -169,20 +186,22 @@ const CartPage: React.FC = () => {
 
     try {
       setIsLoading(true);
-      setError('');
-      setSuccessMessage('');
+      setError("");
+      setSuccessMessage("");
 
       const fullAddress = `${addressFormData.flatNo}, ${addressFormData.landMark}, ${addressFormData.address}, ${addressFormData.pincode}`;
       const coordinates = await getCoordinates(fullAddress);
 
       if (!coordinates) {
-        setError('Unable to find location coordinates');
+        setError("Unable to find location coordinates");
         return;
       }
 
       const withinRadius = await isWithinRadius(coordinates);
-      if (!withinRadius) {
-        setError('Sorry, we do not deliver to this location');
+      console.log({ withinRadius });
+
+      if (!withinRadius.isWithin) {
+        setError("Sorry, we do not deliver to this location");
         return;
       }
 
@@ -198,26 +217,33 @@ const CartPage: React.FC = () => {
       };
 
       if (editingAddressId) {
-        await axios.put(`${BASE_URL}/user-service/updateAddress/${editingAddressId}`, data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setSuccessMessage('Address updated successfully!');
+        await axios.put(
+          `${BASE_URL}/user-service/updateAddress/${editingAddressId}`,
+          data,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setSuccessMessage("Address updated successfully!");
       } else {
         await axios.post(`${BASE_URL}/user-service/addAddress`, data, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccessMessage('Address added successfully!');
+        setSuccessMessage("Address added successfully!");
       }
 
-      setError('');
+      setError("");
       await fetchAddresses();
       setTimeout(resetAddressForm, 3000);
     } catch (err) {
-      setSuccessMessage('');
+      setSuccessMessage("");
       const apiError = err as ApiError;
-      setError(apiError.response?.data?.message || 'Failed to save address');
+      setError(apiError.response?.data?.message || "Failed to save address");
     } finally {
       setIsLoading(false);
+      setIsAddressModalOpen(false);
+      setSuccessMessage("");
+      setError("");
     }
   };
 
@@ -237,15 +263,15 @@ const CartPage: React.FC = () => {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }
       );
 
       await fetchCartData();
     } catch (error) {
-      console.error('Failed to increase cart item:', error);
-      message.error('Failed to update quantity');
+      console.error("Failed to increase cart item:", error);
+      message.error("Failed to update quantity");
     } finally {
       setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
     }
@@ -268,7 +294,7 @@ const CartPage: React.FC = () => {
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
           }
         );
@@ -278,8 +304,8 @@ const CartPage: React.FC = () => {
         await removeCartItem(item);
       }
     } catch (error) {
-      console.error('Failed to decrease cart item:', error);
-      message.error('Failed to update quantity');
+      console.error("Failed to decrease cart item:", error);
+      message.error("Failed to update quantity");
     } finally {
       setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
     }
@@ -293,52 +319,71 @@ const CartPage: React.FC = () => {
         },
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
       await fetchCartData();
-      message.success('Item removed from cart successfully.');
+      message.success("Item removed from cart successfully.");
     } catch (error) {
-      console.error('Failed to remove cart item:', error);
-      message.error('Failed to remove item');
+      console.error("Failed to remove cart item:", error);
+      message.error("Failed to remove item");
     }
   };
 
   const resetAddressForm = () => {
     setAddressFormData({
-      flatNo: '',
-      landMark: '',
-      address: '',
-      pincode: '',
-      addressType: 'Home',
+      flatNo: "",
+      landMark: "",
+      address: "",
+      pincode: "",
+      addressType: "Home",
     });
     setAddressFormErrors({
-      flatNo: '',
-      landmark: '',
-      address: '',
-      pincode: '',
+      flatNo: "",
+      landmark: "",
+      address: "",
+      pincode: "",
     });
     setEditingAddressId(null);
     setShowAddressForm(false);
   };
 
-  const handleToProcess = () => {
+  const handleToProcess = async () => {
+    if (!cartData || cartData.length === 0) {
+      message.error("Your cart is empty, Please Add Ateast one Item");
+      return;
+    }
     if (!selectedAddress) {
       message.error("Please select an address");
       return;
     }
-    navigate("/main/checkout", { state: { selectedAddress } });
+    if(checkoutError){
+       Modal.error({
+              title: 'Sorry',
+              content: 'Please remove out-of-stock items and proceed with the checkout.',
+              onOk: () => {
+      
+              },
+            })
+            return;
+    }
+    const isAddressValid = await handleAddressChange(selectedAddress);
+    if (isAddressValid?.isWithin) {
+      navigate("/main/checkout", { state: { selectedAddress } });
+    }
   };
 
   const handleAddressModalClose = () => {
     setIsAddressModalOpen(false);
     setEditingAddressId(null);
+    setSuccessMessage("");
+    setError("");
     setAddressFormData({
-      flatNo: '',
-      landMark: '',
-      address: '',
-      pincode: '',
-      addressType: 'Home',
+      flatNo: "",
+      landMark: "",
+      address: "",
+      pincode: "",
+      addressType: "Home",
     });
   };
 
@@ -346,6 +391,62 @@ const CartPage: React.FC = () => {
     fetchCartData();
     fetchAddresses();
   }, []);
+
+  const handleAddressChange = async (selectedAddress: Address) => {
+    const fullAddress = `${selectedAddress?.flatNo}, ${selectedAddress?.landMark}, ${selectedAddress?.address}, ${selectedAddress?.pincode}`;
+    const coordinates = await getCoordinates(fullAddress);
+
+    if (!coordinates) {
+      setError("Unable to find location coordinates");
+      return;
+    }
+
+    const withinRadius = await isWithinRadius(coordinates);
+    console.log({ withinRadius });
+
+    if (!withinRadius.isWithin) {
+      Modal.error({
+        title: "Delivery Unavailable",
+        content: (
+          <>
+            <p>
+              Sorry! We're unable to deliver to this address as it is{" "}
+              {withinRadius.distanceInKm} km away, beyond our 20 km delivery
+              radius. Please select another saved address within the radius or
+              add a new one to proceed. We appreciate your understanding!
+            </p>
+            {/* Wrapping buttons inside a flex container */}
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button type="default" onClick={() => Modal.destroyAll()}>
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                onClick={() => {
+                  Modal.destroyAll();
+                  setIsAddressModalOpen(true);
+                }}
+              >
+                Add New Address
+              </Button>
+            </div>
+          </>
+        ),
+        footer: null, // Removes default "Ok" button
+      });
+
+      const updatedWithinRadius = {
+        ...withinRadius,
+        isWithin: false,
+      };
+
+      return updatedWithinRadius;
+    }
+    setSelectedAddress(selectedAddress);
+    return withinRadius;
+  };
+
+  const handleCartData = async () => {};
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -361,7 +462,7 @@ const CartPage: React.FC = () => {
                 <div className="flex flex-col items-center justify-center h-64">
                   <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
                   <button
-                    onClick={() => navigate('/main/dashboard/products')}
+                    onClick={() => navigate("/main/dashboard/products")}
                     className="bg-purple-500 text-white px-6 py-2 rounded-md hover:bg-purple-700"
                   >
                     Browse items
@@ -376,7 +477,11 @@ const CartPage: React.FC = () => {
                     <div className="flex items-center space-x-4">
                       <div
                         className="w-20 h-20 bg-gray-200 cursor-pointer"
-                        onClick={() => navigate(`/main/itemsdisplay/${item.itemId}`, { state: { item } })}
+                        onClick={() =>
+                          navigate(`/main/itemsdisplay/${item.itemId}`, {
+                            state: { item },
+                          })
+                        }
                       >
                         <img
                           src={item.image}
@@ -384,43 +489,76 @@ const CartPage: React.FC = () => {
                           className="w-full h-full object-cover"
                         />
                       </div>
+
                       <div>
-                        <h3 className="font-bold text-center md:text-left">{item.itemName}</h3>
+                        <h3 className="font-bold text-gray-800 truncate flex-1">
+                          {item.itemName}
+                        </h3>
                         <p className="text-sm text-center md:text-left">
                           Weight: {item.weight} {item.units}
                         </p>
                         <p className="text-sm line-through text-red-500 text-center md:text-left">
                           MRP: ₹{item.priceMrp}
                         </p>
-                        <p className="text-green-600 font-bold text-center md:text-left">₹{item.itemPrice}</p>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center justify-between space-x-4">
-                      <div className="flex items-center border rounded-md">
+                        <p className="text-green-600 font-bold md:text-left">
+                          ₹{item.itemPrice}
+                        </p>
+                      </div>
+                    </div>
+                  {item.quantity!== 0?(
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="flex items-center justify-between space-x-4 w-full">
+                        <div className="flex items-center border rounded-md">
+                          <button
+                            className="px-3 py-1"
+                            onClick={() => handleDecrease(item)}
+                            disabled={loadingItems[item.itemId]}
+                          >
+                            -
+                          </button>
+                          <span className="px-3 py-1">
+                            {cartItems[item.itemId]}
+                          </span>
+                          <button
+                            className="px-3 py-1"
+                            onClick={() => handleIncrease(item)}
+                            disabled={loadingItems[item.itemId]}
+                          >
+                            +
+                          </button>
+                        </div>
                         <button
-                          className="px-3 py-1"
-                          onClick={() => handleDecrease(item)}
-                          disabled={loadingItems[item.itemId]}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors duration-200"
+                          onClick={() => removeCartItem(item)}
                         >
-                          -
-                        </button>
-                        <span className="px-3 py-1">{cartItems[item.itemId]}</span>
-                        <button
-                          className="px-3 py-1"
-                          onClick={() => handleIncrease(item)}
-                          disabled={loadingItems[item.itemId]}
-                        >
-                          +
+                          Delete
                         </button>
                       </div>
-                      <button
-                        className="bg-red-500 text-white px-4 py-2 rounded-md"
-                        onClick={() => removeCartItem(item)}
-                      >
-                        Delete
-                      </button>
+
+                      <div className="w-full flex justify-center mt-4">
+                        <p className="text-purple-600 font-bold whitespace-nowrap text-m">
+                          Total : ₹
+                          {(
+                            parseFloat(item.itemPrice) *
+                            (cartItems[item.itemId] || 0)
+                          ).toFixed(2)}
+                        </p>
+                      </div>
                     </div>
+                    ):(
+                      <div className="flex flex-col items-center space-y-4">
+                        <p className="text-red-600 font-bold whitespace-nowrap text-m">
+                          Out of Stock
+                        </p>
+                        <button
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors duration-200"
+                          onClick={() => removeCartItem(item)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -428,41 +566,64 @@ const CartPage: React.FC = () => {
           </main>
 
           <div className="w-full lg:w-1/4">
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <h2 className="text-xl font-bold mb-4">Delivery Address</h2>
-              {selectedAddress === null? <p>No addresses found.</p>:<span className="flex justify-between mb-2 text-gray-700">{selectedAddress.flatNo}, {selectedAddress.address}, {selectedAddress.landMark},{selectedAddress.pincode}</span>}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border broder-black-500">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Delivery Address</h2>
+                <button
+                  onClick={() => setIsAddressModalOpen(true)}
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center gap-1"
+                >
+                  <span>+</span> Add
+                </button>
+              </div>
+              {selectedAddress === null ? (
+                <p>No addresses found.</p>
+              ) : (
+                <span className="flex justify-between mb-2 text-gray-700">
+                  {selectedAddress.flatNo}, {selectedAddress.address},{" "}
+                  {selectedAddress.landMark}, {selectedAddress.pincode}
+                </span>
+              )}
               <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-1">Select Address</label>
+                <label className="block font-bold text-gray-700  mb-1">
+                  Select Address
+                </label>
                 <select
                   value={selectedAddress?.address || ""}
                   onChange={(e) => {
-                    const selected = addresses.find((addr) => addr.address === e.target.value);
-                    setSelectedAddress(selected || null);
+                    const selected = addresses.find(
+                      (addr) => addr.address === e.target.value
+                    );
+
+                    if (selected) {
+                      handleAddressChange(selected);
+                    }
                   }}
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Choose an Address</option>
                   {addresses.map((address, index) => (
                     <option key={index} value={address.address}>
-                      {address.flatNo}, {address.address}, {address.landMark},{address.pincode}
+                      {address.flatNo}, {address.address}, {address.landMark},{" "}
+                      {address.pincode}
                     </option>
                   ))}
                 </select>
-                <button
-                  onClick={() => setIsAddressModalOpen(true)}
-                  className="mt-3 w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
-                >
-                  + Add New Address
-                </button>
               </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="border-t border-gray-200 mt-4 pt-4">
                 <div className="flex justify-between mb-2 text-gray-700">
                   <span>Subtotal</span>
                   <span className="font-semibold">
-                    ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
+                    ₹
+                    {cartData
+                      ?.reduce(
+                        (acc, item) =>
+                          acc +
+                          parseFloat(item.itemPrice) *
+                            parseInt(item.cartQuantity),
+                        0
+                      )
+                      .toFixed(2) || "0.00"}
                   </span>
                 </div>
                 <div className="flex justify-between mb-2 text-gray-700">
@@ -472,13 +633,22 @@ const CartPage: React.FC = () => {
                 <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
                   <span>Total</span>
                   <span>
-                    ₹{cartData?.reduce((acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity), 0).toFixed(2) || "0.00"}
+                    ₹
+                    {cartData
+                      ?.reduce(
+                        (acc, item) =>
+                          acc +
+                          parseFloat(item.itemPrice) *
+                            parseInt(item.cartQuantity),
+                        0
+                      )
+                      .toFixed(2) || "0.00"}
                   </span>
                 </div>
                 <button
                   className="w-full bg-purple-500 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition"
                   onClick={() => handleToProcess()}
-                  disabled={!cartData || cartData.length === 0}
+                  // disabled={checkoutError}
                 >
                   Proceed to Checkout
                 </button>
@@ -493,7 +663,7 @@ const CartPage: React.FC = () => {
             <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">
-                  {editingAddressId ? 'Edit Address' : 'Add New Address'}
+                  {editingAddressId ? "Edit Address" : "Add New Address"}
                 </h2>
                 <button
                   onClick={handleAddressModalClose}
@@ -509,96 +679,116 @@ const CartPage: React.FC = () => {
                   placeholder="Flat/House No"
                   value={addressFormData.flatNo}
                   onChange={(e) =>
-                    setAddressFormData((prev) => ({ ...prev, flatNo: e.target.value }))
+                    setAddressFormData((prev) => ({
+                      ...prev,
+                      flatNo: e.target.value,
+                    }))
                   }
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {addressFormErrors.flatNo && (
-                    <p className="text-red-500 text-sm">{addressFormErrors.flatNo}</p>
-                  )}
-  
-                  <input
-                    type="text"
-                    placeholder="Landmark"
-                    value={addressFormData.landMark}
-                    onChange={(e) =>
-                      setAddressFormData((prev) => ({ ...prev, landMark: e.target.value }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {addressFormErrors.landmark && (
-                    <p className="text-red-500 text-sm">{addressFormErrors.landmark}</p>
-                  )}
-  
-                  <input
-                    type="text"
-                    placeholder="Address"
-                    value={addressFormData.address}
-                    onChange={(e) =>
-                      setAddressFormData((prev) => ({ ...prev, address: e.target.value }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {addressFormErrors.address && (
-                    <p className="text-red-500 text-sm">{addressFormErrors.address}</p>
-                  )}
-  
-                  <input
-                    type="text"
-                    placeholder="PIN Code"
-                    value={addressFormData.pincode}
-                    onChange={(e) =>
-                      setAddressFormData((prev) => ({ ...prev, pincode: e.target.value }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {addressFormErrors.pincode && (
-                    <p className="text-red-500 text-sm">{addressFormErrors.pincode}</p>
-                  )}
-  
-                  <select
-                    value={addressFormData.addressType}
-                    onChange={(e) =>
-                      setAddressFormData((prev) => ({
-                        ...prev,
-                        addressType: e.target.value as 'Home' | 'Work' | 'Others',
-                      }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Home">Home</option>
-                    <option value="Work">Work</option>
-                    <option value="Others">Others</option>
-                  </select>
-                </div>
-  
-                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-                {successMessage && (
-                  <p className="text-green-500 text-sm mt-2">{successMessage}</p>
+                />
+                {addressFormErrors.flatNo && (
+                  <p className="text-red-500 text-sm">
+                    {addressFormErrors.flatNo}
+                  </p>
                 )}
-  
-                <div className="mt-6 flex justify-end space-x-4">
-                  <button
-                    onClick={handleAddressModalClose}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleAddressSubmit}
-                    className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
-                  >
-                    {editingAddressId ? 'Update Address' : 'Save Address'}
-                  </button>
-                </div>
+
+                <input
+                  type="text"
+                  placeholder="Landmark"
+                  value={addressFormData.landMark}
+                  onChange={(e) =>
+                    setAddressFormData((prev) => ({
+                      ...prev,
+                      landMark: e.target.value,
+                    }))
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {addressFormErrors.landmark && (
+                  <p className="text-red-500 text-sm">
+                    {addressFormErrors.landmark}
+                  </p>
+                )}
+
+                <input
+                  type="text"
+                  placeholder="Address"
+                  value={addressFormData.address}
+                  onChange={(e) =>
+                    setAddressFormData((prev) => ({
+                      ...prev,
+                      address: e.target.value,
+                    }))
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {addressFormErrors.address && (
+                  <p className="text-red-500 text-sm">
+                    {addressFormErrors.address}
+                  </p>
+                )}
+
+                <input
+                  type="text"
+                  placeholder="PIN Code"
+                  value={addressFormData.pincode}
+                  onChange={(e) =>
+                    setAddressFormData((prev) => ({
+                      ...prev,
+                      pincode: e.target.value,
+                    }))
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {addressFormErrors.pincode && (
+                  <p className="text-red-500 text-sm">
+                    {addressFormErrors.pincode}
+                  </p>
+                )}
+
+                <select
+                  value={addressFormData.addressType}
+                  onChange={(e) =>
+                    setAddressFormData((prev) => ({
+                      ...prev,
+                      addressType: e.target.value as "Home" | "Work" | "Others",
+                    }))
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Home">Home</option>
+                  <option value="Work">Work</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+              {successMessage && (
+                <p className="text-green-500 text-sm mt-2">{successMessage}</p>
+              )}
+
+              <div className="mt-6 flex justify-end space-x-4">
+                <button
+                  onClick={handleAddressModalClose}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddressSubmit}
+                  className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                >
+                  {editingAddressId ? "Update Address" : "Save Address"}
+                </button>
               </div>
             </div>
-          )}
-        </div>
-  
-        <Footer />
+          </div>
+        )}
       </div>
-    );
-  };
-  
-  export default CartPage;
+
+      <Footer />
+    </div>
+  );
+};
+
+export default CartPage;

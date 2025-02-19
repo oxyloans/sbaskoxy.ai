@@ -41,7 +41,7 @@ const WhatsappRegister = () => {
     const accessToken = localStorage.getItem("accessToken");
 
     if (userId && accessToken) {
-      navigate(location.state?.from || "/main/dashboard/services", { replace: true });
+      navigate(location.state?.from || "/main/dashboard/products", { replace: true });
       return;
     }
 
@@ -212,7 +212,7 @@ const WhatsappRegister = () => {
         localStorage.removeItem("mobileOtpSession");
         localStorage.removeItem("salt");
         localStorage.removeItem("expiryTime");
-        setTimeout(() => navigate(location.state?.from || "/main/dashboard/services"), 500);
+        setTimeout(() => navigate(location.state?.from || "/main/dashboard/products"), 500);
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (err) {

@@ -105,7 +105,7 @@ const WriteToUs: React.FC = () => {
 
     try {
       const response = await axios.get(
-        `https://meta.oxyglobal.tech/api/writetous-service/getQuery/${id}`
+        `https://meta.oxyglobal.tech/api/user-service/write/getQuery/${id}`
       );
       if (response.data) {
         setFormData(prev => ({
@@ -171,7 +171,7 @@ const WriteToUs: React.FC = () => {
 
     try {
       await axios.post(
-        "https://meta.oxyglobal.tech/api/writetous-service/saveData",
+        "https://meta.oxyglobal.tech/api/user-service/write/saveData",
         data
       );
       setFormData({ query: "", documentName: "", documentId: "" });
@@ -196,7 +196,7 @@ const WriteToUs: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `https://meta.oxyglobal.tech/api/writetous-service/uploadQueryScreenShot?userId=${storedUserId}`,
+        `https://meta.oxyglobal.tech/api/user-service/write/uploadQueryScreenShot?userId=${storedUserId}`,
         formData,
         {
           onUploadProgress: (progressEvent) => {

@@ -174,7 +174,7 @@ const App: React.FC = () => {
           <Route path="/main" element={<RequireAuth><Content1/></RequireAuth>} >
           <Route
               index
-              element={<Navigate to="/main/dashboard/services" replace />}
+              element={<Navigate to="/main/dashboard/products" replace />}
             />
           <Route path="dashboard/:tab" element={<DashboardMain />} />
           {/* <Route path="services/freerudraksha" element={<FreeRudrakshaPage/>} /> */}

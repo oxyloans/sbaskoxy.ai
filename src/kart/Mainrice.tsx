@@ -15,6 +15,7 @@ interface Item {
   itemImage: null;
   weight: string;
   itemPrice: number;
+  quantity: number;
   itemMrp: number | string;
 }
 

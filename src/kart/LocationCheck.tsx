@@ -6,16 +6,21 @@ interface Coordinates {
   longitude: number;
 }
 
+interface Cords {
+  lat: number;
+  lng: number;
+}
+
 // Define the central position and radius
 const centralPosition: Coordinates = {
   latitude: 17.4752533,
   longitude: 78.3847054,
 };
 
-const radius = 20000; // Radius in meters (20 km)
+const radius = 20000;
 
 // Utility to check if a position is within a radius
-export const isWithinRadius = (coord1: Coordinates) => {
+export const isWithinRadius = (coord1: Cords) => {
   console.log("coord1", coord1);
   console.log("centralPosition", centralPosition);
 
@@ -23,14 +28,16 @@ export const isWithinRadius = (coord1: Coordinates) => {
 
   const R = 6371e3; // Earth's radius in meters
 
-  if (!coord1.latitude || !coord1.longitude) {
-    return { status: "error", distanceInKm: 0, isWithin: false, coord1 };
+  if (!coord1.lat || !coord1.lng) {
+    console.log("no coor");
+
+    return { status: "error", distanceInKm: 100, isWithin: false, coord1 };
   }
 
-  const lat1 = toRad(coord1.latitude);
+  const lat1 = toRad(coord1.lat);
   const lat2Rad = toRad(centralPosition.latitude);
-  const deltaLat = toRad(centralPosition.latitude - coord1.latitude);
-  const deltaLon = toRad(centralPosition.longitude - coord1.longitude);
+  const deltaLat = toRad(centralPosition.latitude - coord1.lat);
+  const deltaLon = toRad(centralPosition.longitude - coord1.lng);
 
   // Haversine formula
   const a =
@@ -44,7 +51,6 @@ export const isWithinRadius = (coord1: Coordinates) => {
   const distance = R * c; // Distance in meters
   console.log("Calculated Distance (meters):", distance);
 
-  // Check if the distance is within the radius
   const isWithin = distance <= radius;
   console.log("Is within radius:", isWithin);
 
@@ -78,7 +84,10 @@ export const getCoordinates = async (address: string) => {
 
     if (response.data.status === "OK") {
       const location = response.data.results[0].geometry.location;
-      return isWithinRadius({ latitude: location.lat, longitude: location.lng });
+      return isWithinRadius({
+        lat: location.lat,
+        lng: location.lng,
+      });
     } else {
       console.error("Error fetching coordinates:", response.data.status);
       alert("Error: Could not fetch coordinates for the given address.");

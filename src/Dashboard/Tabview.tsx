@@ -42,6 +42,15 @@ const Tabview = () => {
     };
   }, []);
 
+    useEffect(() => {
+      const pathTab = location.pathname.split("/").pop();
+    
+  
+      if (pathTab) {
+        setActiveTab(pathTab);
+      }
+    }, [location.pathname]);
+
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
     navigate(`/main/dashboard/${tab}`);
@@ -125,16 +134,16 @@ const Tabview = () => {
         <div className="w-full max-w-2xl overflow-x-auto items-center">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 justify-center ">
             <TabButton
-              tab="services"
-              icon={<Settings size={20} />}
-              label="Services"
-              // count={services.length}
-            />
-            <TabButton
               tab="products"
               icon={<ShoppingBag size={20} />}
               label="Products"
               // count={products.length}
+            />
+            <TabButton
+              tab="services"
+              icon={<Settings size={20} />}
+              label="Services"
+              // count={services.length}
             />
             <TabButton
               tab="freegpts"

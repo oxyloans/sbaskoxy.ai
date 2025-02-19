@@ -12,6 +12,7 @@ interface Item {
   itemImage: null;
   weight: string;
   itemPrice: number;
+  quantity: number;
   itemMrp: number | string;
 }
 
@@ -256,7 +257,7 @@ const Categories: React.FC<CategoriesProps> = ({
       )}
 
       {/* Items Grid */}
-      <AnimatePresence mode="wait">
+      {/* <AnimatePresence mode="wait">
         <motion.div
           key={`${activeCategory}-${activeSubCategory}`}
           initial={{ opacity: 0, y: 20 }}
@@ -332,7 +333,98 @@ const Categories: React.FC<CategoriesProps> = ({
             </motion.div>
           ))}
         </motion.div>
-      </AnimatePresence>
+      </AnimatePresence> */}
+      <AnimatePresence mode="wait">
+  <motion.div
+    key={`${activeCategory}-${activeSubCategory}`}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+  >
+    {getCurrentCategoryItems().map((item, index) => (
+      <motion.div
+        key={item.itemId}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: index * 0.05 }}
+        className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative"
+      >
+        {/* {item.quantity === 0 && (
+          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+            Out of Stock
+          </span>
+        )} */}
+        <div 
+          className="p-4 cursor-pointer"
+          onClick={() => onItemClick(item)}
+        >
+          <div className="aspect-square mb-3 overflow-hidden rounded-lg bg-purple-50">
+            <img
+              src={item.itemImage ?? "https://via.placeholder.com/150"}
+              alt={item.itemName}
+              className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <h3 className="font-medium text-gray-800 mb-2 line-clamp-2 min-h-[2.5rem] text-sm">
+            {item.itemName}
+          </h3>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-purple-600 font-semibold">₹{item.itemPrice}</span>
+            <span className="text-gray-500 line-through text-sm">₹{item.itemMrp}</span>
+          </div>
+
+          {item.quantity > 0 ? (
+            cartItems[item.itemId] > 0 ? (
+              <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuantityChange(item, false);
+                  }}
+                >
+                  -
+                </motion.button>
+                <span className="font-medium text-purple-700">{cartItems[item.itemId]}</span>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleQuantityChange(item, true);
+                  }}
+                >
+                  +
+                </motion.button>
+              </div>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg transition-all duration-300 hover:shadow-md"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart(item);
+                }}
+              >
+                Add to Cart
+              </motion.button>
+            )
+          ) : (
+            <button
+              className="w-full py-2 bg-gray-200 text-gray-600 rounded-lg cursor-not-allowed"
+              disabled
+            >
+              Out of Stock
+            </button>
+          )}
+        </div>
+      </motion.div>
+    ))}
+  </motion.div>
+</AnimatePresence>
     </div>
   );
 };

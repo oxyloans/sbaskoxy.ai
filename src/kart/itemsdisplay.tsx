@@ -28,6 +28,7 @@ interface Item {
   units: string;
   category: string;
   image:string;
+  quantity: number;
 }
 
 interface CartItem {
@@ -90,7 +91,7 @@ const ItemDisplayPage = () => {
   // Updated useEffect to handle both initial load and navigation
   useEffect(() => {
 
-    console.log({itemId});
+    console.log(state.item);
     
     if (itemId) {
       if (!state?.item) {
@@ -404,10 +405,12 @@ const ItemDisplayPage = () => {
                  
 
                   {/* Quantity and Add to Cart */}
+                  {itemDetails?.quantity !== 0 ?(
                   <div className="space-y-4">
                     {itemDetails && cartItems[itemDetails.itemId ] ? (
                       <div className="flex items-center space-x-4">
                         <button
+
                           className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
                           onClick={() => itemDetails && handleQuantityChange(itemDetails, false)}
                         >
@@ -426,13 +429,21 @@ const ItemDisplayPage = () => {
                     ) : (
                       <button
                         onClick={() => itemDetails && handleAddToCart(itemDetails)}
+                        // disabled={itemDetails?.quantity === 0}
                         className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
                       >
                         <ShoppingCart className="w-5 h-5" />
                         Add to Cart
                       </button>
                     )}
-                  </div>
+                  </div>):(
+                        <button
+                        className="w-full py-3 bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center gap-2"
+                      >
+                        <ShoppingCart className="w-5 h-5" />
+                        Out of Stock
+                      </button> 
+                  )}
                 </div>
               </div>
             </div>

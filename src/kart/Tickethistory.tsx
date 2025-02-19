@@ -80,7 +80,7 @@ const TicketHistoryPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://meta.oxyglobal.tech/api/writetous-service/getAllQueries",
+        "https://meta.oxyglobal.tech/api/user-service/write/getAllQueries",
         {
           askOxyOfers: "FREESAMPLE",
           userId: storedUserId,
@@ -128,7 +128,7 @@ const TicketHistoryPage: React.FC = () => {
     setCancelLoader(true);
     try {
       await axios.post(
-        "https://meta.oxyglobal.tech/api/writetous-service/saveData",
+        "https://meta.oxyglobal.tech/api/user-service/write/saveData",
         {
           adminDocumentId: "",
           askOxyOfers: "FREESAMPLE",
