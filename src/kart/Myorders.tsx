@@ -25,7 +25,7 @@ interface OrderHistory {
 
 interface Item {
   itemName: string;
-  itemImage: string;
+  image: string;
   weight: string;
   price: number;
   mrp: number;
@@ -303,9 +303,9 @@ const MyOrders: React.FC = () => {
                       {/* Item Details on the Left */}
                       <div className="flex items-center space-x-4">
                         <div className="w-20 h-20 bg-gray-200 cursor-pointer">
-                          {item.itemImage && (
+                          {item.image && (
                             <img
-                              src={item.itemImage}
+                              src={item.image}
                               alt={item.itemName}
                               className="w-full h-full object-cover"
                             />

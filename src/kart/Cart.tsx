@@ -356,7 +356,7 @@ const CartPage: React.FC = () => {
       const currentQuantity = cartItems[item.itemId];
       if (currentQuantity > 1) {
         const newQuantity = currentQuantity - 1;
-
+  
         await axios.patch(
           `${BASE_URL}/cart-service/cart/decrementCartData`,
           {
@@ -371,9 +371,17 @@ const CartPage: React.FC = () => {
             },
           }
         );
-
+  
+        // Update local state immediately
+        setCartItems(prev => ({
+          ...prev,
+          [item.itemId]: newQuantity
+        }));
+        
+        // Update cart data
         await fetchCartData();
       } else {
+        // If quantity is 1, remove the item
         await removeCartItem(item);
       }
     } catch (error) {
@@ -383,7 +391,7 @@ const CartPage: React.FC = () => {
       setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
     }
   };
-
+  
   const removeCartItem = async (item: CartItem) => {
     try {
       await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
@@ -395,7 +403,26 @@ const CartPage: React.FC = () => {
           "Content-Type": "application/json",
         },
       });
-      await fetchCartData();
+  
+      // Remove item from local state immediately
+      setCartData(prev => prev.filter(cartItem => cartItem.cartId !== item.cartId));
+      setCartItems(prev => {
+        const updated = { ...prev };
+        delete updated[item.itemId];
+        return updated;
+      });
+  
+      // Update total count in cart context
+      const updatedCount = Object.entries(cartItems)
+      .filter(([key]) => key !== String(item.itemId)) // Ensure key comparison works correctly
+      .reduce((sum, [, qty]) => sum + qty, 0);
+    
+  
+      // Check if cart is now empty
+      if (Object.keys(cartItems).length === 1) { // Since we're checking before the state update
+        window.location.reload();
+      }
+  
       message.success("Item removed from cart successfully.");
     } catch (error) {
       console.error("Failed to remove cart item:", error);
@@ -530,7 +557,7 @@ const CartPage: React.FC = () => {
     return withinRadius;
   };
 
-  const handleCartData = async () => {};
+  const handleCartData = async () => { };
 
   const isCheckoutDisabled = (): boolean => {
     // Check if cart is empty
@@ -675,11 +702,10 @@ const CartPage: React.FC = () => {
                               {cartItems[item.itemId]}
                             </span>
                             <button
-                              className={`px-3 py-1 ${
-                                cartItems[item.itemId] >= item.quantity
+                              className={`px-3 py-1 ${cartItems[item.itemId] >= item.quantity
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                              }`}
+                                }`}
                               onClick={() => {
                                 if (cartItems[item.itemId] < item.quantity) {
                                   handleIncrease(item);
@@ -695,7 +721,10 @@ const CartPage: React.FC = () => {
                           </div>
                           <button
                             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors duration-200"
-                            onClick={() => removeCartItem(item)}
+                            onClick={async () => {
+                              await removeCartItem(item);
+                            }}
+                            aria-label="Delete item from cart"
                           >
                             Delete
                           </button>
@@ -718,7 +747,10 @@ const CartPage: React.FC = () => {
                         </p>
                         <button
                           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors duration-200"
-                          onClick={() => removeCartItem(item)}
+                          onClick={async () => {
+                            await removeCartItem(item);
+                          }}
+                          aria-label="Delete item from cart"
                         >
                           Delete
                         </button>
@@ -836,33 +868,32 @@ const CartPage: React.FC = () => {
                     (item) =>
                       item.cartQuantity > item.quantity && item.quantity > 0
                   ) && (
-                    <div className="mb-3 p-3 bg-yellow-100 text-yellow-700 rounded">
-                      <p className="font-semibold">
-                        Quantity adjustments needed:
-                      </p>
-                      <ul className="ml-4 mt-1 list-disc">
-                        {cartData
-                          .filter(
-                            (item) =>
-                              item.cartQuantity > item.quantity &&
-                              item.quantity > 0
-                          )
-                          .map((item) => (
-                            <li key={item.itemId}>
-                              {item.itemName} - Only {item.quantity} in stock
-                              (you have {item.cartQuantity})
-                            </li>
-                          ))}
-                      </ul>
-                    </div>
-                  )}
+                      <div className="mb-3 p-3 bg-yellow-100 text-yellow-700 rounded">
+                        <p className="font-semibold">
+                          Quantity adjustments needed:
+                        </p>
+                        <ul className="ml-4 mt-1 list-disc">
+                          {cartData
+                            .filter(
+                              (item) =>
+                                item.cartQuantity > item.quantity &&
+                                item.quantity > 0
+                            )
+                            .map((item) => (
+                              <li key={item.itemId}>
+                                {item.itemName} - Only {item.quantity} in stock
+                                (you have {item.cartQuantity})
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
 
                   <button
-                    className={`w-full py-3 px-6 rounded-lg transition ${
-                      isCheckoutDisabled()
+                    className={`w-full py-3 px-6 rounded-lg transition ${isCheckoutDisabled()
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-purple-500 hover:bg-purple-700 text-white"
-                    }`}
+                      }`}
                     onClick={() => handleToProcess()}
                     disabled={isCheckoutDisabled()}
                   >
