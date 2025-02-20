@@ -16,7 +16,7 @@ interface Item {
   weight: string;
   itemPrice: number;
   quantity: number;
-  itemMrp: number | string;
+  itemMrp: number;
 }
 
 interface SubCategory {
@@ -103,7 +103,7 @@ const Ricebags: React.FC = () => {
         
         const allCategories: Category[] = [
           {
-            categoryName: "All Categories",
+            categoryName: "All Items",
             categoryImage: null,
             itemsResponseDtoList: allItemsList,
             subCategories: [] // Initialize empty subcategories for "All Categories"

@@ -221,7 +221,42 @@ const CartPage: React.FC = () => {
       console.log({ withinRadius });
 
       if (!withinRadius.isWithin) {
-        setError("Sorry, we do not deliver to this location");
+        setAddressFormData({
+          flatNo: "",
+          landMark: "",
+          address: "",
+          pincode: "",
+          addressType: "Home",
+        });
+        Modal.error({
+          title: "Delivery Unavailable",
+          content: (
+            <>
+              <p>
+                Sorry! We're unable to deliver to this address as it is{" "}
+                {withinRadius.distanceInKm} km away, beyond our 20 km delivery
+                radius. Please select another saved address within the radius or
+                add a new one to proceed. We appreciate your understanding!
+              </p>
+              {/* Wrapping buttons inside a flex container */}
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button type="default" onClick={() => Modal.destroyAll()}>
+                  Cancel
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    Modal.destroyAll();
+                    setIsAddressModalOpen(true);
+                  }}
+                >
+                  Add New Address
+                </Button>
+              </div>
+            </>
+          ),
+          footer: null, // Removes default "Ok" button
+        });
         return;
       }
 
@@ -250,6 +285,13 @@ const CartPage: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setSuccessMessage("Address added successfully!");
+        setAddressFormData({
+          flatNo: "",
+          landMark: "",
+          address: "",
+          pincode: "",
+          addressType: "Home",
+        });
       }
 
       setError("");

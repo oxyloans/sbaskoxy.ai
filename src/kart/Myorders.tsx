@@ -69,7 +69,7 @@ const MyOrders: React.FC = () => {
       const token = localStorage.getItem("token");
       const response = await axios.post(
         API_URL,
-        { customerId },
+        { userId : customerId },
         {
           headers: {
             Authorization: `Bearer ${token}`,

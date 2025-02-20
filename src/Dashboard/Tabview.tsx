@@ -132,7 +132,7 @@ const Tabview = () => {
     >
       <div className="flex justify-center">
         <div className="w-full max-w-2xl overflow-x-auto items-center">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 justify-center ">
+          <div className="grid grid-cols-2 pt-4 md:grid-cols-4 gap-2 md:gap-4 justify-center ">
             <TabButton
               tab="products"
               icon={<ShoppingBag size={20} />}
@@ -164,28 +164,28 @@ const Tabview = () => {
       {isVisible &&
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        {/* Blockchain ID Section */}
-        <div className="flex items-center gap-2 bg-white p-3 rounded-lg overflow-hidden shadow-sm w-full md:w-auto mt-4">
-          <span className="text-sm font-medium">
-            Blockchain ID: {multichainId}
-          </span>
-          <button
-            onClick={handleCopyMultichainId}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            aria-label="Copy multichain ID"
-          >
-            {isCopied ? (
-              <Check className="w-4 h-4 text-green-600" />
-            ) : (
-              <Copy className="w-4 h-4 text-gray-600" />
-            )}
-          </button>
-        </div>
+      {/* Blockchain ID Section */}
+      <div className="flex items-center gap-2 bg-white p-3 rounded-lg shadow-lg w-full md:w-auto mt-4">
+        <span className="text-sm font-medium text-purple-600">
+          Blockchain ID: {multichainId}
+        </span>
+        <button
+          onClick={handleCopyMultichainId}
+          className="p-1 bg-white border border-purple-600 text-purple-600 hover:bg-purple-100 rounded transition-colors"
+          aria-label="Copy multichain ID"
+        >
+          {isCopied ? (
+            <Check className="w-4 h-4" />
+          ) : (
+            <Copy className="w-4 h-4" />
+          )}
+        </button>
+      </div>
 
-        {/* BMV Coins Section */}
-        <div className="bg-white p-3 rounded-lg shadow-sm w-full md:w-auto">
-          <span className="text-sm font-medium">BMV Coins: {bmvCoin}</span>
-        </div>
+      {/* BMV Coins Section */}
+      <div className="bg-white p-3 rounded-lg shadow-lg w-full md:w-auto">
+        <span className="text-sm font-medium text-purple-600">BMV Coins: {bmvCoin}</span>
+      </div>
       </div>
       }
     </div>

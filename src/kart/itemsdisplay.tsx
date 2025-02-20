@@ -1,14 +1,13 @@
-import React, { useEffect, useState,useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message } from 'antd';
 import {
   ShoppingCart, Home, ChevronRight, Minus, Plus, Tag,
-  Package2, Star, Bot, X, MessageCircle, Heart
+  Package2, Star, Bot, X, MessageCircle, AlertCircle
 } from 'lucide-react';
 import ValidationPopup from "./ValidationPopup";
 import Footer from "../components/Footer";
-import { parse } from "path";
 import { CartContext } from "../until/CartContext";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
@@ -109,7 +108,7 @@ const ItemDisplayPage = () => {
   // Updated navigation handler for related items
   const handleRelatedItemClick = (item: Item) => {
     setItemDetails(item); // Update item details immediately
-    navigate(`/itemsdisplay/${item.itemId}`, { 
+    navigate(`/main/itemsdisplay/${item.itemId}`, { 
       state: { item },
       replace: true 
     });
@@ -155,7 +154,7 @@ const ItemDisplayPage = () => {
 
   const fetchRelatedItems = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/product-service/getItemsList`);
+      const response = await axios.get(`${BASE_URL}/product-service/showItemsForCustomrs`);
 
       
         console.log("Fetched Categories:", response.data);
@@ -339,9 +338,18 @@ const ItemDisplayPage = () => {
     }]);
   }
   }
-
   const calculateDiscount = (mrp: number, price: number) => {
     return Math.round(((mrp - price) / mrp) * 100);
+  };
+
+  const getStockStatus = (quantity: number) => {
+    if (quantity === 0) return { text: "Out of Stock", color: "bg-red-100 text-red-600" };
+    if (quantity <= 5) return { text: `Only ${quantity} left!`, color: "bg-yellow-100 text-yellow-600" };
+    return { text: "In Stock", color: "bg-green-100 text-green-600" };
+  };
+
+  const isMaxStockReached = (item: Item) => {
+    return cartItems[item.itemId] >= item.quantity;
   };
 
   return (
@@ -364,31 +372,50 @@ const ItemDisplayPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column - Product Details */}
-          <div className="lg:col-span-8 space-y-8">
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Product Image */}
+          <div className="lg:col-span-8 space-y-6">
+            <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                {/* Product Image Section */}
                 <div className="relative">
-                  <div className="aspect-square rounded-lg overflow-hidden">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
                     <img
-                      src={itemDetails?.itemImage || itemDetails?.image }
+                      src={itemDetails?.itemImage || itemDetails?.image}
                       alt={itemDetails?.itemName}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain transform transition-transform hover:scale-105"
                     />
                   </div>
-                  <div className="absolute top-4 right-4 bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
-                    {itemDetails &&
-                      calculateDiscount(
-                        Number(itemDetails.itemMrp) || Number(itemDetails.priceMrp),
-                        Number(itemDetails.itemPrice)
-                      )}% OFF
-                  </div>
+                  
+                  {/* Enhanced Discount Badge */}
+                  {itemDetails && (
+                    <div className="absolute top-4 right-4 flex items-center">
+                      <span className="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-lg">
+                        {calculateDiscount(
+                          Number(itemDetails.itemMrp) || Number(itemDetails.priceMrp),
+                          Number(itemDetails.itemPrice)
+                        )}% OFF
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Stock Status Badge */}
+                  {itemDetails && (
+                    <div className="absolute top-4 left-4">
+                      <div className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 ${
+                        getStockStatus(itemDetails.quantity).color
+                      }`}>
+                        {itemDetails.quantity <= 5 && <AlertCircle className="w-4 h-4" />}
+                        {getStockStatus(itemDetails.quantity).text}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Product Info */}
+                {/* Product Info Section */}
                 <div className="space-y-6">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">{itemDetails?.itemName}</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+                      {itemDetails?.itemName}
+                    </h1>
                     <div className="flex items-center gap-2">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -397,71 +424,98 @@ const ItemDisplayPage = () => {
                     </div>
                   </div>
 
+                  {/* Price Section */}
                   <div className="flex items-baseline gap-4">
-                    <span className="text-3xl font-bold text-purple-600">₹{itemDetails?.itemPrice}</span>
-                    <span className="text-lg text-gray-500 line-through">₹{itemDetails?.itemMrp || itemDetails?.priceMrp}</span>
+                    <span className="text-3xl font-bold text-purple-600">
+                      ₹{itemDetails?.itemPrice}
+                    </span>
+                    <span className="text-lg text-gray-500 line-through">
+                      ₹{itemDetails?.itemMrp || itemDetails?.priceMrp}
+                    </span>
                   </div>
 
-                 
-
-                  {/* Quantity and Add to Cart */}
-                  {itemDetails?.quantity !== 0 ?(
+                  {/* Enhanced Add to Cart Section */}
                   <div className="space-y-4">
-                    {itemDetails && cartItems[itemDetails.itemId ] ? (
-                      <div className="flex items-center space-x-4">
+                    {itemDetails?.quantity !== 0 ? (
+                      itemDetails && cartItems[itemDetails.itemId] ? (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
+                            <button
+                              className={`p-2 rounded-lg transition-all ${
+                                cartItems[itemDetails.itemId] <= 1
+                                  ? "bg-red-100 text-red-600 hover:bg-red-200"
+                                  : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                              }`}
+                              onClick={() => itemDetails && handleQuantityChange(itemDetails, false)}
+                            >
+                              <Minus className="w-5 h-5" />
+                            </button>
+                            <span className="font-bold text-xl text-purple-700">
+                              {cartItems[itemDetails.itemId]}
+                            </span>
+                            <button
+                              className={`p-2 rounded-lg transition-all ${
+                                isMaxStockReached(itemDetails)
+                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                  : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                              }`}
+                              onClick={() => !isMaxStockReached(itemDetails) && handleQuantityChange(itemDetails, true)}
+                              disabled={isMaxStockReached(itemDetails)}
+                            >
+                              <Plus className="w-5 h-5" />
+                            </button>
+                          </div>
+                          {isMaxStockReached(itemDetails) && (
+                            <p className="text-yellow-600 text-sm flex items-center gap-1.5">
+                              <AlertCircle className="w-4 h-4" />
+                              Maximum available quantity reached
+                            </p>
+                          )}
+                        </div>
+                      ) : (
                         <button
-
-                          className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
-                          onClick={() => itemDetails && handleQuantityChange(itemDetails, false)}
+                          onClick={() => itemDetails && handleAddToCart(itemDetails)}
+                          className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
+                            transform transition-all hover:scale-105 flex items-center justify-center gap-2"
                         >
-                          <Minus className="w-4 h-4" />
+                          <ShoppingCart className="w-5 h-5" />
+                          Add to Cart
                         </button>
-                        <span className="font-bold text-xl w-8 text-center">
-                          {cartItems[itemDetails.itemId]}
-                        </span>
-                        <button
-                          className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200"
-                          onClick={() => itemDetails && handleQuantityChange(itemDetails, true)}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
+                      )
                     ) : (
                       <button
-                        onClick={() => itemDetails && handleAddToCart(itemDetails)}
-                        // disabled={itemDetails?.quantity === 0}
-                        className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
-                      >
-                        <ShoppingCart className="w-5 h-5" />
-                        Add to Cart
-                      </button>
-                    )}
-                  </div>):(
-                        <button
-                        className="w-full py-3 bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center gap-2"
+                        disabled
+                        className="w-full py-3 bg-gray-200 text-gray-600 rounded-lg 
+                          flex items-center justify-center gap-2 cursor-not-allowed"
                       >
                         <ShoppingCart className="w-5 h-5" />
                         Out of Stock
-                      </button> 
-                  )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Product Details */}
+            {/* Product Details Section - Enhanced */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h2 className="text-xl font-bold mb-4">Product Details</h2>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="flex items-center gap-3 bg-purple-50 p-3 rounded-lg">
                   <Package2 className="w-5 h-5 text-purple-600" />
-                  <span>{itemDetails?.itemWeight || itemDetails?.weight} {itemDetails?.weightUnit || itemDetails?.units}</span>
+                  <span className="font-medium">
+                    {itemDetails?.itemWeight || itemDetails?.weight} 
+                    {itemDetails?.weightUnit || itemDetails?.units}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 bg-purple-50 p-3 rounded-lg">
                   <Tag className="w-5 h-5 text-purple-600" />
-                  <span>{itemDetails?.category}</span>
+                  <span className="font-medium">{itemDetails?.category}</span>
                 </div>
               </div>
-              <p className="text-gray-600">{itemDetails?.itemDescription}</p>
+              <p className="text-gray-600 leading-relaxed">
+                {itemDetails?.itemDescription}
+              </p>
             </div>
           </div>
 
