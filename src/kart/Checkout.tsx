@@ -313,6 +313,18 @@ const CheckoutPage: React.FC = () => {
       console.log(response.data);
   
       if (response.status === 200 && response.data) {
+        if(response.data.status!=null){
+          Modal.error({
+            title: "Error",
+            content: response.data.status,
+            okText: "Ok",
+            // cancelText: "No",
+            onOk() {
+              navigate("/main/mycart");
+            },
+          })
+          return;
+        }
         if (selectedPayment === "COD" && response.data.paymentId === null) {
           fetchCartData();
           Modal.success({

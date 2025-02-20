@@ -25,7 +25,7 @@ interface CartItem {
   itemDescription: string;
   units: string;
   weight: string;
-  cartQuantity: string;
+  cartQuantity: number;
   cartId: string;
   quantity: number;
 }
@@ -118,18 +118,38 @@ const CartPage: React.FC = () => {
       if (response.data.customerCartResponseList) {
         const cartItemsMap = response.data.customerCartResponseList.reduce(
           (acc: { [key: string]: number }, item: CartItem) => {
-            acc[item.itemId] = parseInt(item.cartQuantity);
+            acc[item.itemId] = item.cartQuantity || 0;
             return acc;
           },
           {}
         );
         setCartItems(cartItemsMap);
-        setCount(response.data?.customerCartResponseList?.length);
+        // Fix: Use cartItemsMap and correct syntax
+        const totalQuantity = Object.values(cartItemsMap as Record<string, number>).reduce(
+          (sum, qty) => sum + qty, 
+          0
+        );
+        setCount(totalQuantity);
       } else {
         setCartItems({});
         setCount(0);
       }
-      const outOfStockItems = response.data?.customerCartResponseList.filter((item:CartItem) => item.quantity === 0);
+      // const outOfStockItems = response.data?.customerCartResponseList.filter((item:CartItem) => item.quantity === 0 || item.quantity > 6);
+      const updatedCart = response.data?.customerCartResponseList.filter((item:CartItem) => item.quantity > 0);
+    // setCart(updatedCart);
+
+    // Check if any item quantity exceeds stock
+    const outOfStockItems = updatedCart.filter((item:CartItem) => item.cartQuantity > item.quantity);
+
+    if (outOfStockItems.length > 0) {
+      setCheckoutError(true);
+      alert(
+        `Please decrease the quantity for: ${outOfStockItems
+          .map((item:CartItem) => item.itemName)
+          .join(", ")} before proceeding to checkout.`
+      );
+      return;
+    }
 
       if (outOfStockItems.length > 0) {
         console.log("Out of Stock Items:", outOfStockItems);
@@ -483,14 +503,21 @@ const CartPage: React.FC = () => {
                           })
                         }
                       >
+                        
                         <img
                           src={item.image}
                           alt={item.itemName}
                           className="w-full h-full object-cover"
                         />
                       </div>
-
+                
                       <div>
+                        {/* Display available stock quantity */}
+                        {item.quantity < 6 && (
+                          <p className="text-xs text-red-500">
+                            Only {item.quantity} item left
+                          </p>
+                        )}
                         <h3 className="font-bold text-gray-800 truncate flex-1">
                           {item.itemName}
                         </h3>
@@ -500,53 +527,54 @@ const CartPage: React.FC = () => {
                         <p className="text-sm line-through text-red-500 text-center md:text-left">
                           MRP: ₹{item.priceMrp}
                         </p>
-
-                        <p className="text-green-600 font-bold md:text-left">
-                          ₹{item.itemPrice}
-                        </p>
+                        <p className="text-green-600 font-bold md:text-left">₹{item.itemPrice}</p>
+                
+                        
                       </div>
                     </div>
-                  {item.quantity!== 0?(
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="flex items-center justify-between space-x-4 w-full">
-                        <div className="flex items-center border rounded-md">
+                
+                    {item.quantity !== 0 ? (
+                      <div className="flex flex-col items-center space-y-4">
+                        <div className="flex items-center justify-between space-x-4 w-full">
+                          <div className="flex items-center border rounded-md">
+                            <button
+                              className="px-3 py-1"
+                              onClick={() => handleDecrease(item)}
+                              disabled={loadingItems[item.itemId]}
+                            >
+                              -
+                            </button>
+                            <span className="px-3 py-1">{cartItems[item.itemId]}</span>
+                            <button
+                              className={`px-3 py-1 ${
+                                cartItems[item.itemId] >= item.quantity ? "opacity-50 cursor-not-allowed" : ""
+                              }`}
+                              onClick={() => {
+                                if (cartItems[item.itemId] < item.quantity) {
+                                  handleIncrease(item);
+                                }
+                              }}
+                              disabled={cartItems[item.itemId] >= item.quantity || loadingItems[item.itemId]}
+                            >
+                              +
+                            </button>
+                          </div>
                           <button
-                            className="px-3 py-1"
-                            onClick={() => handleDecrease(item)}
-                            disabled={loadingItems[item.itemId]}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors duration-200"
+                            onClick={() => removeCartItem(item)}
                           >
-                            -
-                          </button>
-                          <span className="px-3 py-1">
-                            {cartItems[item.itemId]}
-                          </span>
-                          <button
-                            className="px-3 py-1"
-                            onClick={() => handleIncrease(item)}
-                            disabled={loadingItems[item.itemId]}
-                          >
-                            +
+                            Delete
                           </button>
                         </div>
-                        <button
-                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors duration-200"
-                          onClick={() => removeCartItem(item)}
-                        >
-                          Delete
-                        </button>
+                
+                        <div className="w-full flex justify-center mt-4">
+                          <p className="text-purple-600 font-bold whitespace-nowrap text-m">
+                            Total : ₹
+                            {(parseFloat(item.itemPrice) * (cartItems[item.itemId] || 0)).toFixed(2)}
+                          </p>
+                        </div>
                       </div>
-
-                      <div className="w-full flex justify-center mt-4">
-                        <p className="text-purple-600 font-bold whitespace-nowrap text-m">
-                          Total : ₹
-                          {(
-                            parseFloat(item.itemPrice) *
-                            (cartItems[item.itemId] || 0)
-                          ).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                    ):(
+                    ) : (
                       <div className="flex flex-col items-center space-y-4">
                         <p className="text-red-600 font-bold whitespace-nowrap text-m">
                           Out of Stock
@@ -620,7 +648,7 @@ const CartPage: React.FC = () => {
                         (acc, item) =>
                           acc +
                           parseFloat(item.itemPrice) *
-                            parseInt(item.cartQuantity),
+                            item.cartQuantity,
                         0
                       )
                       .toFixed(2) || "0.00"}
@@ -639,7 +667,7 @@ const CartPage: React.FC = () => {
                         (acc, item) =>
                           acc +
                           parseFloat(item.itemPrice) *
-                            parseInt(item.cartQuantity),
+                            item.cartQuantity,
                         0
                       )
                       .toFixed(2) || "0.00"}

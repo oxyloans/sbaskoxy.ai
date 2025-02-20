@@ -350,15 +350,17 @@ const Categories: React.FC<CategoriesProps> = ({
         transition={{ delay: index * 0.05 }}
         className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative"
       >
-        {/* {item.quantity === 0 && (
-          <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+        {item.quantity === 0? (
+          <span className="top-2 left-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded-lg">
             Out of Stock
           </span>
-        )} */}
-        <div 
-          className="p-4 cursor-pointer"
-          onClick={() => onItemClick(item)}
-        >
+        ):item.quantity < 6 && (
+          <span className="top-2 left-2 bg-yellow-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+            {item.quantity} left
+          </span>
+        )}
+
+        <div className="p-4 cursor-pointer" onClick={() => onItemClick(item)}>
           <div className="aspect-square mb-3 overflow-hidden rounded-lg bg-purple-50">
             <img
               src={item.itemImage ?? "https://via.placeholder.com/150"}
@@ -366,15 +368,27 @@ const Categories: React.FC<CategoriesProps> = ({
               className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
             />
           </div>
+
           <h3 className="font-medium text-gray-800 mb-2 line-clamp-2 min-h-[2.5rem] text-sm">
             {item.itemName}
           </h3>
+
           <div className="flex items-center justify-between mb-2">
             <span className="text-purple-600 font-semibold">₹{item.itemPrice}</span>
             <span className="text-gray-500 line-through text-sm">₹{item.itemMrp}</span>
           </div>
 
-          {item.quantity > 0 ? (
+         {/* Display stock quantity */}
+          {/* {item.quantity < 6 ? (
+            <span className="text-xs text-gray-500 block mb-1 line-clamp-2">
+              Only {item.quantity} left in stock
+            </span>
+          ):(
+            <span className="text-xs text-gray-500 block mb-1 line-clamp-2">
+            </span>
+          )}  */}
+
+          {item.quantity !== 0 ? (
             cartItems[item.itemId] > 0 ? (
               <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1">
                 <motion.button
@@ -390,11 +404,16 @@ const Categories: React.FC<CategoriesProps> = ({
                 <span className="font-medium text-purple-700">{cartItems[item.itemId]}</span>
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600"
+                  className={`w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 ${
+                    cartItems[item.itemId] >= item.quantity ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleQuantityChange(item, true);
+                    if (cartItems[item.itemId] < item.quantity) {
+                      handleQuantityChange(item, true);
+                    }
                   }}
+                  disabled={cartItems[item.itemId] >= item.quantity}
                 >
                   +
                 </motion.button>
@@ -413,10 +432,7 @@ const Categories: React.FC<CategoriesProps> = ({
               </motion.button>
             )
           ) : (
-            <button
-              className="w-full py-2 bg-gray-200 text-gray-600 rounded-lg cursor-not-allowed"
-              disabled
-            >
+            <button className="w-full py-2 bg-gray-200 text-gray-600 rounded-lg cursor-not-allowed" disabled>
               Out of Stock
             </button>
           )}
@@ -425,6 +441,7 @@ const Categories: React.FC<CategoriesProps> = ({
     ))}
   </motion.div>
 </AnimatePresence>
+
     </div>
   );
 };
