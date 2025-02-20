@@ -21,7 +21,7 @@ interface RefereeDetail {
   whatsappnumber: string;
   firstName: string | null;
   lastName: string | null;
-  referenceStatus: boolean;
+  referenceStatus: string;
   referee: string;
   referredDate?: string;
 }
@@ -75,7 +75,7 @@ const ReferralPage: React.FC = () => {
       setRefereeDetails(detailsWithDate);
       
       const total = detailsWithDate.length;
-      const active = detailsWithDate.filter(d => d.referenceStatus).length;
+      const active = detailsWithDate.filter(d => d.referenceStatus ==="Regsitered").length;
       setStats({
         totalReferrals: total,
         activeReferrals: active,
@@ -115,13 +115,7 @@ const ReferralPage: React.FC = () => {
         }
       );
 
-      // if (shareAction === 'whatsapp') {
-      //   const shareText = `Hey! I'm inviting you to join AskOxy.ai - Use my referral link to sign up: ${referralLink}`;
-      //   window.open(`https://wa.me/${phoneNumber.replace('+', '')}?text=${encodeURIComponent(shareText)}`, '_blank');
-      // } else if (shareAction === 'copy') {
-      //   await navigator.clipboard.writeText(referralLink);
-      //   alert('Referral link copied!');
-      // }
+
 
       setIsModalOpen(false);
       fetchRefereeDetails();
@@ -188,39 +182,13 @@ const ReferralPage: React.FC = () => {
               bgColor="bg-green-100"
               iconColor="text-green-600"
             />
-            {/* <StatCard
-              icon={<TrendingUp />}
-              title="Conversion Rate"
-              value={`${stats.conversionRate.toFixed(1)}%`}
-              bgColor="bg-blue-100"
-              iconColor="text-blue-600"
-            /> */}
           </div>
 
           {/* Main Content */}
           <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Referral Program</h2>
+            <h2 className="text-2xl font-bold mb-6 text-purple-600">Refer a Friend & Earn</h2>
 
             <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Your Referral Link</h3>
-                <div className="flex items-center bg-gray-50 rounded-lg p-3 border">
-                  <LinkIcon className="mr-3 text-purple-600" />
-                  <input 
-                    type="text" 
-                    readOnly 
-                    value={referralLink}
-                    className="flex-1 bg-transparent focus:outline-none text-gray-600"
-                  />
-                  <button 
-                    onClick={() => handleShare('copy')}
-                    className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <Copy className="text-purple-600" />
-                  </button>
-                </div>
-              </div>
-
               <div>
                 <h3 className="text-lg font-semibold mb-4">Invite a Friend</h3>
                 <button 
