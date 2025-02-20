@@ -165,7 +165,7 @@ const Tabview = () => {
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
       {/* Blockchain ID Section */}
-      <div className="flex items-center gap-2 bg-white p-3 rounded-lg shadow-lg w-full md:w-auto mt-4">
+      <div className="flex items-center overflow-hidden gap-2 bg-white p-3 rounded-lg shadow-lg w-full md:w-auto mt-4">
         <span className="text-sm font-medium text-purple-600">
           Blockchain ID: {multichainId}
         </span>

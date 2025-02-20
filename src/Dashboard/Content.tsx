@@ -79,7 +79,7 @@ const Content1: React.FC = () => {
           ${isMobileOpen ? "pl-0" : "pl-0"}`}
       >
         <Tabview />
-        <main className="min-h-screen p-4 md:p-6 bg-white ">
+        <main className="min-h-screen p-2 md:p-4 bg-white ">
           <Outlet />
         </main>
       </div>

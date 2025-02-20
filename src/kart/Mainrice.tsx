@@ -34,7 +34,7 @@ interface Category {
 
 const Ricebags: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>("All Categories");
+  const [activeCategory, setActiveCategory] = useState<string>("All Items");
   const [loading, setLoading] = useState<boolean>(true);
   const [cart, setCart] = useState<{ [key: string]: number }>({});
   const [customerId, setCustomerId] = useState<string>("");
@@ -218,12 +218,12 @@ const Ricebags: React.FC = () => {
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="text-center py-6 md:py-12"
+          className="text-center py-2 md:py-6"
         >
-          <h1 className="text-2xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent px-4">
+          <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent px-4">
             Premium Quality Rice
           </h1>
-          <p className="mt-3 text-sm md:text-lg text-gray-600 px-4">
+          <p className="text-m md:text-lg text-gray-600 px-4">
             Discover our exclusive collection of premium rice varieties
           </p>
         </motion.div>
@@ -283,7 +283,7 @@ const Ricebags: React.FC = () => {
         </div>
       </nav>
 
-      <Footer />
+ 
 
       {/* Loading State */}
       {loading && (
@@ -295,6 +295,7 @@ const Ricebags: React.FC = () => {
           />
         </div>
       )}
+           <Footer />
     </div>
   );
 };
