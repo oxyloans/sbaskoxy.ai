@@ -53,6 +53,7 @@ const CheckoutPage: React.FC = () => {
   const [selectedAddress,setSelectedAddress] = useState<Address>(state?.selectedAddress || null)
   const [grandTotalAmount, setGrandTotalAmount] = useState<number>(0);
   const [deliveryBoyFee, setDeliveryBoyFee] = useState<number>(0);
+  const [subGst,setSubGst] = useState(0);
   const [totalAmount,setTotalAmount]=useState<number>(0);
   const [walletMessage,setWalletMessage]=useState();
   const [grandTotal,setGrandTotal]=useState<number>(0);
@@ -177,12 +178,13 @@ const CheckoutPage: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setGrandTotalAmount(parseFloat(response.data.totalSum));
+      setGrandTotalAmount(parseFloat(response.data.totalSumWithGstSum));
+      setSubGst(response.data.totalGstSum);
       const totalDeliveryFee = response.data?.cartResponseList.reduce((sum:number, item :CartData) => sum + item.deliveryBoyFee, 0);
        console.log({totalDeliveryFee});
        setDeliveryBoyFee(totalDeliveryFee)
-       setTotalAmount(parseFloat(response.data.totalSum))
-       setGrandTotal(parseFloat(response.data.totalSum))
+       setTotalAmount(parseFloat(response.data.totalSumWithGstSum))
+       setGrandTotal(parseFloat(response.data.totalSumWithGstSum))
       
     } catch (error) {
       console.error('Error fetching cart items:', error);
@@ -739,6 +741,10 @@ const CheckoutPage: React.FC = () => {
                      <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Delivery Fee</span>
                         <span className="font-medium text-green-600">FREE</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Total GST </span>
+                        <span className="font-medium text-green-600">₹{subGst}</span>
                       </div>
                       <div className="border-t border-gray-100 pt-3 mt-3">
                         <div className="flex justify-between items-center">

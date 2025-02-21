@@ -58,6 +58,8 @@ const CartPage: React.FC = () => {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [subGst, setSubGst] = useState(0);
+  const [totalGst, setTotalGst] = useState(0);
   const [error, setError] = useState<string>("");
   const [checkoutError, setCheckoutError] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -168,7 +170,42 @@ const CartPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+  const fetchGSTData = async () => {
+   
+    const requestBody = {   
+      customerId: localStorage.getItem("userId"),
 
+    };
+    try {
+      const fetchResponse = await axios.post(`${BASE_URL}/cart-service/cart/cartItemData`,requestBody, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+
+      });
+      
+  
+      const cartData = fetchResponse.data;
+      setSubGst(cartData.totalGstSum);
+      setTotalGst(cartData.totalSumWithGstSum);
+    } catch (error) {
+      console.error("Error processing cart data:", error);
+    }
+  };
+
+  const calculateSubtotal = () => {
+    return cartData?.reduce(
+      (acc, item) => acc + parseFloat(item.itemPrice) * item.cartQuantity,
+      0
+    ) || 0;
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    return subtotal + subGst;
+  };
+   
+  
   const getCoordinates = async (address: string) => {
     try {
       const API_KEY = "AIzaSyAM29otTWBIAefQe6mb7f617BbnXTHtN0M";
@@ -492,6 +529,7 @@ const CartPage: React.FC = () => {
   useEffect(() => {
     fetchCartData();
     fetchAddresses();
+    fetchGSTData();
   }, []);
 
   // Add a separate useEffect to check stock status whenever cartData changes
@@ -827,19 +865,13 @@ const CartPage: React.FC = () => {
                     <span>Shipping</span>
                     <span className="font-semibold">₹0.00</span>
                   </div>
+                  <div className="flex justify-between mb-2 text-gray-700">
+                    <span>GST Charges</span>
+                    <span className="font-semibold">₹ {subGst.toFixed(2)}</span>
+                  </div>
                   <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
                     <span>Total</span>
-                    <span>
-                      ₹
-                      {cartData
-                        ?.reduce(
-                          (acc, item) =>
-                            acc +
-                            parseFloat(item.itemPrice) * item.cartQuantity,
-                          0
-                        )
-                        .toFixed(2) || "0.00"}
-                    </span>
+                    <span>₹ {calculateTotal().toFixed(2)}</span>
                   </div>
 
                   {/* Display out of stock messages */}
