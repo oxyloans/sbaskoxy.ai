@@ -53,9 +53,9 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-${color}-200 p-4 md:p-6 rounded-lg shadow-md h-36 md:h-36`}
+      className={`bg-${color}-200 p-4 md:p-5 rounded-lg shadow-md h-36 md:h-36`}
     >
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <h1 className="text-m py-1 font-bold">{title}</h1>
       <p className="text-3xl font-bold">{count}</p>
     </div>
   );
@@ -73,7 +73,7 @@ const Admin: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(
     "REGISTEREDUSERS"
   );
-  const [showRegisteredColumn, setShowRegisteredColumn] = useState(false);
+  const [showRegisteredColumn, setShowRegisteredColumn] = useState(true);
   const [registeredUserCount, setRegisteredUserCount] = useState<UserCount[]>(
     []
   );
@@ -243,7 +243,14 @@ const Admin: React.FC = () => {
       projectType: "ASKOXY",
       mobileNumber: user.phoneNumber || "N/A",
       askOxyOfers: "REGISTERED USERS",
-      registrationDate: new Date(user.createdAt).toLocaleString(),
+      registrationDate: new Date(user.createdAt).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
     }));
     setOffers(userCountData);
   }, [userCount]);
@@ -291,7 +298,14 @@ const Admin: React.FC = () => {
         projectType: "ASKOXY",
         mobileNumber: user.phoneNumber || "N/A",
         askOxyOfers: "REGISTERED USERS",
-        registrationDate: new Date(user.createdAt).toLocaleString(),
+        registrationDate: new Date(user.createdAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
       }));
       // console.log({ userCount });
 

@@ -37,7 +37,7 @@ import Rotary from "../assets/img/myrotray (1).png";
 import MMServices from "../assets/img/manufacturing.png";
 import hiring from "../assets/img/wearehiring.png";
 import FreeChatGPTmain from "./FreechatGPTmain";
-import BMVCOINmain from './BMVcoinmain';
+import BMVCOINmain from "./BMVcoinmain";
 interface DashboardItem {
   title: string;
   image: string;
@@ -45,6 +45,21 @@ interface DashboardItem {
   path: string;
   icon: React.ReactNode;
   category?: string;
+}
+
+interface Campaign {
+  imageUrls: Image[];
+  campaignType: string;
+  message: string | null;
+  campaignTypeAddBy: string;
+  campaignDescription: string;
+  campaignStatus: boolean;
+}
+
+interface Image {
+  imageId: string;
+  imageUrl: string;
+  status: boolean;
 }
 
 const DashboardMain: React.FC = () => {
@@ -57,9 +72,25 @@ const DashboardMain: React.FC = () => {
   const [multichainId, setMultichainId] = useState<string>("");
   const [bmvCoin, setBmvCoin] = useState<number>(0);
   const [isCopied, setIsCopied] = useState<boolean>(false);
-
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const response = await axios.get<Campaign[]>(
+          "https://meta.oxyglobal.tech/api/marketing-service/campgin/getAllCampaignDetails"
+        );
+        setCampaigns(response.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+      }
+    };
+
+    fetchCampaigns();
+  }, []);
 
   useEffect(() => {
     setIsSidebarOpen(false);
@@ -67,7 +98,6 @@ const DashboardMain: React.FC = () => {
 
   useEffect(() => {
     const pathTab = location.pathname.split("/").pop();
-  
 
     if (pathTab) {
       setActiveTab(pathTab);
@@ -192,6 +222,11 @@ const DashboardMain: React.FC = () => {
     );
   };
 
+  const handleCampaignClick = (campaignType: string) => {
+    console.log(`/services/campaign/${campaignType}`);
+    navigate(`/main/services/campaign/${campaignType}`);
+  };
+
   const renderItems = (items: DashboardItem[]): JSX.Element => (
     <div className="space-y-6">
       {activeTab === "products" ? (
@@ -248,12 +283,52 @@ const DashboardMain: React.FC = () => {
                 </div>
               </div>
             ))}
+
+            {campaigns
+              .filter((campaign) => campaign.campaignStatus !== false)
+              .map((campaign, index) => (
+                <div
+                  key={index}
+                  className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg
+                  transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+                  onClick={() => handleCampaignClick(campaign.campaignType)}
+                >
+                  <div className="relative h-48 overflow-hidden">
+                    {campaign.imageUrls.map((image, imgIndex) => (
+                      <img
+                        key={imgIndex}
+                        src={image.imageUrl}
+                        alt={`Campaign Image ${imgIndex + 1}`}
+                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ))}
+                    {campaign.campaignType && (
+                      <span className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-white/90 rounded-full">
+                        {campaign.campaignType}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      {/* <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
+                    {campaign.icon}
+                    </div> */}
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                        {campaign.campaignType}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-600 line-clamp-2 group-hover:text-gray-900 transition-colors">
+                      {campaign.campaignDescription}
+                    </p>
+                  </div>
+                </div>
+              ))}
           </div>
         </>
       ) : activeTab === "freegpts" ? (
-        <>{ <FreeChatGPTmain /> }</>
+        <>{<FreeChatGPTmain />}</>
       ) : (
-        activeTab === "bmvcoin" && <>{ <BMVCOINmain /> }</>
+        activeTab === "bmvcoin" && <>{<BMVCOINmain />}</>
       )}
     </div>
   );

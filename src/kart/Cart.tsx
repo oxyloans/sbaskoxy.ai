@@ -379,6 +379,7 @@ const CartPage: React.FC = () => {
       );
 
       await fetchCartData();
+      fetchGSTData();
     } catch (error) {
       console.error("Failed to increase cart item:", error);
       message.error("Failed to update quantity");
@@ -417,6 +418,7 @@ const CartPage: React.FC = () => {
         
         // Update cart data
         await fetchCartData();
+        fetchGSTData();
       } else {
         // If quantity is 1, remove the item
         await removeCartItem(item);
@@ -461,6 +463,7 @@ const CartPage: React.FC = () => {
       }
   
       message.success("Item removed from cart successfully.");
+      fetchGSTData();
     } catch (error) {
       console.error("Failed to remove cart item:", error);
       message.error("Failed to remove item");

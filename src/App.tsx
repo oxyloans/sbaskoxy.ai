@@ -77,6 +77,7 @@ import BMVCOINmain from "./Dashboard/BMVcoinmain";
 import Sidebarmain from "./Dashboard/SidebarMain";
 import Headermain from "./Dashboard/HeaderMain";
 import Content1 from "./Dashboard/Content";
+import CampaignDetails from "./Components1/campaignDetails";
 const App: React.FC = () => {
   return (
     <CartProvider>
@@ -93,7 +94,8 @@ const App: React.FC = () => {
           {/* Landing Page (First Page) */}
           <Route path="/" element={<Landingpage />} />
 
-          <Route path="/alluserqueries" element={<AllQueriesforAdmin />} />
+         
+          <Route path="/allqueries" element={<AllQueries />} />
           <Route path="/admin" element={<Admin />} />
           <Route
             path="/allcampaignsdetails"
@@ -115,7 +117,7 @@ const App: React.FC = () => {
 
             {/* Nested Routes */}
             <Route path="freerudraksha" element={<Freerudraksha />} />
-           {/* <Route path="campaign/:type" element={<CampaignDetails />} />*/} 
+         
             <Route path="ticket-history" element={<TicketHistory />} />
             
             
@@ -180,6 +182,7 @@ const App: React.FC = () => {
           {/* <Route path="services/freerudraksha" element={<FreeRudrakshaPage/>} /> */}
           <Route path="services/freerudraksha" element={<Freerudraksha />} />
           <Route path="services/freeai-genai" element={<FreeAiandGenAi />} />
+          <Route path="services/campaign/:type" element={<CampaignDetails />} />
           <Route path="services/studyabroad" element={<StudyAbroad />} />
           <Route path="services/Freechatgpt" element={<FreeChatGPTmain/>} />
           <Route path="services/myrotary" element={<MyRotaryServices />} />

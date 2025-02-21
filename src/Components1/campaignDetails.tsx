@@ -43,6 +43,7 @@ const CampaignDetails: React.FC = () => {
     projectType: "ASKOXY",
   });
   const BASE_URL = `https://meta.oxyglobal.tech/api/`;
+
   // Fetch campaigns from the API
   useEffect(() => {
     const fetchCampaigns = async () => {
