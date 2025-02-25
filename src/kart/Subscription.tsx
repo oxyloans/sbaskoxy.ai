@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import Footer from "../components/Footer";
-import { Menu, X, Check, AlertCircle } from "lucide-react";
+import { Menu, X, Check, AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FaBars, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
 import { message, Modal } from 'antd';
 import decryptEas from './decryptEas';
 import encryptEas from './encryptEas'; 
+import { motion, AnimatePresence } from "framer-motion";
 
 // Types
 type SubscriptionPlan = {
@@ -29,6 +30,7 @@ interface AlertProps {
   children: React.ReactNode;
   className?: string;
 }
+
 
 interface AlertDescriptionProps {
   children: React.ReactNode;
@@ -66,9 +68,10 @@ const AlertDescription: React.FC<AlertDescriptionProps> = ({ children }) => (
 const SubscriptionCard: React.FC<{
   plan: SubscriptionPlan;
   isSelected: boolean;
-  planDetails: userSubscriptionPlan
+  planDetails: userSubscriptionPlan;
+  Loading: {  [key: string]: boolean  };
   onSubscribe: (planId: string) => void;
-}> = ({ plan, isSelected, onSubscribe , planDetails }) => (
+}> = ({ plan, isSelected, onSubscribe , planDetails,Loading }) => (
   <div
     id={plan.planId}
     className={`relative rounded-xl border ${
@@ -114,7 +117,7 @@ const SubscriptionCard: React.FC<{
       //   ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
         : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
     } transform hover:scale-[1.02]`}
-  disabled={isSelected || planDetails?.status}
+  disabled={isSelected || planDetails?.status || Loading[plan.planId]}
 >
   {isSelected || planDetails?.status ? 'Selected' : 'Choose Plan'}
 </button>
@@ -136,13 +139,15 @@ const FeatureCard: React.FC<{ title: string; description: string }> = ({
   </div>
 );
 
+
 const Subscription: React.FC = () => {
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [plandetails, setPlanDetails] = useState<userSubscriptionPlan>();
-  const [loading,setLoading] = useState(false)
+  const [loading,setLoading] = useState<{ [key: string]: boolean }>({})
+  const [isLoading,setIsLoading] = useState< boolean >(false)
    const [profileData,setProfileData] = useState<ProfileData>({
     userFirstName: '',
     userLastName: '',
@@ -172,7 +177,7 @@ const Subscription: React.FC = () => {
     }
   }, []);
   
-
+  
     useEffect(()=>{
       const trans = localStorage.getItem('merchantTransactionId')
       const paymentId = localStorage.getItem('paymentId')
@@ -183,6 +188,12 @@ const Subscription: React.FC = () => {
 
   const handleSubscribe = async(planId: string, amount: number) => {
     setSelectedPlan(planId);
+    setLoading((prev)=>({
+      ...prev,
+      [planId]:true
+    
+    }))
+    setIsLoading(true)
     try{
     const response = await axios.post(`${BASEURL}/order-service/userSubscriptionAmount`, { planId, customerId: localStorage.getItem('userId'),amount },
     {
@@ -228,6 +239,11 @@ const Subscription: React.FC = () => {
     }
   }catch(error){
     console.log(error);
+    setLoading((prev)=>({
+      ...prev,
+      [planId]:false
+    }))
+    setIsLoading(false)
     setSelectedPlan(null);
   }
   };
@@ -283,13 +299,23 @@ const Subscription: React.FC = () => {
           },
         });        
       })
-      .catch((error) => console.log("getepayPortal", error.response));
+      .catch((error) =>{ 
+        console.log("getepayPortal", error.response);
+        setLoading((prev)=>({
+          ...prev,
+          [selectedPlan as string]:false
+        }))
+        setIsLoading(false)
+      });
       
-      setLoading(false);
   };
 
   function Requery(paymentId:any) {
-    setLoading(false);
+    setLoading((prev)=>({
+      ...prev,
+      [selectedPlan as string]:true
+    }))
+    setIsLoading(true)
     if (
       paymentStatus === "PENDING" ||
       paymentStatus === "" ||
@@ -383,18 +409,22 @@ const Subscription: React.FC = () => {
                       navigate("/main/wallet");
                     },
                   })
+                  setIsLoading(false)
                   localStorage.removeItem('paymentId')
                   localStorage.removeItem('merchantTransactionId')
                   // setLoading(false);
                 })
                 .catch((error) => {
                   console.error("Error in payment confirmation:", error);
+                  setIsLoading(false)
                 });
             } else {
             }
           }
         })
-        .catch((error) => console.log("Payment Status", error));
+        .catch((error) =>{ console.log("Payment Status", error)
+          setIsLoading(false)
+        });
     }
     // else{
     //   clearInterval(intervalId)
@@ -423,7 +453,17 @@ const Subscription: React.FC = () => {
     }
   }
 
-
+  if(isLoading){
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 md:w-16 md:h-16 border-4 border-purple-600 border-t-transparent rounded-full"
+        />
+      </div>
+    )
+  }
 
 
 
@@ -463,6 +503,7 @@ const Subscription: React.FC = () => {
                     plan={plan}
                     isSelected={selectedPlan === plan.planId}
                     onSubscribe={()=>handleSubscribe(plan.planId, plan.amount)}
+                    Loading={ loading }
                     planDetails={plandetails || {} as userSubscriptionPlan} // Ensure it's always a valid object
                   />
                 ))}

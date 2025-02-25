@@ -115,7 +115,7 @@ const MyWalletPage: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-6">Transaction History</h2>
                 
                 <div className="flex gap-4 mb-6 border-b">
-                  {(['all', 'credit', 'debit'] as const).map((tab) => (
+                  {(['all'] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}

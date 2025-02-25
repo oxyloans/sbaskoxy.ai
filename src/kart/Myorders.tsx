@@ -30,7 +30,8 @@ interface Item {
   price: number;
   mrp: number;
   quantity: number;
-  itemUnit:string
+  itemUnit:string;
+  singleItemPrice: number;
 }
 
 interface OrderDetailsResponse {
@@ -45,7 +46,7 @@ interface OrderDetailsResponse {
   paymentType: number;
   orderDate: string;
   customerName: string;
-  orderHistory: OrderHistory;
+  orderHistory: OrderHistory[];
   orderAddress: OrderAddress;
   orderItems: Item[];
 }
@@ -116,6 +117,7 @@ const MyOrders: React.FC = () => {
       "4": "bg-purple-400 text-purple-950",
       "5": "bg-red-100 text-red-600",
       "6": "bg-orange-100 text-orange-600",
+      "PickedUp": "bg-green-100 text-green-600",
     };
     return statusMap[status] || statusMap["0"];
   };
@@ -129,6 +131,7 @@ const MyOrders: React.FC = () => {
       "4": "Delivered",
       "5": "Rejected",
       "6": "Cancelled",
+      "PickedUp": "Picked up",
     };
     return statusMap[status] || "Unknown";
   };
@@ -192,7 +195,7 @@ const MyOrders: React.FC = () => {
                   <option value="assigned">Assigned</option>
                   <option value="delivered">Delivered</option>
                   <option value="rejected">Rejected</option>
-                  <option value="cancelled">Cancelled</option>
+                  {/* <option value="cancelled">Cancelled</option> */}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
               </div>
@@ -230,7 +233,7 @@ const MyOrders: React.FC = () => {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-purple-900">#{order.orderId}</h3>
+                      <h3 className="text-lg font-semibold text-purple-900">#{order.newOrderId}</h3>
                       <p className="text-sm text-gray-600">{formatDate(order.orderDate)}</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.orderStatus)}`}>
@@ -274,7 +277,7 @@ const MyOrders: React.FC = () => {
                   <p className="text-gray-600">{formatDate(selectedOrder.orderDate)}</p>
                 </div>
 
-                <div className="bg-purple-50 rounded-lg p-4">
+                <div className="bg-purple-50 rounded-lg p-4 row">
                   <h4 className="font-semibold text-purple-900 mb-3">Order Status</h4>
                   <div className="flex items-center justify-center">
                     <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedOrder.orderStatus)}`}>
@@ -317,14 +320,14 @@ const MyOrders: React.FC = () => {
                             Weight: {item.weight} {item.itemUnit}
                           </p>
                           <p className="text-sm line-through text-red-500 text-center md:text-left"> MRP: ₹{item.mrp}</p>
-                          <p className="text-green-600 font-bold text-lg text-center md:text-left">₹{item.price}</p>
+                          <p className="text-green-600 font-bold text-lg text-center md:text-left">₹{item.singleItemPrice}</p>
                         </div>
                       </div>
 
                       {/* Quantity-Based Price Section on the Right */}
                       <div className="flex flex-col items-center md:items-end">
                         <p className="text-gray-700 text-sm">Qty: {item.quantity}</p>
-                        <p className="text-green-600 font-bold">Total: ₹{item.quantity * item.price}</p>
+                        <p className="text-green-600 font-bold">Total: ₹{item.quantity * item.singleItemPrice}</p>
                       </div>
                     </div>
                   ))}
@@ -348,72 +351,77 @@ const MyOrders: React.FC = () => {
                         <span className="text-purple-600">₹{selectedOrder.grandTotal}</span>
                       </div>
                     </div>
-                  </div>
+                  </div>  
                 </div>
 
                 {selectedOrder.orderHistory && (
                   <div className="bg-purple-50 rounded-lg p-4">
                     <h4 className="font-semibold text-purple-900 mb-3">Order Timeline</h4>
-                    <div className="space-y-4">
-                      {selectedOrder.orderHistory.placedDate && (
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-purple-600"></div>
-                          <div>
-                            <p className="font-medium">Order Placed</p>
-                            <p className="text-sm text-gray-600">{formatDate(selectedOrder.orderHistory.placedDate)}</p>
-                          </div>
-                        </div>
-                      )}
-                      {selectedOrder.orderHistory.acceptedDate && (
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-purple-600"></div>
-                          <div>
-                            <p className="font-medium">Order Accepted</p>
-                            <p className="text-sm text-gray-600">{formatDate(selectedOrder.orderHistory.acceptedDate)}</p>
-                          </div>
-                        </div>
-                      )}
 
-                      {selectedOrder.orderHistory.assignedDate && (
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-purple-600"></div>
-                          <div>
-                            <p className="font-medium">Order Assigned</p>
-                            <p className="text-sm text-gray-600">{formatDate(selectedOrder.orderHistory.assignedDate)}</p>
-                          </div>
-                        </div>
-                      )}
+                    {selectedOrder.orderHistory.map((orderHistory,index) => (
 
-                      {selectedOrder.orderHistory.deliveredDate && (
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-purple-600"></div>
-                          <div>
-                            <p className="font-medium">Order Delivered</p>
-                            <p className="text-sm text-gray-600">{formatDate(selectedOrder.orderHistory.deliveredDate)}</p>
+                      <div className="space-y-4">
+                        {orderHistory.placedDate && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-purple-600"></div>
+                            <div>
+                              <p className="font-medium">Order Placed</p>
+                              <p className="text-sm text-gray-600">{formatDate(orderHistory.placedDate)}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                        {orderHistory.acceptedDate && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-purple-600"></div>
+                            <div>
+                              <p className="font-medium">Order Accepted</p>
+                              <p className="text-sm text-gray-600">{formatDate(orderHistory.acceptedDate)}</p>
+                            </div>
+                          </div>
+                        )}
 
-                      {selectedOrder.orderHistory.canceledDate && (
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-red-600"></div>
-                          <div>
-                            <p className="font-medium text-red-600">Order Canceled</p>
-                            <p className="text-sm text-gray-600">{formatDate(selectedOrder.orderHistory.canceledDate)}</p>
+                        {orderHistory.assignedDate && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-purple-600"></div>
+                            <div>
+                              <p className="font-medium">Order Assigned</p>
+                              <p className="text-sm text-gray-600">{formatDate(orderHistory.assignedDate)}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {selectedOrder.orderHistory.rejectedDate && (
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 rounded-full bg-red-600"></div>
-                          <div>
-                            <p className="font-medium text-red-600">Order Rejected</p>
-                            <p className="text-sm text-gray-600">{formatDate(selectedOrder.orderHistory.rejectedDate)}</p>
+                        {orderHistory.deliveredDate && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-purple-600"></div>
+                            <div>
+                              <p className="font-medium">Order Delivered</p>
+                              <p className="text-sm text-gray-600">{formatDate(orderHistory.deliveredDate)}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+
+                        {orderHistory.canceledDate && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-red-600"></div>
+                            <div>
+                              <p className="font-medium text-red-600">Order Canceled</p>
+                              <p className="text-sm text-gray-600">{formatDate(orderHistory.canceledDate)}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {orderHistory.rejectedDate && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-red-600"></div>
+                            <div>
+                              <p className="font-medium text-red-600">Order Rejected</p>
+                              <p className="text-sm text-gray-600">{formatDate(orderHistory.rejectedDate)}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                    ))}
                   </div>
                 )}
               </div>

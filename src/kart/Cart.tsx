@@ -58,8 +58,6 @@ const CartPage: React.FC = () => {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
-  const [subGst, setSubGst] = useState(0);
-  const [totalGst, setTotalGst] = useState(0);
   const [error, setError] = useState<string>("");
   const [checkoutError, setCheckoutError] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
@@ -170,42 +168,7 @@ const CartPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-  const fetchGSTData = async () => {
-   
-    const requestBody = {   
-      customerId: localStorage.getItem("userId"),
 
-    };
-    try {
-      const fetchResponse = await axios.post(`${BASE_URL}/cart-service/cart/cartItemData`,requestBody, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-
-      });
-      
-  
-      const cartData = fetchResponse.data;
-      setSubGst(cartData.totalGstSum);
-      setTotalGst(cartData.totalSumWithGstSum);
-    } catch (error) {
-      console.error("Error processing cart data:", error);
-    }
-  };
-
-  const calculateSubtotal = () => {
-    return cartData?.reduce(
-      (acc, item) => acc + parseFloat(item.itemPrice) * item.cartQuantity,
-      0
-    ) || 0;
-  };
-
-  const calculateTotal = () => {
-    const subtotal = calculateSubtotal();
-    return subtotal + subGst;
-  };
-   
-  
   const getCoordinates = async (address: string) => {
     try {
       const API_KEY = "AIzaSyAM29otTWBIAefQe6mb7f617BbnXTHtN0M";
@@ -253,7 +216,7 @@ const CartPage: React.FC = () => {
       const coordinates = await getCoordinates(fullAddress);
 
       if (!coordinates) {
-        setError("Unable to find location coordinates");
+        message.error("Unable to find location coordinates. Please check the address.");
         return;
       }
 
@@ -319,12 +282,12 @@ const CartPage: React.FC = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setSuccessMessage("Address updated successfully!");
+        message.success("Address updated successfully.", 5);
       } else {
         await axios.post(`${BASE_URL}/user-service/addAddress`, data, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccessMessage("Address added successfully!");
+        message.success("Address added successfully.", 5);
         setAddressFormData({
           flatNo: "",
           landMark: "",
@@ -379,7 +342,6 @@ const CartPage: React.FC = () => {
       );
 
       await fetchCartData();
-      fetchGSTData();
     } catch (error) {
       console.error("Failed to increase cart item:", error);
       message.error("Failed to update quantity");
@@ -394,7 +356,7 @@ const CartPage: React.FC = () => {
       const currentQuantity = cartItems[item.itemId];
       if (currentQuantity > 1) {
         const newQuantity = currentQuantity - 1;
-  
+
         await axios.patch(
           `${BASE_URL}/cart-service/cart/decrementCartData`,
           {
@@ -409,16 +371,15 @@ const CartPage: React.FC = () => {
             },
           }
         );
-  
+
         // Update local state immediately
-        setCartItems(prev => ({
+        setCartItems((prev) => ({
           ...prev,
-          [item.itemId]: newQuantity
+          [item.itemId]: newQuantity,
         }));
-        
+
         // Update cart data
         await fetchCartData();
-        fetchGSTData();
       } else {
         // If quantity is 1, remove the item
         await removeCartItem(item);
@@ -430,7 +391,7 @@ const CartPage: React.FC = () => {
       setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
     }
   };
-  
+
   const removeCartItem = async (item: CartItem) => {
     try {
       await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
@@ -442,28 +403,29 @@ const CartPage: React.FC = () => {
           "Content-Type": "application/json",
         },
       });
-  
+
       // Remove item from local state immediately
-      setCartData(prev => prev.filter(cartItem => cartItem.cartId !== item.cartId));
-      setCartItems(prev => {
+      setCartData((prev) =>
+        prev.filter((cartItem) => cartItem.cartId !== item.cartId)
+      );
+      setCartItems((prev) => {
         const updated = { ...prev };
         delete updated[item.itemId];
         return updated;
       });
-  
+
       // Update total count in cart context
       const updatedCount = Object.entries(cartItems)
-      .filter(([key]) => key !== String(item.itemId)) // Ensure key comparison works correctly
-      .reduce((sum, [, qty]) => sum + qty, 0);
-    
-  
+        .filter(([key]) => key !== String(item.itemId)) // Ensure key comparison works correctly
+        .reduce((sum, [, qty]) => sum + qty, 0);
+
       // Check if cart is now empty
-      if (Object.keys(cartItems).length === 1) { // Since we're checking before the state update
+      if (Object.keys(cartItems).length === 1) {
+        // Since we're checking before the state update
         window.location.reload();
       }
-  
-      message.success("Item removed from cart successfully.");
-      fetchGSTData();
+
+      message.success("Item removed from cart successfully.", 5);
     } catch (error) {
       console.error("Failed to remove cart item:", error);
       message.error("Failed to remove item");
@@ -532,7 +494,6 @@ const CartPage: React.FC = () => {
   useEffect(() => {
     fetchCartData();
     fetchAddresses();
-    fetchGSTData();
   }, []);
 
   // Add a separate useEffect to check stock status whenever cartData changes
@@ -549,7 +510,7 @@ const CartPage: React.FC = () => {
     const coordinates = await getCoordinates(fullAddress);
 
     if (!coordinates) {
-      setError("Unable to find location coordinates");
+      message.error("Unable to find location coordinates. Please check the address.");
       return;
     }
 
@@ -598,7 +559,7 @@ const CartPage: React.FC = () => {
     return withinRadius;
   };
 
-  const handleCartData = async () => { };
+  const handleCartData = async () => {};
 
   const isCheckoutDisabled = (): boolean => {
     // Check if cart is empty
@@ -743,10 +704,11 @@ const CartPage: React.FC = () => {
                               {cartItems[item.itemId]}
                             </span>
                             <button
-                              className={`px-3 py-1 ${cartItems[item.itemId] >= item.quantity
+                              className={`px-3 py-1 ${
+                                cartItems[item.itemId] >= item.quantity
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                                }`}
+                              }`}
                               onClick={() => {
                                 if (cartItems[item.itemId] < item.quantity) {
                                   handleIncrease(item);
@@ -868,13 +830,19 @@ const CartPage: React.FC = () => {
                     <span>Shipping</span>
                     <span className="font-semibold">₹0.00</span>
                   </div>
-                  <div className="flex justify-between mb-2 text-gray-700">
-                    <span>GST Charges</span>
-                    <span className="font-semibold">₹ {subGst.toFixed(2)}</span>
-                  </div>
                   <div className="flex justify-between mb-4 text-gray-800 font-bold text-lg">
                     <span>Total</span>
-                    <span>₹ {calculateTotal().toFixed(2)}</span>
+                    <span>
+                      ₹
+                      {cartData
+                        ?.reduce(
+                          (acc, item) =>
+                            acc +
+                            parseFloat(item.itemPrice) * item.cartQuantity,
+                          0
+                        )
+                        .toFixed(2) || "0.00"}
+                    </span>
                   </div>
 
                   {/* Display out of stock messages */}
@@ -903,38 +871,40 @@ const CartPage: React.FC = () => {
                     (item) =>
                       item.cartQuantity > item.quantity && item.quantity > 0
                   ) && (
-                      <div className="mb-3 p-3 bg-yellow-100 text-yellow-700 rounded">
-                        <p className="font-semibold">
-                          Quantity adjustments needed:
-                        </p>
-                        <ul className="ml-4 mt-1 list-disc">
-                          {cartData
-                            .filter(
-                              (item) =>
-                                item.cartQuantity > item.quantity &&
-                                item.quantity > 0
-                            )
-                            .map((item) => (
-                              <li key={item.itemId}>
-                                {item.itemName} - Only {item.quantity} in stock
-                                (you have {item.cartQuantity})
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
-                    )}
+                    <div className="mb-3 p-3 bg-yellow-100 text-yellow-700 rounded">
+                      <p className="font-semibold">
+                        Quantity adjustments needed:
+                      </p>
+                      <ul className="ml-4 mt-1 list-disc">
+                        {cartData
+                          .filter(
+                            (item) =>
+                              item.cartQuantity > item.quantity &&
+                              item.quantity > 0
+                          )
+                          .map((item) => (
+                            <li key={item.itemId}>
+                              {item.itemName} - Only {item.quantity} in stock
+                              (you have {item.cartQuantity})
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
 
                   <button
-                    className={`w-full py-3 px-6 rounded-lg transition ${isCheckoutDisabled()
+                    className={`w-full py-3 px-6 rounded-lg transition ${
+                      isCheckoutDisabled()
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-purple-500 hover:bg-purple-700 text-white"
-                      }`}
+                    }`}
                     onClick={() => handleToProcess()}
                     disabled={isCheckoutDisabled()}
                   >
                     {isCheckoutDisabled()
                       ? "Cannot Checkout - Stock Issues"
                       : "Proceed to Checkout"}
+                      
                   </button>
                 </div>
               </div>
@@ -1050,12 +1020,6 @@ const CartPage: React.FC = () => {
                 </div>
 
                 {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-                {successMessage && (
-                  <p className="text-green-500 text-sm mt-2">
-                    {successMessage}
-                  </p>
-                )}
-
                 <div className="mt-6 flex justify-end space-x-4">
                   <button
                     onClick={handleAddressModalClose}

@@ -329,16 +329,24 @@ const CheckoutPage: React.FC = () => {
         }
         if (selectedPayment === "COD" && response.data.paymentId === null) {
           fetchCartData();
-          Modal.success({
-            title: "Successfull",
-            content: "Order placed successfully",
-            okText: "Ok",
-            cancelText: "No",
-            onOk() {
-              navigate("/main/myorders");
-              fetchCartData();
-            },
-          });
+          if(response.data.paymentType === null){
+            Modal.success({
+                 content: "Order placed Successfully",
+                 onOk: () => {
+                   navigate("/main/myorders");
+                   fetchCartData();
+                 },
+               })
+             }else{
+               Modal.error({
+                 content: response.data.paymentType,
+                 onOk: () => {
+                   navigate("/main/mycart");
+                   fetchCartData();
+                 },
+               })
+             
+             }
         } else if (
           selectedPayment === "ONLINE" &&
           response.data.paymentId !== null
@@ -543,6 +551,7 @@ const CheckoutPage: React.FC = () => {
                                   localStorage.removeItem('paymentId')
                                   localStorage.removeItem('merchantTransactionId')
                                   fetchCartData();
+                                  if(secondResponse.data.paymentType === null){
                                    Modal.success({
                                         content: "Order placed Successfully",
                                         onOk: () => {
@@ -550,6 +559,16 @@ const CheckoutPage: React.FC = () => {
                                           fetchCartData();
                                         },
                                       })
+                                    }else{
+                                      Modal.error({
+                                        content: secondResponse.data.paymentType,
+                                        onOk: () => {
+                                          navigate("/main/mycart");
+                                          fetchCartData();
+                                        },
+                                      })
+                                    
+                                    }
                                   // setLoading(false);
                                 })
                 .catch((error) => {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message } from 'antd';
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Package, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Package, AlertCircle, Loader2 } from 'lucide-react';
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
@@ -63,6 +63,14 @@ const Categories: React.FC<CategoriesProps> = ({
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [loadingItems, setLoadingItems] = useState<{ 
+    items: { [key: string]: boolean };
+    status: { [key: string]: string };
+  }>({
+    items: {}, // Stores boolean values for each item
+    status: {}  // Stores status strings for each item
+  });
+
 
   const fetchCartData = async () => {
     const Id = localStorage.getItem("userId");
@@ -126,16 +134,28 @@ const Categories: React.FC<CategoriesProps> = ({
     }
 
     try {
-      await axios.post(
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [item.itemId]: true },
+      }));
+    const response =  await axios.post(
         `${BASE_URL}/cart-service/cart/add_Items_ToCart`,
         { customerId: userId, itemId: item.itemId, quantity: 1 },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       fetchCartData();
-      message.success("Item added to cart successfully.");
+      message.success(response.data.errorMessage);
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [item.itemId]: false },
+      }));
     } catch (error) {
       console.error("Error adding to cart:", error);
       message.error("Error adding to cart.");
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [item.itemId]: false },
+      }));
     }
   };
 
@@ -144,25 +164,70 @@ const Categories: React.FC<CategoriesProps> = ({
     return Math.round(((mrpNum - price) / mrpNum) * 100);
   };
 
-  const handleQuantityChange = async (item: Item, increment: boolean) => {
+  const handleQuantityChange = async (item: Item, increment: boolean,status : string) => {
+
     try {
       const endpoint = increment
         ? `${BASE_URL}/cart-service/cart/incrementCartData`
         : `${BASE_URL}/cart-service/cart/decrementCartData`;
 
       if (!increment && cartItems[item.itemId] <= 1) {
+        setLoadingItems((prev) => ({
+          ...prev,
+          items: { ...prev.items, [item.itemId]: true },
+          status: { ...prev.status, [item.itemId]: status },
+        }));
         const targetCartId = cartData.find((cart) => cart.itemId === item.itemId)?.cartId;
-        await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
+        const response = await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
           data: { id: targetCartId },
         });
+        if(response){
+          setLoadingItems((prev) => ({
+            ...prev,
+            items: { ...prev.items, [item.itemId]: false },
+            status: { ...prev.status, [item.itemId]: "" }
+          }));
         message.success("Item removed from cart successfully.");
+        }else{
+          setLoadingItems((prev) => ({
+            ...prev,
+            items: { ...prev.items, [item.itemId]: false },
+            status: { ...prev.status, [item.itemId]: "" }
+          }));
+          message.success("Sorry, Please try again");
+        }
       } else {
+        setLoadingItems((prev) => ({
+          ...prev,
+          items: { ...prev.items, [item.itemId]: true },
+          status: { ...prev.status, [item.itemId]: status }
+        }));
+        const response =
         await axios.patch(endpoint, { customerId, itemId: item.itemId });
+        if(response){
+          setLoadingItems((prev) => ({
+            ...prev,
+            items: { ...prev.items, [item.itemId]: false },
+            status: { ...prev.status, [item.itemId]: "" }
+          }));
+        }else{
+          setLoadingItems((prev) => ({
+            ...prev,
+            items: { ...prev.items, [item.itemId]: false },
+            status: { ...prev.status, [item.itemId]: "" }
+          }));
+          message.success("Sorry, Please try again");
+        }
       }
       fetchCartData();
     } catch (error) {
       console.error("Error updating quantity:", error);
       message.error("Error updating item quantity");
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [item.itemId]: false },
+        status: { ...prev.status, [item.itemId]: "" }
+      }));
     }
   };
 
@@ -343,10 +408,15 @@ const Categories: React.FC<CategoriesProps> = ({
                           className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleQuantityChange(item, false);
+                            handleQuantityChange(item, false,"sub");
                           }}
+                          disabled={loadingItems.items[item.itemId]}
                         >
-                          -
+                          {loadingItems.items[item.itemId] && loadingItems.status[item.itemId]== "sub" ? (
+                              <Loader2 className="mr-1 animate-spin inline-block" />
+                            ) : (
+                              "-"
+                            )}
                         </motion.button>
                         <span className="font-medium text-purple-700">{cartItems[item.itemId]}</span>
                         <motion.button
@@ -356,15 +426,21 @@ const Categories: React.FC<CategoriesProps> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             if (cartItems[item.itemId] < item.quantity) {
-                              handleQuantityChange(item, true);
+                              handleQuantityChange(item, true,"Add");
                             }
                           }}
-                          disabled={cartItems[item.itemId] >= item.quantity}
+                          disabled={cartItems[item.itemId] >= item.quantity || loadingItems.items[item.itemId]}
                         >
-                          +
+                          {loadingItems.items[item.itemId] && loadingItems.status[item.itemId]== "Add" ? (
+                              <Loader2 className="mr-1 animate-spin inline-block" />
+                            ) : (
+                              "+"
+                            )}
+                          
                         </motion.button>
                       </div>
                     ) : (
+                      <>
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -373,9 +449,15 @@ const Categories: React.FC<CategoriesProps> = ({
                           e.stopPropagation();
                           handleAddToCart(item);
                         }}
+                        disabled={loadingItems.items[item.itemId]}
                       >
-                        Add to Cart
+                            {loadingItems.items[item.itemId]? (
+                              <Loader2 className="mr-2 animate-spin inline-block" />
+                            ) : (
+                              "Add to Cart"
+                            )}
                       </motion.button>
+                      </>
                     )
                   ) : (
                     <button className="w-full py-2 mt-2 bg-gray-200 text-gray-600 rounded-lg cursor-not-allowed" disabled>

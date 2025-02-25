@@ -4,6 +4,7 @@ import { FaBars, FaTimes, FaHome, FaBriefcase, FaMapMarkerAlt, FaTrash, FaPen } 
 import { Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { isWithinRadius } from "./LocationCheck";
+import { message } from "antd";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
@@ -55,7 +56,7 @@ const ManageAddressesPage: React.FC = () => {
         console.log("Location accessed successfully");
       },
       (error) => {
-        setError("Please enable location services to add addresses");
+        message.error("Please enable location services to add addresses");
       }
     );
   };
@@ -70,7 +71,7 @@ const ManageAddressesPage: React.FC = () => {
       setError('');
     } catch (error) {
       console.error("Error fetching addresses:", error);
-      setError('Failed to load addresses. Please try again.');
+      message.error("Failed to load addresses. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -118,13 +119,13 @@ const ManageAddressesPage: React.FC = () => {
       const coordinates = await getCoordinates(fullAddress);
 
       if (!coordinates) {
-        setError('Unable to find location coordinates. Please check the address.');
+        message.error("Unable to find location coordinates. Please check the address.");
         return;
       }
 
       const withinRadius = await isWithinRadius(coordinates);
       if (!withinRadius) {
-        setError('Sorry, we do not deliver to this location');
+        message.error("Sorry, we do not deliver to this location");
         return;
       }
 
@@ -143,18 +144,18 @@ const ManageAddressesPage: React.FC = () => {
         await axios.put(`${BASE_URL}/user-service/updateAddress/${editingId}`, data, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccessMessage('Address updated successfully!');
+        message.success("Address updated successfully!");
       } else {
         await axios.post(`${BASE_URL}/user-service/addAddress`, data, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setSuccessMessage('Address added successfully!');
+        message.success("Address added successfully!", 5);
       }
 
       await fetchAddresses();
       resetForm();
     } catch (error) {
-      setError('Failed to save address. Please try again.');
+      message.error("Failed to save address. Please try again."); 
     } finally {
       setIsLoading(false);
     }
@@ -176,10 +177,10 @@ const ManageAddressesPage: React.FC = () => {
       await axios.delete(`${BASE_URL}/user-service/deleteAddress/${addressId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSuccessMessage('Address deleted successfully!');
+      message.success("Address deleted successfully!");
       await fetchAddresses();
     } catch (error) {
-      setError('Failed to delete address. Please try again.');
+      message.error("Failed to delete address. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -248,11 +249,11 @@ const ManageAddressesPage: React.FC = () => {
                 )}
               </div>
 
-              {(error || successMessage) && (
+              {/* {(error || successMessage) && (
                 <div className={`mb-6 p-4 rounded-lg ${error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
                   {error || successMessage}
                 </div>
-              )}
+              )} */}
 
               {isLoading && (
                 <div className="flex items-center justify-center py-8">
