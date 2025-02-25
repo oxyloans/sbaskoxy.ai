@@ -6,10 +6,8 @@ import {
   Navigate,
 } from "react-router-dom";
 import CartProvider from "./until/CartProvider";
-import Example from "./components/Example";
 
 import Landingpage from "./components/Landingpage";
-import Whatapplogin from "./components/Whatapplogin";
 import Freerudraksha from "./components/Freerudraksh";
 import FreeSample from "./components/FreeSample";
 import FreeAiandGenAi from "./components/FreeAi&GenAi";
@@ -45,18 +43,14 @@ import ScholarshipGpt from "./Components1/GPT's/ScholarshipGpt";
 import UniversityAgents from "./Components1/GPT's/UniversityAgents";
 import University from "./Components1/GPT's/UniversityGpt";
 import RiceSalePage from "./components/Communities";
-import AllQueriesforAdmin from "./components/UserQueries";
 import Admin from "./Pages/Admin";
 import QR from "./components/qr";
 import ThankYouPage from "./components/ThankYouPage";
 import BMVCOIN from "./Components1/BMVCOIN";
 import WhatsappLogin from "./Components1/Auth/WhatsappLogin";
 import WhatsappRegister from "./Components1/Auth/WhatsappRegister";
-// import CampaignDetails
-//   from "./Components1/CampaignDetails";
   import AllQueries from "./Pages/AllQueries";
   import RequireAuth from "./auth/RequireAuth";
-  import Ricebags from "./kart/Mainrice";
 import ItemDisplayPage from "./kart/itemsdisplay";
 import MyWalletPage from "./kart/Wallet";
 import CartPage from "./kart/Cart";
@@ -70,12 +64,9 @@ import CheckoutPage from "./kart/Checkout";
 import PrivacyPolicy from "./kart/Privacypolicy";
 import ReferralPage from "./kart/Referral";
 import DashboardMain from "./Dashboard/Dashboardmain";
-import FreeRudrakshaPage from "./Dashboard/freerudrakshamain";
 import BMVPDF from "./components/bmvpdf";
 import FreeChatGPTmain from "./Dashboard/FreechatGPTmain";
 import BMVCOINmain from "./Dashboard/BMVcoinmain";
-import Sidebarmain from "./Dashboard/SidebarMain";
-import Headermain from "./Dashboard/HeaderMain";
 import Content1 from "./Dashboard/Content";
 import CampaignDetails from "./Components1/campaignDetails";
 const App: React.FC = () => {

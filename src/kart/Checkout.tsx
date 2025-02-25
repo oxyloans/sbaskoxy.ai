@@ -17,6 +17,7 @@ interface CartItem {
   itemName: string;
   itemPrice: string;
   cartQuantity: string;
+  quantity: number;
 }
 
 interface CartData {
@@ -269,6 +270,22 @@ const CheckoutPage: React.FC = () => {
 
   const handlePayment = async () => {
     try {
+      // Check if there are out-of-stock items or quantity exceeds available stock
+    const hasStockIssues = cartData.some(
+      (item) => parseInt(item.cartQuantity) > item.quantity || item.quantity === 0
+    );
+
+    if (hasStockIssues) {
+      Modal.error({
+        title: "Stock Issues",
+        content: "Some items in your cart are out of stock or exceed available stock. Please adjust the quantity or remove them before proceeding.",
+        okText: "OK",
+        onOk() {
+          navigate("/main/mycart");
+        }
+      });
+      return;
+    }
       if (grandTotalAmount === 0) {
         message.error("Please add items to cart");
         navigate("/main/dashboard/product");
@@ -329,7 +346,7 @@ const CheckoutPage: React.FC = () => {
         }
         if (selectedPayment === "COD" && response.data.paymentId === null) {
           fetchCartData();
-          if(response.data.paymentType === null){
+          if(response.data.status === null){
             Modal.success({
                  content: "Order placed Successfully",
                  onOk: () => {
@@ -339,7 +356,7 @@ const CheckoutPage: React.FC = () => {
                })
              }else{
                Modal.error({
-                 content: response.data.paymentType,
+                 content: response.data.status,
                  onOk: () => {
                    navigate("/main/mycart");
                    fetchCartData();
@@ -438,7 +455,7 @@ const CheckoutPage: React.FC = () => {
 
         Modal.confirm({
           title: "Proceed to Payment?",
-          content: "Click OK to continue to the payment gateway.",
+          content: "Click on Yes to continue to the payment gateway.",
           okText: "Yes",
           cancelText: "No",
           onOk() {
@@ -551,7 +568,7 @@ const CheckoutPage: React.FC = () => {
                                   localStorage.removeItem('paymentId')
                                   localStorage.removeItem('merchantTransactionId')
                                   fetchCartData();
-                                  if(secondResponse.data.paymentType === null){
+                                  if(secondResponse.data.status === null){
                                    Modal.success({
                                         content: "Order placed Successfully",
                                         onOk: () => {
@@ -561,7 +578,7 @@ const CheckoutPage: React.FC = () => {
                                       })
                                     }else{
                                       Modal.error({
-                                        content: secondResponse.data.paymentType,
+                                        content: secondResponse.data.status,
                                         onOk: () => {
                                           navigate("/main/mycart");
                                           fetchCartData();

@@ -124,7 +124,6 @@ const CartPage: React.FC = () => {
           {}
         );
         setCartItems(cartItemsMap);
-        // Fix: Use cartItemsMap and correct syntax
         const totalQuantity = Object.values(
           cartItemsMap as Record<string, number>
         ).reduce((sum, qty) => sum + qty, 0);
@@ -133,13 +132,16 @@ const CartPage: React.FC = () => {
         setCartItems({});
         setCount(0);
       }
-      // const outOfStockItems = response.data?.customerCartResponseList.filter((item:CartItem) => item.quantity === 0 || item.quantity > 6);
-      const updatedCart = response.data?.customerCartResponseList.filter(
-        (item: CartItem) => item.quantity > 0
-      );
-      // setCart(updatedCart);
 
-      // Check if any item quantity exceeds stock
+      // IMPORTANT CHANGE: Don't filter out items with quantity = 0
+      // const updatedCart = response.data?.customerCartResponseList.filter(
+      //   (item: CartItem) => item.quantity > 0
+      // );
+
+      // Use all items including out-of-stock ones
+      const updatedCart = response.data?.customerCartResponseList || [];
+
+      // Check for stock issues in all items
       const outOfStockItems = updatedCart.filter(
         (item: CartItem) => item.cartQuantity > item.quantity
       );
@@ -151,16 +153,9 @@ const CartPage: React.FC = () => {
             .map((item: CartItem) => item.itemName)
             .join(", ")} before proceeding to checkout.`
         );
-        return;
       }
 
-      if (outOfStockItems.length > 0) {
-        console.log("Out of Stock Items:", outOfStockItems);
-        setCheckoutError(true);
-      } else {
-        console.log("All items are in stock.", outOfStockItems);
-        setCheckoutError(false);
-      }
+      // Set cart data with ALL items including out-of-stock ones
       setCartData(response.data?.customerCartResponseList || []);
     } catch (error) {
       console.error("Error fetching cart items:", error);
@@ -216,7 +211,9 @@ const CartPage: React.FC = () => {
       const coordinates = await getCoordinates(fullAddress);
 
       if (!coordinates) {
-        message.error("Unable to find location coordinates. Please check the address.");
+        message.error(
+          "Unable to find location coordinates. Please check the address."
+        );
         return;
       }
 
@@ -510,7 +507,9 @@ const CartPage: React.FC = () => {
     const coordinates = await getCoordinates(fullAddress);
 
     if (!coordinates) {
-      message.error("Unable to find location coordinates. Please check the address.");
+      message.error(
+        "Unable to find location coordinates. Please check the address."
+      );
       return;
     }
 
@@ -904,7 +903,6 @@ const CartPage: React.FC = () => {
                     {isCheckoutDisabled()
                       ? "Cannot Checkout - Stock Issues"
                       : "Proceed to Checkout"}
-                      
                   </button>
                 </div>
               </div>
