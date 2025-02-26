@@ -35,13 +35,14 @@ const WhatsappRegister = () => {
   const [resendTimer, setResendTimer] = useState(30);
   const [isClosing, setIsClosing] = useState(false);
   const reffererId = localStorage.getItem("refferrerId");
+  const [isPhoneDisabled, setisPhoneDisabled] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     const accessToken = localStorage.getItem("accessToken");
 
     if (userId && accessToken) {
-      navigate(location.state?.from || "/main/dashboard/products", { replace: true });
+      navigate(location.state?.from || "/dashboard", { replace: true });
       return;
     }
 
@@ -151,12 +152,13 @@ const WhatsappRegister = () => {
         if (response.data.mobileOtpSession === null) {
           setShowSuccessPopup(false);
           setError("You already registered with this number.");
-          setTimeout(() => navigate("/whatsapplogin"), 4000);
+          setTimeout(() => navigate("/whatapplogin"), 4000);
         } else {
           setOtpShow(true);
           setShowSuccessPopup(true);
           setMessage("OTP sent successfully to your WhatsApp number");
           setResendDisabled(true);
+          setisPhoneDisabled(true);  // Disable the input field after OTP is sent
           setResendTimer(30);
           setTimeout(() => {
             setShowSuccessPopup(false);
@@ -209,10 +211,7 @@ const WhatsappRegister = () => {
         localStorage.setItem("accessToken", response.data.accessToken);
         setMessage("Registration Successful");
         localStorage.removeItem("refferrerId");
-        localStorage.removeItem("mobileOtpSession");
-        localStorage.removeItem("salt");
-        localStorage.removeItem("expiryTime");
-        setTimeout(() => navigate(location.state?.from || "/main/dashboard/products"), 500);
+        setTimeout(() => navigate(location.state?.from || "/dashboard"), 500);
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (err) {
@@ -319,8 +318,9 @@ const WhatsappRegister = () => {
                   onChange={setPhoneNumber}
                   defaultCountry="IN"
                   international
-                  className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&.PhoneInputInput]:outline-none [&.PhoneInputInput]:border-none"
-                  disabled={showOtp && !isButtonEnabled}
+                  className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:border-none"
+                  // disabled={showOtp && !isButtonEnabled && isPhoneDisabled}
+                  disabled={isPhoneDisabled}
                   placeholder="Enter your number"
                   style={
                     {
@@ -379,7 +379,7 @@ const WhatsappRegister = () => {
                   ) : (
                     <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                   )}
-                  Resend OTP {resendDisabled && `${resendTimer}`}
+                  Resend OTP {resendDisabled && `(${resendTimer}s)`}
                 </button>
               </div>
             )}
@@ -409,11 +409,13 @@ const WhatsappRegister = () => {
                   </>
                 )}
               </button>
-
               {isButtonEnabled && (
                 <button
                   type="button"
-                  onClick={() => setOtpShow(false)}
+                  onClick={() => {
+                    setOtpShow(false);
+                    setisPhoneDisabled(false); // Enable input field when changing the number
+                  }}
                   disabled={isLoading}
                   className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
@@ -429,7 +431,7 @@ const WhatsappRegister = () => {
           <p className="text-sm text-gray-600 text-center flex items-center justify-center gap-2">
             Already registered?{" "}
             <Link
-              to="/whatsapplogin"
+              to="/whatapplogin"
               className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1 group"
             >
               Login Now

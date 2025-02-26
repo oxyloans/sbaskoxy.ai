@@ -10,7 +10,7 @@ import {
   MessageSquare,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -79,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
 
   return (
     <div className="relative h-full flex flex-col bg-white">
-      <div className="flex justify-end items-center p-2 py-4">
+      <div className="flex justify-end items-center p-2 py-2">
         <button
           onClick={toggleCollapse}
           className={`p-2 rounded-lg bg-gray-50 hover:bg-purple-50 
@@ -94,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
         </button>
       </div>
 
-      <div className={`flex-1 px-3 py-2 space-y-1.5`}>
+      <div className={`flex-1 px-3 pb-2 space-y-1.5`}>
         {menuItems.map((item, index) => {
           const isActive = location.pathname === item.to;
           return (
@@ -103,7 +103,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
               to={item.to}
               onClick={() => onItemClick && onItemClick()}
               className={`relative flex items-center rounded-xl transition-all duration-200 
-                ${isCollapsed ? "w-12 h-12 justify-center" : "h-12 px-4"}
+                ${
+                  isCollapsed
+                    ? "w-12 min-h-10 h-auto sm:h-10 md:h-10 justify-center"
+                    : "min-h-10 h-auto sm:h-11 md:h-10 px-4"
+                }
                 ${
                   isActive
                     ? "bg-purple-50 before:absolute before:w-1 before:h-8 before:bg-purple-600 before:rounded-full before:left-0 before:top-2"
@@ -111,17 +115,27 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
                 }
                 group`}
             >
-              <div className={`flex items-center ${isCollapsed ? "" : "gap-4"}`}>
-                <span 
+              <div
+                className={`flex items-center ${isCollapsed ? "" : "gap-4"}`}
+              >
+                <span
                   className={`transition-colors duration-200 flex items-center justify-center
-                    ${isActive ? "text-purple-600" : "text-gray-500 group-hover:text-purple-600"}`}
+                    ${
+                      isActive
+                        ? "text-purple-600"
+                        : "text-gray-500 group-hover:text-purple-600"
+                    }`}
                 >
                   {item.icon}
                 </span>
                 {!isCollapsed && (
                   <span
                     className={`font-medium whitespace-nowrap text-sm
-                      ${isActive ? "text-purple-600" : "text-gray-600 group-hover:text-purple-600"}`}
+                      ${
+                        isActive
+                          ? "text-purple-600"
+                          : "text-gray-600 group-hover:text-purple-600"
+                      }`}
                   >
                     {item.label}
                   </span>
@@ -129,12 +143,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
               </div>
 
               {isCollapsed && (
-                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 
+                <div
+                  className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 
                   bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 invisible
-                  group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+                >
                   {item.label}
-                  <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 
-                    border-4 border-transparent border-r-gray-900" />
+                  <div
+                    className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 
+                    border-4 border-transparent border-r-gray-900"
+                  />
                 </div>
               )}
             </Link>
@@ -142,12 +160,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
         })}
       </div>
 
-      <div className="mt-auto p-3 border-t">
+      <div className="mt-auto px-3 py-2 border-t">
         <button
           onClick={handleSignout}
-          className={`relative flex items-center rounded-xl transition-all duration-200
-            hover:bg-red-50 
-            ${isCollapsed ? "w-12 h-12 justify-center" : "h-12 px-4"}`}
+          className={`flex items-center rounded-xl transition-all duration-200
+            hover:bg-red-50 min-h-10 h-auto sm:h-10 md:h-12
+            ${isCollapsed ? "w-12 justify-center" : "px-4"}`}
         >
           <div className={`flex items-center ${isCollapsed ? "" : "gap-4"}`}>
             <span className="text-red-500 flex items-center justify-center">
@@ -160,12 +178,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
           </div>
 
           {isCollapsed && (
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 
+            <div
+              className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 
               bg-gray-900 text-white text-xs font-medium rounded-md opacity-0 invisible
-              group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+            >
               Sign Out
-              <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 
-                border-4 border-transparent border-r-gray-900" />
+              <div
+                className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 
+                border-4 border-transparent border-r-gray-900"
+              />
             </div>
           )}
         </button>

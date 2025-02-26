@@ -264,7 +264,7 @@ const Ricebags: React.FC = () => {
       </motion.button>
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
         <div className="flex overflow-x-auto py-3 px-4 space-x-4 scrollbar-hide">
           {categories.map((category, index) => (
             <motion.button

@@ -75,7 +75,7 @@ const ReferralPage: React.FC = () => {
       setRefereeDetails(detailsWithDate);
       
       const total = detailsWithDate.length;
-      const active = detailsWithDate.filter(d => d.referenceStatus ==="Regsitered").length;
+      const active = detailsWithDate.filter(d => d.referenceStatus ==="REGISTERED").length;
       setStats({
         totalReferrals: total,
         activeReferrals: active,

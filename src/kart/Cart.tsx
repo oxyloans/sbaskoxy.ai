@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Loader2, X } from "lucide-react";
 import { isWithinRadius } from "./LocationCheck";
-import { Button, message, Modal } from "antd";
+import { Button, message, Modal, } from "antd";
 import Footer from "../components/Footer";
 import { CartContext } from "../until/CartContext";
+import { LoadingOutlined } from "@ant-design/icons";
 
 interface Address {
   id?: string;
@@ -699,9 +700,16 @@ const CartPage: React.FC = () => {
                             >
                               -
                             </button>
+                            {loadingItems[item.itemId] ?
+                            <LoadingOutlined
+                                  style={{ fontSize: 16, color: "#722ED1" }}
+                                  spin
+                                />
+                  :
                             <span className="px-3 py-1">
                               {cartItems[item.itemId]}
                             </span>
+}
                             <button
                               className={`px-3 py-1 ${
                                 cartItems[item.itemId] >= item.quantity

@@ -34,6 +34,7 @@ const WhatsappLogin = () => {
   const [resendDisabled, setResendDisabled] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
   const [isClosing, setIsClosing] = useState(false);
+  const [isPhoneDisabled, setIsPhoneDisabled] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -145,6 +146,7 @@ const WhatsappLogin = () => {
           setShowSuccessPopup(true);
           setMessage("OTP sent successfully to your WhatsApp number");
           setResendDisabled(true);
+          setIsPhoneDisabled(true);
           setResendTimer(30);
           setTimeout(() => {
             setShowSuccessPopup(false);
@@ -302,7 +304,8 @@ const WhatsappLogin = () => {
                   defaultCountry="IN"
                   international
                   className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&.PhoneInputInput]:outline-none [&.PhoneInputInput]:border-none"
-                  disabled={showOtp && !isButtonEnabled}
+                  // disabled={showOtp && !isButtonEnabled}
+                  disabled={isPhoneDisabled}
                   placeholder="Enter your number"
                   style={
                     {
@@ -394,7 +397,9 @@ const WhatsappLogin = () => {
               {isButtonEnabled && (
                 <button
                   type="button"
-                  onClick={() => setOtpShow(false)}
+                  onClick={() => {
+                    setOtpShow(false);
+                    setIsPhoneDisabled(false);}}
                   disabled={isLoading}
                   className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >

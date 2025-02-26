@@ -25,10 +25,10 @@ interface OrderHistory {
 
 interface Item {
   itemName: string;
-  image: string;
+  itemUrl: string;
   weight: string;
   price: number;
-  mrp: number;
+  itemMrpPrice: number;
   quantity: number;
   itemUnit:string;
   singleItemPrice: number;
@@ -42,6 +42,7 @@ interface OrderDetailsResponse {
   customerId: string;
   subTotal: number | null;
   grandTotal: number;
+  walletAmount:number;
   deliveryFee: number;
   paymentType: number;
   orderDate: string;
@@ -306,9 +307,9 @@ const MyOrders: React.FC = () => {
                       {/* Item Details on the Left */}
                       <div className="flex items-center space-x-4">
                         <div className="w-20 h-20 bg-gray-200 cursor-pointer">
-                          {item.image && (
+                          {item.itemUrl && (
                             <img
-                              src={item.image}
+                              src={item.itemUrl}
                               alt={item.itemName}
                               className="w-full h-full object-cover"
                             />
@@ -317,9 +318,9 @@ const MyOrders: React.FC = () => {
                         <div>
                           <h3 className="font-bold text-center md:text-left">{item.itemName}</h3>
                           <p className="text-sm text-center md:text-left">
-                            Weight: {item.weight} {item.itemUnit}
+                            Weight: {item.weight} {item.itemUnit || "KGS"}
                           </p>
-                          <p className="text-sm line-through text-red-500 text-center md:text-left"> MRP: ₹{item.mrp}</p>
+                          <p className="text-sm line-through text-red-500 text-center md:text-left"> MRP: ₹{item.itemMrpPrice}</p>
                           <p className="text-green-600 font-bold text-lg text-center md:text-left">₹{item.singleItemPrice}</p>
                         </div>
                       </div>
@@ -340,6 +341,10 @@ const MyOrders: React.FC = () => {
                     <div className="flex justify-between">
                       <span>Delivery Fee</span>
                       <span>₹{selectedOrder.deliveryFee}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Wallet Amount</span>
+                      <span>₹{selectedOrder.walletAmount}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Payment Method</span>
