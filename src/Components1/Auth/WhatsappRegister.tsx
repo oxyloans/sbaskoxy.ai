@@ -227,6 +227,7 @@ const WhatsappRegister = () => {
       setResendDisabled(true);
       setResendTimer(30);
       setIsLoading(true);
+      setOtpError("");
 
       try {
         const response = await axios.post(
@@ -321,6 +322,7 @@ const WhatsappRegister = () => {
                   className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:border-none"
                   // disabled={showOtp && !isButtonEnabled && isPhoneDisabled}
                   disabled={isPhoneDisabled}
+                  maxLength={15}
                   placeholder="Enter your number"
                   style={
                     {

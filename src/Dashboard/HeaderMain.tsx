@@ -271,7 +271,7 @@ const Header: React.FC<HeaderProps> = ({
               }`}
               >
                 <UserCircle
-                  size={16}
+                  size={20}
                   className={`sm:w-6 sm:h-6 transition-colors duration-300 
                 ${
                   location.pathname === "/main/profile"
@@ -298,13 +298,13 @@ const Header: React.FC<HeaderProps> = ({
               }`}
               >
                 <ShoppingCart
-                  size={16}
+                  size={20}
                   className={`sm:w-6 sm:h-6 transition-colors duration-300 
                 ${
-                  location.pathname === "/mycart"
-                    ? "text-purple-600"
+                  location.pathname === "/main/mycart"
+                    ? "text-purple-700"
                     : activeButton === "cart"
-                    ? "text-purple-500"
+                    ? "text-purple-600"
                     : "text-gray-700"
                 }`}
                 />

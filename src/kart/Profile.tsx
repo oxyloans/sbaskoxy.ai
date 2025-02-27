@@ -371,9 +371,9 @@ const ProfilePage = () => {
         {/* Mobile Navigation Bar */}
 
         {/* Main Content */}
-        <div className="pt-4 lg:pt-0 px-4 lg:px-6">
+        <div className="pt-4 lg:pt-0 px-2 lg:px-6">
           {/* Desktop Navigation */}
-          <div className="border-b border-gray-200 mb-6">
+          <div className="border-b border-gray-200 mb-2">
             <div className="flex space-x-8">
               <button
                 className={`pb-4 px-4 ${
@@ -670,7 +670,7 @@ const ProfilePage = () => {
                   </>
                 ) : (
                   <div className=" mx-auto">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
                       {editingAddressId ? "Edit Address" : "Add New Address"}
                     </h3>
                     <form

@@ -23,7 +23,8 @@ interface RefereeDetail {
   lastName: string | null;
   referenceStatus: string;
   referee: string;
-  referredDate?: string;
+  referrer: string;
+  created_at: number[];
 }
 
 interface Stats {
@@ -55,6 +56,18 @@ const ReferralPage: React.FC = () => {
     }
   }, [token]);
 
+  const formatDate = (dateArray: number[]): string => {
+    if (Array.isArray(dateArray) && dateArray.length >= 3) {
+      const [year, month, day] = dateArray;
+      return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    return 'N/A';
+  };
+
   const fetchRefereeDetails = async () => {
     try {
       const response = await axios.get<RefereeDetail[]>(
@@ -67,15 +80,10 @@ const ReferralPage: React.FC = () => {
         }
       );
 
-      const detailsWithDate = response.data.map((detail: RefereeDetail) => ({
-        ...detail,
-        referredDate: new Date().toLocaleDateString()
-      }));
-
-      setRefereeDetails(detailsWithDate);
+      setRefereeDetails(response.data);
       
-      const total = detailsWithDate.length;
-      const active = detailsWithDate.filter(d => d.referenceStatus ==="REGISTERED").length;
+      const total = response.data.length;
+      const active = response.data.filter(d => d.referenceStatus === "REGISTERED").length;
       setStats({
         totalReferrals: total,
         activeReferrals: active,
@@ -87,7 +95,7 @@ const ReferralPage: React.FC = () => {
   };
 
   const handleShare = (action: 'whatsapp' | 'copy') => {
-    // setShareAction(action);
+    setShareAction(action);
     setPhoneNumber(undefined);
     setError('');
     setIsModalOpen(true);
@@ -101,7 +109,7 @@ const ReferralPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-    const response =  await axios.post(
+      const response = await axios.post(
         'https://meta.oxyglobal.tech/api/user-service/inviteaUser',
         {
           referealId: customerId,
@@ -115,28 +123,22 @@ const ReferralPage: React.FC = () => {
         }
       );
 
-
-
       setIsModalOpen(false);
       fetchRefereeDetails();
       Modal.success({
         content: response.data.message,
-        onOk: () => {
-          
-        },
-      })
+        onOk: () => {},
+      });
     } catch (error) {
       console.error('Error inviting user:', error);
-      if(error){
-      Modal.error({
-        content: 'An invitation has already been sent to this user.',
-        onOk: () => {
-
-        },
-      })
-    }else{
-      setError('Failed to invite user. Please try again.');
-    }
+      if (error) {
+        Modal.error({
+          content: 'An invitation has already been sent to this user.',
+          onOk: () => {},
+        });
+      } else {
+        setError('Failed to invite user. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -216,16 +218,16 @@ const ReferralPage: React.FC = () => {
                     {refereeDetails.map((referee) => (
                       <tr key={referee.id} className="hover:bg-gray-50">
                         <td className="border-b p-4 text-gray-600">{referee.whatsappnumber}</td>
-                        <td className="border-b p-4 text-gray-600">{referee.referredDate || 'N/A'}</td>
+                        <td className="border-b p-4 text-gray-600">{formatDate(referee.created_at)}</td>
                         <td className="border-b p-4">
                           <span 
                             className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              referee.referenceStatus 
+                              referee.referenceStatus === "REGISTERED" 
                                 ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
+                                : 'bg-amber-100 text-amber-800'
                             }`}
                           >
-                            {referee.referenceStatus }
+                            {referee.referenceStatus}
                           </span>
                         </td>
                       </tr>
@@ -271,14 +273,14 @@ const ReferralPage: React.FC = () => {
                   Please enter the phone number of the person you want to refer.
                 </p>
                 <div className="space-y-4">
-                <PhoneInput
-        international
-        countryCallingCodeEditable={false}
-        defaultCountry="IN"
-        value={phoneNumber}
-        onChange={setPhoneNumber}
-        className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&.PhoneInputInput]:outline-none [&.PhoneInputInput]:border-none"
-      />
+                  <PhoneInput
+                    international
+                    countryCallingCodeEditable={false}
+                    defaultCountry="IN"
+                    value={phoneNumber}
+                    onChange={setPhoneNumber}
+                    className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&.PhoneInputInput]:outline-none [&.PhoneInputInput]:border-none"
+                  />
                   {error && (
                     <p className="text-sm text-red-500">{error}</p>
                   )}

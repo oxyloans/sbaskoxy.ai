@@ -61,7 +61,7 @@ const WriteToUs: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [cartCount, setCartCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,7 +85,6 @@ const WriteToUs: React.FC = () => {
   });
 
   useEffect(() => {
-    // Safe localStorage access during effect, not during render
     const storedProfileData = localStorage.getItem("profileData");
     if (storedProfileData) {
       try {
@@ -94,62 +93,57 @@ const WriteToUs: React.FC = () => {
         console.error("Error parsing profile data:", e);
       }
     }
-  
-    // Get location state with proper type casting
+
     const locationState = location.state as LocationState || {};
-  
-    // Check if we're coming directly from the orders page
     const fromOrdersPage = locationState.fromOrdersPage === true;
-  
+
     if (!fromOrdersPage) {
-      // Not from orders page - clear existing order data
+      // Not from orders page - clear any order-related data and query
       localStorage.removeItem("selectedOrderId");
       localStorage.removeItem("selectedOrderNewId");
       setShowOrderInfo(false);
       setOrderInfo({ orderId: "", orderNewId: "" });
+
+      // Clear query unless editing an existing ticket
+      if (!id) {
+        setFormData({ query: "", documentName: "", documentId: "" });
+      }
     } else {
-      // Coming from orders page - use location state or localStorage as fallback
+      // From orders page - pre-fill order reference
       const orderId = locationState.orderId || localStorage.getItem("selectedOrderId") || "";
       const orderNewId = locationState.orderNewId || localStorage.getItem("selectedOrderNewId") || "";
-  
-      // Update localStorage with current order data
+
       if (orderId) localStorage.setItem("selectedOrderId", orderId);
       if (orderNewId) localStorage.setItem("selectedOrderNewId", orderNewId);
-  
-      // Set order info and flag to show in UI
+
       setOrderInfo({ orderId, orderNewId });
       setShowOrderInfo(Boolean(orderId || orderNewId));
-  
-      // Pre-populate query with order reference (using the cleaner logic)
+
       const orderReferenceId = orderNewId || orderId;
+      if (orderReferenceId) {
+        const orderReference = `Regarding Order #${orderReferenceId}`;
 
-if (orderReferenceId) {
-  const orderReference = `Regarding Order #${orderReferenceId}`;
-
-  setFormData(prev => {
-    // Check if the query already starts with this order reference to avoid duplication
-    if (prev.query.startsWith(orderReference)) {
-      return prev;  // No need to modify if it's already there
+        setFormData(prev => {
+          if (prev.query.startsWith(orderReference)) {
+            return prev;  // Avoid duplication if already present
+          }
+          return {
+            ...prev,
+            query: orderReference + "\n\n" + (prev.query || "")
+          };
+        });
+      }
     }
-    
-    return {
-      ...prev,
-      query: orderReference + "\n\n" + (prev.query || "")
-    };
-  });
-}
 
-    }
-  
-    // Load existing query if editing a ticket
     if (id) {
       fetchExistingQuery();
     }
-  
+
     const storedCartCount = localStorage.getItem('cartCount');
     setCartCount(storedCartCount ? parseInt(storedCartCount) : 0);
   }, [id, location]);
-  
+
+
 
   const fetchExistingQuery = async () => {
     if (!id) return;
@@ -208,7 +202,6 @@ if (orderReferenceId) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
-
   const handleFormSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -216,19 +209,18 @@ if (orderReferenceId) {
 
     setIsSubmitting(true);
 
-    // Get order information from state rather than directly from localStorage
     const orderId = showOrderInfo ? orderInfo.orderId : "";
     const orderNewId = showOrderInfo ? orderInfo.orderNewId : "";
     const orderReferenceId = orderNewId || orderId;
 
-if (orderReferenceId) {
-    const orderReference = `Regarding Order #${orderReferenceId}`;
+    let finalQuery = formData.query.trim();
 
-    setFormData(prev => ({
-        ...prev,
-        query: orderReference + "\n\n" + prev.query
-    }));
-}
+    if (orderReferenceId) {
+      const orderReference = `Regarding Order #${orderReferenceId}`;
+      if (!finalQuery.startsWith(orderReference)) {
+        finalQuery = orderReference + "\n\n" + finalQuery;
+      }
+    }
 
     const storedUserId = localStorage.getItem("userId") || "";
     const whatsappNumber = localStorage.getItem("whatsappNumber") || profileData.whatsappNumber;
@@ -236,21 +228,20 @@ if (orderReferenceId) {
     const data = {
       adminDocumentId: "",
       askOxyOfers: "FREESAMPLE",
-      comments: formData.query,
+      comments: finalQuery,
       email: profileData.customerEmail,
       id: id || "",
       mobileNumber: whatsappNumber,
       projectType: "ASKOXY",
-      query: formData.query,
+      query: finalQuery,
       queryStatus: "PENDING",
       resolvedBy: id ? "user" : "",
       resolvedOn: "",
       status: "",
       userDocumentId: formData.documentId || "",
       userId: storedUserId,
-      // Include order information only if showing order info
       orderId: orderId || undefined,
-      orderNewId: orderNewId || undefined
+      orderNewId: orderNewId || undefined,
     };
 
     try {
@@ -260,11 +251,10 @@ if (orderReferenceId) {
       );
       setFormData({ query: "", documentName: "", documentId: "" });
       showNotification("Query submitted successfully!", "success");
-      
-      // Clear stored order information after submission
+
       localStorage.removeItem("selectedOrderId");
       localStorage.removeItem("selectedOrderNewId");
-      
+
       navigate("/main/tickethistory");
     } catch (error) {
       console.error("Error submitting query", error);
@@ -273,6 +263,7 @@ if (orderReferenceId) {
       setIsSubmitting(false);
     }
   };
+
 
   const handleFileupload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -315,9 +306,8 @@ if (orderReferenceId) {
 
   const showNotification = (message: string, type: "success" | "error") => {
     const notificationElement = document.createElement("div");
-    notificationElement.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
-      type === "success" ? "bg-green-500" : "bg-red-500"
-    } text-white transform transition-transform duration-300 ease-in-out`;
+    notificationElement.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${type === "success" ? "bg-green-500" : "bg-red-500"
+      } text-white transform transition-transform duration-300 ease-in-out`;
     notificationElement.textContent = message;
     document.body.appendChild(notificationElement);
     setTimeout(() => {
@@ -326,161 +316,161 @@ if (orderReferenceId) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className=" flex flex-col min-h-screen">
       <CustomAlert
         isOpen={showProfileAlert}
         onClose={() => setShowProfileAlert(false)}
         onConfirm={handleProfileRedirect}
       />
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        <main className="flex-1 p-4 lg:p-6">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="p-8">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-400">
-                    Write to us
-                  </h2>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <FiClock className="w-4 h-4" />
-                    <p className="text-sm">We'll respond within 24 hours</p>
+      <div className="bg-white rounded-xl shadow-sm flex flex-col lg:flex-row gap-6">
+        <main className="  flex-1 p-4 lg:p-6">
+
+          <div className="p-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-400">
+                  Write to us
+                </h2>
+                <div className="flex items-center text-gray-600 text-sm gap-1">
+                  <FiClock className="w-4 h-4" />
+                  <p>We'll respond within 24 hours</p>
+                </div>
+
+              </div>
+              <button
+                onClick={() => navigate("/main/tickethistory")}
+                className="group flex items-center gap-2 bg-purple-50 text-purple-700 px-6 py-3 rounded-full hover:bg-purple-100 transition-all duration-300 shadow-md hover:shadow-lg"
+              >
+                <FiMessageSquare className="w-5 h-5" />
+                <span>View Ticket History</span>
+              </button>
+            </div>
+
+            {/* Order Reference Card - Only show if coming from an order page */}
+            {showOrderInfo && (orderInfo.orderNewId || orderInfo.orderId) && (
+              <div className="mb-8 bg-purple-50 rounded-xl p-4 border border-purple-100">
+                <div className="flex items-center gap-3">
+                  <FiPackage className="text-purple-600 w-6 h-6" />
+                  <div>
+                    <h3 className="font-semibold text-purple-900">
+                      {orderInfo.orderNewId ? `Order #${orderInfo.orderNewId}` : `Order ${orderInfo.orderId}`}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Your query will be linked to this order
+                    </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => navigate("/main/tickethistory")}
-                  className="group flex items-center gap-2 bg-purple-50 text-purple-700 px-6 py-3 rounded-full hover:bg-purple-100 transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                  <FiMessageSquare className="w-5 h-5" />
-                  <span>View Ticket History</span>
-                </button>
+              </div>
+            )}
+
+            <form onSubmit={handleFormSubmit} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Your Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={`${profileData.userFirstName} ${profileData.userLastName}`.trim()}
+                    className={`w-full px-4 py-3 rounded-lg border ${!profileData.userFirstName && !profileData.userLastName ? 'border-red-500' : 'border-gray-200'
+                      } bg-gray-50`}
+                    readOnly
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={profileData.customerEmail}
+                    className={`w-full px-4 py-3 rounded-lg border ${!profileData.customerEmail ? 'border-red-500' : 'border-gray-200'
+                      } bg-gray-50`}
+                    readOnly
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={localStorage.getItem("whatsappNumber") || profileData.whatsappNumber}
+                    placeholder="Enter your phone number"
+                    readOnly
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50"
+                  />
+                </div>
+
+                {id === undefined && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700">
+                      Attachment (Optional)
+                    </label>
+
+                    <div className="relative">
+                      <label className="w-full flex flex-col items-center justify-center h-24 px-4 py-4 bg-purple-50 text-purple-600 rounded-lg border-2 border-purple-100 border-dashed cursor-pointer hover:bg-purple-100 transition-all duration-300">
+                        <FiUploadCloud className="w-10 h-10 mb-2" />
+                        <span className="text-sm font-medium">Click to upload file</span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={handleFileupload}
+                        />
+                      </label>
+
+                      {uploadProgress > 0 && (
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-purple-100">
+                          <div
+                            className="h-full bg-purple-600 transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      )}
+
+                      {formData.documentName && (
+                        <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                          <FiCheckCircle className="w-4 h-4" />
+                          <span className="truncate">{formData.documentName}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
               </div>
 
-              {/* Order Reference Card - Only show if coming from an order page */}
-              {showOrderInfo && (orderInfo.orderNewId || orderInfo.orderId) && (
-                <div className="mb-8 bg-purple-50 rounded-xl p-4 border border-purple-100">
-                  <div className="flex items-center gap-3">
-                    <FiPackage className="text-purple-600 w-6 h-6" />
-                    <div>
-                      <h3 className="font-semibold text-purple-900">
-                        {orderInfo.orderNewId ? `Order #${orderInfo.orderNewId}` : `Order ${orderInfo.orderId}`}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Your query will be linked to this order
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div className="space-y-2">
+                <label htmlFor="query" className="text-sm font-semibold text-gray-700">
+                  Your Query *
+                </label>
+                <textarea
+                  id="query"
+                  rows={6}
+                  name="query"
+                  value={formData.query}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${errors.query ? 'border-red-500' : 'border-gray-200'
+                    }`}
+                  placeholder="Please describe your query in detail..."
+                />
 
-              <form onSubmit={handleFormSubmit} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700">
-                      Your Name *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter your name"
-                      value={`${profileData.userFirstName} ${profileData.userLastName}`.trim()}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        !profileData.userFirstName && !profileData.userLastName ? 'border-red-500' : 'border-gray-200'
-                      } bg-gray-50`}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="Enter your email address"
-                      value={profileData.customerEmail}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        !profileData.customerEmail ? 'border-red-500' : 'border-gray-200'
-                      } bg-gray-50`}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700">
-                      Phone Number
-                    </label>
-                    <input
-                      type="text"
-                      value={localStorage.getItem("whatsappNumber") || profileData.whatsappNumber}
-                      placeholder="Enter your phone number"
-                      readOnly
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50"
-                    />
-                  </div>
-
-                  {id === undefined && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-gray-700">
-                        Attachment (Optional)
-                      </label>
-                      <div className="relative">
-                        <label className="w-full flex flex-col items-center px-4 py-6 bg-purple-50 text-purple-600 rounded-lg border-2 border-purple-100 border-dashed cursor-pointer hover:bg-purple-100 transition-all duration-300">
-                          <FiUploadCloud className="w-8 h-8 mb-2" />
-                          <span className="text-sm font-medium">
-                            Click to upload file
-                          </span>
-                          <input
-                            type="file"
-                            className="hidden"
-                            onChange={handleFileupload}
-                          />
-                        </label>
-                        {uploadProgress > 0 && (
-                          <div className="absolute bottom-0 left-0 w-full h-1 bg-purple-100">
-                            <div
-                              className="h-full bg-purple-600 transition-all duration-300"
-                              style={{ width: `${uploadProgress}%` }}
-                            />
-                          </div>
-                        )}
-                        {formData.documentName && (
-                          <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
-                            <FiCheckCircle className="w-4 h-4" />
-                            <span>{formData.documentName}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-  <label htmlFor="query" className="text-sm font-semibold text-gray-700">
-    Your Query *
-  </label>
-  <textarea
-    id="query"
-    rows={6}
-    name="query"
-    value={formData.query}
-    onChange={handleInputChange}
-    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${
-      errors.query ? 'border-red-500' : 'border-gray-200'
-    }`}
-    placeholder="Please describe your query in detail..."
-  />
-  
-  {/* Display error message if any */}
-  {errors.query && (
-    <p className="text-sm text-red-500">{errors.query}</p>
-  )}
-</div>
+                {/* Display error message if any */}
+                {errors.query && (
+                  <p className="text-sm text-red-500">{errors.query}</p>
+                )}
+              </div>
 
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`
                     mx-auto
                     block
                     w-full sm:w-3/4 md:w-1/2 lg:w-1/4
@@ -495,38 +485,38 @@ if (orderReferenceId) {
                     transform hover:-translate-y-1
                     ${isSubmitting ? "opacity-75 cursor-not-allowed" : ""}
                   `}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg
-                        className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Submitting...
-                    </span>
-                  ) : (
-                    "Submit Query"
-                  )}
-                </button>
-              </form>
-            </div>
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg
+                      className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Submitting...
+                  </span>
+                ) : (
+                  "Submit Query"
+                )}
+              </button>
+            </form>
           </div>
+
         </main>
       </div>
       <Footer />

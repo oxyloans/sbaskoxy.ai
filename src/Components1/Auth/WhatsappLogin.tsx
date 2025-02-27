@@ -211,6 +211,7 @@ const WhatsappLogin = () => {
     if (!resendDisabled) {
       setResendDisabled(true);
       setResendTimer(30);
+      setOtpError("");
       setIsLoading(true);
 
       try {
@@ -306,6 +307,7 @@ const WhatsappLogin = () => {
                   className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&.PhoneInputInput]:outline-none [&.PhoneInputInput]:border-none"
                   // disabled={showOtp && !isButtonEnabled}
                   disabled={isPhoneDisabled}
+                  maxLength={15}
                   placeholder="Enter your number"
                   style={
                     {

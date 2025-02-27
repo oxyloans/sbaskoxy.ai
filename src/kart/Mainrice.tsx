@@ -266,22 +266,22 @@ const Ricebags: React.FC = () => {
 
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
-        <div className="flex overflow-x-auto py-3 px-4 space-x-4 scrollbar-hide">
-          {categories.map((category, index) => (
-            <motion.button
-              key={index}
-              whileTap={{ scale: 0.95 }}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeCategory === category.categoryName
-                  ? "bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md"
-                  : "bg-purple-50 text-purple-700 hover:bg-purple-100"
-              }`}
-              onClick={() => setActiveCategory(category.categoryName)}
-            >
-              {category.categoryName}
-            </motion.button>
-          ))}
-        </div>
+      <div className="flex overflow-x-auto py-3 px-4 space-x-4 scrollbar-hide css-hide-scrollbar">
+  {categories.map((category, index) => (
+    <motion.button
+      key={index}
+      whileTap={{ scale: 0.95 }}
+      className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+        activeCategory === category.categoryName
+          ? "bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md"
+          : "bg-purple-50 text-purple-700 hover:bg-purple-100"
+      }`}
+      onClick={() => setActiveCategory(category.categoryName)}
+    >
+      {category.categoryName}
+    </motion.button>
+  ))}
+</div>
       </nav>
 
  
@@ -298,6 +298,9 @@ const Ricebags: React.FC = () => {
       )}
            <Footer />
     </div>
+
+   
+
   );
 };
 
