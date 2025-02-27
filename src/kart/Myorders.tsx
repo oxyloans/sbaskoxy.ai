@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Filter, Search, Package2, ChevronDown } from 'lucide-react';
+import { Menu, X, Filter, Search, Package2, ChevronDown, MessageSquare, ExternalLink, Eye } from 'lucide-react';
 import Footer from '../components/Footer';
 import axios from "axios";
+import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = "https://meta.oxyglobal.tech/api/";
-const customerId = localStorage.getItem("userId");
-const API_URL = `${BASE_URL}order-service/getAllOrders_customerId`;
 
 interface OrderAddress {
   flatNo: string;
@@ -30,7 +29,7 @@ interface Item {
   price: number;
   itemMrpPrice: number;
   quantity: number;
-  itemUnit:string;
+  itemUnit: string;
   singleItemPrice: number;
 }
 
@@ -42,7 +41,7 @@ interface OrderDetailsResponse {
   customerId: string;
   subTotal: number | null;
   grandTotal: number;
-  walletAmount:number;
+  walletAmount: number;
   deliveryFee: number;
   paymentType: number;
   orderDate: string;
@@ -53,6 +52,7 @@ interface OrderDetailsResponse {
 }
 
 const MyOrders: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<OrderDetailsResponse | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [allOrders, setOrders] = useState<OrderDetailsResponse[]>([]);
@@ -60,18 +60,27 @@ const MyOrders: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortOption, setSortOption] = useState<string>('newest');
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
+  const [customerId, setCustomerId] = useState<string>('');
+  
   useEffect(() => {
-    fetchOrders();
+    // Safe localStorage access during effect, not during render
+    const storedCustomerId = localStorage.getItem("userId");
+    if (storedCustomerId) {
+      setCustomerId(storedCustomerId);
+      // Only fetch orders when we have a valid customer ID
+      fetchOrders(storedCustomerId);
+    }
   }, []);
 
-  const fetchOrders = async (): Promise<void> => {
+  const fetchOrders = async (userId: string): Promise<void> => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
+      const API_URL = `${BASE_URL}order-service/getAllOrders_customerId`;
+      
       const response = await axios.post(
         API_URL,
-        { userId : customerId },
+        { userId },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -148,9 +157,34 @@ const MyOrders: React.FC = () => {
     });
   };
 
+  const handleWriteToUs = () => {
+    if (selectedOrder) {
+      // Store the order details in localStorage
+      localStorage.setItem("selectedOrderId", selectedOrder.orderId);
+      if (selectedOrder.newOrderId) {
+        localStorage.setItem("selectedOrderNewId", selectedOrder.newOrderId);
+      } else {
+        localStorage.removeItem("selectedOrderNewId");
+      }
+
+      // Navigate to the WriteToUs page with proper state
+      navigate(`/main/writeToUs`, {
+        state: {
+          orderId: selectedOrder.orderId,
+          orderNewId: selectedOrder.newOrderId,
+          fromOrdersPage: true  // Add this flag to indicate coming from orders page
+        }
+      });
+
+      // Close the details modal
+      setIsDetailsOpen(false);
+    }
+  };
+
   const filteredOrders = allOrders.filter((order) => {
     const matchesSearch = searchQuery === '' ||
-      (order.orderId && order.orderId.toLowerCase().includes(searchQuery.toLowerCase()));
+      (order.orderId && order.orderId.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (order.newOrderId && order.newOrderId.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesStatus = statusFilter === 'all' ||
       getStatusText(order.orderStatus).toLowerCase() === statusFilter.toLowerCase();
@@ -162,11 +196,10 @@ const MyOrders: React.FC = () => {
     }
     return new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime();
   });
-
+  
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1">
@@ -223,15 +256,20 @@ const MyOrders: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading orders...</p>
           </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+            <Package2 className="h-16 w-16 text-gray-400 mx-auto" />
+            <h3 className="mt-4 text-xl font-medium text-gray-900">No orders found</h3>
+            <p className="mt-2 text-gray-500">Try changing your search or filter criteria.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredOrders.map((order) => (
               <div
                 key={order.orderId}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-purple-100"
-                onClick={() => fetchOrderDetails(order.orderId)}
+                className="bg-white rounded-xl shadow-sm border border-purple-100 overflow-hidden hover:shadow transition-all duration-300"
               >
-                <div className="p-6">
+                <div className="p-5">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-purple-900">#{order.newOrderId}</h3>
@@ -244,13 +282,24 @@ const MyOrders: React.FC = () => {
 
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Amount</span>
+                      <span className="text-gray-600">Total Amount</span>
                       <span className="font-medium">₹{order.grandTotal}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Payment</span>
                       <span className="font-medium">{order.paymentType === 2 ? "Online" : "COD"}</span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Enhanced View Details button */}
+                <div
+                  className="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 cursor-pointer transition-all duration-300"
+                  onClick={() => fetchOrderDetails(order.orderId)}
+                >
+                  <div className="px-5 py-3 flex items-center justify-center gap-2 text-white">
+                    <Eye className="h-5 w-5" />
+                    <span className="font-medium">View Order Details</span>
                   </div>
                 </div>
               </div>
@@ -261,7 +310,7 @@ const MyOrders: React.FC = () => {
         {isDetailsOpen && selectedOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 scrollbar-thin scrollbar-thumb-purple-600">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="bg-purple-600 text-white p-4 sticky top-0 flex justify-between items-center">
+              <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 sticky top-0 flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Order Details</h2>
                 <button
                   onClick={() => setIsDetailsOpen(false)}
@@ -276,6 +325,15 @@ const MyOrders: React.FC = () => {
                   <Package2 className="h-12 w-12 text-purple-600 mx-auto mb-2" />
                   <h3 className="text-xl font-semibold text-purple-900">Order #{selectedOrder.orderId}</h3>
                   <p className="text-gray-600">{formatDate(selectedOrder.orderDate)}</p>
+
+                  {/* Write to Us button moved here for more prominence */}
+                  {/* <button
+                    onClick={handleWriteToUs}
+                    className="flex items-center justify-center gap-2 mx-auto mt-4 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                    <span>Write to us about this order</span>
+                  </button> */}
                 </div>
 
                 <div className="bg-purple-50 rounded-lg p-4 row">
@@ -302,11 +360,11 @@ const MyOrders: React.FC = () => {
                   {selectedOrder.orderItems.map((item, index) => (
                     <div
                       key={index}
-                      className="border rounded-lg p-4 mb-4 flex flex-col md:flex-row items-center md:justify-between space-y-4 md:space-y-0"
+                      className="border rounded-lg p-4 mb-4 flex flex-col md:flex-row items-center md:justify-between space-y-4 md:space-y-0 hover:border-purple-300 transition-colors"
                     >
                       {/* Item Details on the Left */}
                       <div className="flex items-center space-x-4">
-                        <div className="w-20 h-20 bg-gray-200 cursor-pointer">
+                        <div className="w-20 h-20 bg-gray-200 cursor-pointer rounded-md overflow-hidden border border-gray-300">
                           {item.itemUrl && (
                             <img
                               src={item.itemUrl}
@@ -356,16 +414,16 @@ const MyOrders: React.FC = () => {
                         <span className="text-purple-600">₹{selectedOrder.grandTotal}</span>
                       </div>
                     </div>
-                  </div>  
+                  </div>
                 </div>
 
                 {selectedOrder.orderHistory && (
                   <div className="bg-purple-50 rounded-lg p-4">
                     <h4 className="font-semibold text-purple-900 mb-3">Order Timeline</h4>
 
-                    {selectedOrder.orderHistory.map((orderHistory,index) => (
+                    {selectedOrder.orderHistory.map((orderHistory, index) => (
 
-                      <div className="space-y-4">
+                      <div key={index} className="space-y-4">
                         {orderHistory.placedDate && (
                           <div className="flex items-center gap-3">
                             <div className="w-2 h-2 rounded-full bg-purple-600"></div>
@@ -429,6 +487,17 @@ const MyOrders: React.FC = () => {
                     ))}
                   </div>
                 )}
+
+                {/* Floating action button for Write To Us at the bottom */}
+                <div className="sticky bottom-0 bg-white p-4 border-t border-gray-200 flex justify-center">
+                  <button
+                    onClick={handleWriteToUs}
+                    className="sm:w-3/4 md:w-1/2 lg:w-1/2 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white px-6 py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg w-full max-w-md"
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                    <span>Write to us</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

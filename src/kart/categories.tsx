@@ -15,6 +15,7 @@ interface Item {
   itemPrice: number;
   quantity: number;
   itemMrp: number;
+  units:string;
 }
 
 interface SubCategory {
@@ -456,6 +457,9 @@ const Categories: React.FC<CategoriesProps> = ({
                   <h3 className="font-medium text-gray-800 line-clamp-2 min-h-[2.5rem] text-sm">
                     {item.itemName}
                   </h3>
+                  <p className="text-sm text-gray-500">
+                  Weight : {item.weight}{item.units}
+                  </p>
 
                   {/* Price Section - Updated layout */}
                   <div className="flex items-baseline space-x-2">

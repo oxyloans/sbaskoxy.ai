@@ -15,6 +15,8 @@ interface Transaction {
   walletTxAmount: number;
   walletTxDesc:string;
   createdAt:string;
+  orderId:string;
+  walletTxBalance:number
 }
 
 const MyWalletPage: React.FC = () => {
@@ -66,7 +68,7 @@ const MyWalletPage: React.FC = () => {
                 <h1 className="text-2xl font-bold text-gray-900">My Wallet</h1>
                 <button 
                   onClick={() => navigate('/main/Subscription')}
-                  className="inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                  className="inline-flex items-center justify-center px-4 py-2  bg-gradient-to-r from-purple-600 to-purple-400 text-white rounded-lg hover:bg-purple-700 transition-all shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Wallet Top-Up
@@ -158,7 +160,7 @@ const MyWalletPage: React.FC = () => {
                               }
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900 mb-1 w-1/2">{transaction.walletTxDesc}</p>
+                              <p className="font-semibold text-gray-600 mb-1 w-1/1">Order ID : #{transaction.orderId}</p>
                               <p className="text-sm text-gray-600">
                                 {new Date(transaction.createdAt).toLocaleDateString()} • wallet
                               </p>
@@ -170,16 +172,20 @@ const MyWalletPage: React.FC = () => {
                                 ? 'text-green-600' 
                                 : 'text-red-600'
                             }`}>
-                              {transaction.type === 'credit' ? '+' : '-'}₹{transaction.walletTxAmount}
+                              {/* {transaction.type === 'credit' ? '+' : '-'} */}
+                              ₹{transaction.walletTxAmount}
                             </p>
-                            {/* <span className={`text-xs px-2 py-1 rounded-full ${
+                            {/* <span className={`text-xs px-2 py-1 rounded-full
+                             ${
                               transaction.status === 'completed' 
                                 ? 'bg-green-100 text-green-700'
                                 : transaction.status === 'pending'
                                   ? 'bg-yellow-100 text-yellow-700'
                                   : 'bg-red-100 text-red-700'
-                            }`}>
-                              {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                            }
+                            `}
+                            >
+                              {transaction.walletTxBalance}
                             </span> */}
                           </div>
                         </div>

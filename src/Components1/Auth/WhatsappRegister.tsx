@@ -42,7 +42,7 @@ const WhatsappRegister = () => {
     const accessToken = localStorage.getItem("accessToken");
 
     if (userId && accessToken) {
-      navigate(location.state?.from || "/dashboard", { replace: true });
+      navigate(location.state?.from || "/main/dashboard/products", { replace: true });
       return;
     }
 
@@ -152,7 +152,7 @@ const WhatsappRegister = () => {
         if (response.data.mobileOtpSession === null) {
           setShowSuccessPopup(false);
           setError("You already registered with this number.");
-          setTimeout(() => navigate("/whatapplogin"), 4000);
+          setTimeout(() => navigate("/whatsapplogin"), 2500);
         } else {
           setOtpShow(true);
           setShowSuccessPopup(true);
@@ -211,7 +211,7 @@ const WhatsappRegister = () => {
         localStorage.setItem("accessToken", response.data.accessToken);
         setMessage("Registration Successful");
         localStorage.removeItem("refferrerId");
-        setTimeout(() => navigate(location.state?.from || "/dashboard"), 500);
+        setTimeout(() => navigate(location.state?.from || "/main/dashboard/products"), 500);
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (err) {
@@ -431,7 +431,7 @@ const WhatsappRegister = () => {
           <p className="text-sm text-gray-600 text-center flex items-center justify-center gap-2">
             Already registered?{" "}
             <Link
-              to="/whatapplogin"
+              to="/whatsapplogin"
               className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1 group"
             >
               Login Now

@@ -570,14 +570,14 @@ const ProfilePage = () => {
                       <button
                         onClick={handleSaveProfile}
                         disabled={isLoading}
-                        className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg transition-colors shadow-md hover:bg-purple-700 disabled:opacity-50"
+                        className="w-full md:w-auto px-6 py-3  bg-gradient-to-r from-purple-600 to-purple-400 text-white rounded-lg transition-colors shadow-md hover:bg-purple-700 disabled:opacity-50"
                       >
                         {isLoading ? "Saving..." : "Save Changes"}
                       </button>
                     ) : (
                       <button
                         onClick={() => setEditStatus(false)}
-                        className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg transition-colors shadow-md hover:bg-purple-700"
+                        className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-400 text-white rounded-lg transition-colors shadow-md hover:bg-purple-700"
                       >
                         Edit Profile
                       </button>
@@ -595,7 +595,7 @@ const ProfilePage = () => {
                     <div className="flex justify-end mb-6">
                       <button
                         onClick={() => setShowAddressForm(true)}
-                        className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700"
+                        className="w-full md:w-auto inline-flex items-center justify-center gap-2  bg-gradient-to-r from-purple-600 to-purple-400 text-white px-6 py-3 rounded-lg hover:bg-purple-700"
                       >
                         <FaMapMarkerAlt />
                         Add New Address

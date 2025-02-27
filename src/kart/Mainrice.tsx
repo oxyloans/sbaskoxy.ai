@@ -17,6 +17,7 @@ interface Item {
   itemPrice: number;
   quantity: number;
   itemMrp: number;
+  units:string;
 }
 
 interface SubCategory {

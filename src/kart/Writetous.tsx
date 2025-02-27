@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import Footer from "../components/Footer";
-import { FiUploadCloud, FiClock, FiMessageSquare, FiCheckCircle } from "react-icons/fi";
+import { FiUploadCloud, FiClock, FiMessageSquare, FiCheckCircle, FiPackage } from "react-icons/fi";
 import { Menu, X } from 'lucide-react';
 
 interface ProfileData {
@@ -18,6 +18,12 @@ interface FormErrors {
   profile?: string;
 }
 
+interface LocationState {
+  orderId?: string;
+  orderNewId?: string;
+  fromOrdersPage?: boolean;
+}
+
 const CustomAlert: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -30,7 +36,7 @@ const CustomAlert: React.FC<{
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-lg font-semibold mb-2">Complete Your Profile</h3>
         <p className="text-gray-600 mb-6">
-        Please complete your profile before proceeding to cart. This helps us serve you better.
+          Please complete your profile before proceeding to cart. This helps us serve you better.
         </p>
         <div className="flex justify-end gap-3">
           <button
@@ -52,16 +58,18 @@ const CustomAlert: React.FC<{
 };
 
 const WriteToUs: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [cartCount, setCartCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<FormErrors>({ query: "", documentId: "" });
   const [showProfileAlert, setShowProfileAlert] = useState(false);
+  const [showOrderInfo, setShowOrderInfo] = useState(false);
+  const [orderInfo, setOrderInfo] = useState({ orderId: "", orderNewId: "" });
 
   const [formData, setFormData] = useState({
     query: "",
@@ -76,29 +84,72 @@ const WriteToUs: React.FC = () => {
     whatsappNumber: "",
   });
 
-  const storedProfileData = localStorage.getItem("profileData") || "";
-  const storedUserId = localStorage.getItem("userId") || "";
-
   useEffect(() => {
+    // Safe localStorage access during effect, not during render
+    const storedProfileData = localStorage.getItem("profileData");
     if (storedProfileData) {
-      setProfileData(JSON.parse(storedProfileData));
+      try {
+        setProfileData(JSON.parse(storedProfileData));
+      } catch (e) {
+        console.error("Error parsing profile data:", e);
+      }
     }
-    fetchExistingQuery();
-    setCartCount(parseInt(localStorage.getItem('cartCount') || '0'));
-  }, [id]);
+  
+    // Get location state with proper type casting
+    const locationState = location.state as LocationState || {};
+  
+    // Check if we're coming directly from the orders page
+    const fromOrdersPage = locationState.fromOrdersPage === true;
+  
+    if (!fromOrdersPage) {
+      // Not from orders page - clear existing order data
+      localStorage.removeItem("selectedOrderId");
+      localStorage.removeItem("selectedOrderNewId");
+      setShowOrderInfo(false);
+      setOrderInfo({ orderId: "", orderNewId: "" });
+    } else {
+      // Coming from orders page - use location state or localStorage as fallback
+      const orderId = locationState.orderId || localStorage.getItem("selectedOrderId") || "";
+      const orderNewId = locationState.orderNewId || localStorage.getItem("selectedOrderNewId") || "";
+  
+      // Update localStorage with current order data
+      if (orderId) localStorage.setItem("selectedOrderId", orderId);
+      if (orderNewId) localStorage.setItem("selectedOrderNewId", orderNewId);
+  
+      // Set order info and flag to show in UI
+      setOrderInfo({ orderId, orderNewId });
+      setShowOrderInfo(Boolean(orderId || orderNewId));
+  
+      // Pre-populate query with order reference (using the cleaner logic)
+      const orderReferenceId = orderNewId || orderId;
 
-  const checkProfileCompletion = (): boolean => {
-    const { userFirstName, userLastName, customerEmail } = profileData;
-    if (!userFirstName || !userLastName || !customerEmail) {
-      setShowProfileAlert(true);
-      return false;
+if (orderReferenceId) {
+  const orderReference = `Regarding Order #${orderReferenceId}`;
+
+  setFormData(prev => {
+    // Check if the query already starts with this order reference to avoid duplication
+    if (prev.query.startsWith(orderReference)) {
+      return prev;  // No need to modify if it's already there
     }
-    return true;
-  };
+    
+    return {
+      ...prev,
+      query: orderReference + "\n\n" + (prev.query || "")
+    };
+  });
+}
 
-  const handleProfileRedirect = () => {
-    navigate("/main/profile");
-  };
+    }
+  
+    // Load existing query if editing a ticket
+    if (id) {
+      fetchExistingQuery();
+    }
+  
+    const storedCartCount = localStorage.getItem('cartCount');
+    setCartCount(storedCartCount ? parseInt(storedCartCount) : 0);
+  }, [id, location]);
+  
 
   const fetchExistingQuery = async () => {
     if (!id) return;
@@ -116,6 +167,19 @@ const WriteToUs: React.FC = () => {
     } catch (error) {
       console.error("Error fetching query:", error);
     }
+  };
+
+  const checkProfileCompletion = (): boolean => {
+    const { userFirstName, userLastName, customerEmail } = profileData;
+    if (!userFirstName || !userLastName || !customerEmail) {
+      setShowProfileAlert(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleProfileRedirect = () => {
+    navigate("/main/profile");
   };
 
   const validateForm = (): boolean => {
@@ -152,13 +216,30 @@ const WriteToUs: React.FC = () => {
 
     setIsSubmitting(true);
 
+    // Get order information from state rather than directly from localStorage
+    const orderId = showOrderInfo ? orderInfo.orderId : "";
+    const orderNewId = showOrderInfo ? orderInfo.orderNewId : "";
+    const orderReferenceId = orderNewId || orderId;
+
+if (orderReferenceId) {
+    const orderReference = `Regarding Order #${orderReferenceId}`;
+
+    setFormData(prev => ({
+        ...prev,
+        query: orderReference + "\n\n" + prev.query
+    }));
+}
+
+    const storedUserId = localStorage.getItem("userId") || "";
+    const whatsappNumber = localStorage.getItem("whatsappNumber") || profileData.whatsappNumber;
+
     const data = {
       adminDocumentId: "",
       askOxyOfers: "FREESAMPLE",
       comments: formData.query,
       email: profileData.customerEmail,
       id: id || "",
-      mobileNumber: localStorage.getItem("whatsappNumber") || profileData.whatsappNumber,
+      mobileNumber: whatsappNumber,
       projectType: "ASKOXY",
       query: formData.query,
       queryStatus: "PENDING",
@@ -167,6 +248,9 @@ const WriteToUs: React.FC = () => {
       status: "",
       userDocumentId: formData.documentId || "",
       userId: storedUserId,
+      // Include order information only if showing order info
+      orderId: orderId || undefined,
+      orderNewId: orderNewId || undefined
     };
 
     try {
@@ -176,6 +260,11 @@ const WriteToUs: React.FC = () => {
       );
       setFormData({ query: "", documentName: "", documentId: "" });
       showNotification("Query submitted successfully!", "success");
+      
+      // Clear stored order information after submission
+      localStorage.removeItem("selectedOrderId");
+      localStorage.removeItem("selectedOrderNewId");
+      
       navigate("/main/tickethistory");
     } catch (error) {
       console.error("Error submitting query", error);
@@ -193,6 +282,7 @@ const WriteToUs: React.FC = () => {
     formData.append("file", file);
     formData.append("fileType", "kyc");
     formData.append("projectType", "ASKOXY");
+    const storedUserId = localStorage.getItem("userId") || "";
 
     try {
       const response = await axios.post(
@@ -265,6 +355,23 @@ const WriteToUs: React.FC = () => {
                   <span>View Ticket History</span>
                 </button>
               </div>
+
+              {/* Order Reference Card - Only show if coming from an order page */}
+              {showOrderInfo && (orderInfo.orderNewId || orderInfo.orderId) && (
+                <div className="mb-8 bg-purple-50 rounded-xl p-4 border border-purple-100">
+                  <div className="flex items-center gap-3">
+                    <FiPackage className="text-purple-600 w-6 h-6" />
+                    <div>
+                      <h3 className="font-semibold text-purple-900">
+                        {orderInfo.orderNewId ? `Order #${orderInfo.orderNewId}` : `Order ${orderInfo.orderId}`}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Your query will be linked to this order
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={handleFormSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -348,35 +455,51 @@ const WriteToUs: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700">
-                    Your Query *
-                  </label>
-                  <textarea
-                    rows={4}
-                    name="query"
-                    value={formData.query}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${
-                      errors.query ? 'border-red-500' : 'border-gray-200'
-                    }`}
-                    placeholder="Please describe your query in detail..."
-                  ></textarea>
-                  {errors.query && (
-                    <p className="text-sm text-red-500">{errors.query}</p>
-                  )}
-                </div>
+  <label htmlFor="query" className="text-sm font-semibold text-gray-700">
+    Your Query *
+  </label>
+  <textarea
+    id="query"
+    rows={6}
+    name="query"
+    value={formData.query}
+    onChange={handleInputChange}
+    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${
+      errors.query ? 'border-red-500' : 'border-gray-200'
+    }`}
+    placeholder="Please describe your query in detail..."
+  />
+  
+  {/* Display error message if any */}
+  {errors.query && (
+    <p className="text-sm text-red-500">{errors.query}</p>
+  )}
+</div>
+
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`w-full bg-gradient-to-r from-purple-600 to-purple-400 text-white py-4 rounded-lg hover:from-purple-700 hover:to-purple-500 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1 ${
-                    isSubmitting ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
+                  className={`
+                    mx-auto
+                    block
+                    w-full sm:w-3/4 md:w-1/2 lg:w-1/4
+                    bg-gradient-to-r from-purple-600 to-purple-400
+                    text-white
+                    py-3 sm:py-4
+                    px-4
+                    rounded-lg
+                    hover:from-purple-700 hover:to-purple-500
+                    transition-all duration-300
+                    shadow-md hover:shadow-lg
+                    transform hover:-translate-y-1
+                    ${isSubmitting ? "opacity-75 cursor-not-allowed" : ""}
+                  `}
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-2">
                       <svg
-                        className="animate-spin h-5 w-5 text-white"
+                        className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"

@@ -150,10 +150,10 @@ const Header: React.FC<HeaderProps> = ({
         onFocus={() => setIsFocused(true)}
         onBlur={() => setTimeout(() => setIsFocused(false), 200)}
         className="w-full pl-4 pr-12 py-2 border-2 border-gray-200 rounded-full 
-          text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+          text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500
           outline-none transition-all duration-300 
-          hover:border-blue-400 hover:shadow-md 
-          group-focus-within:border-blue-500"
+          hover:border-purple-400 hover:shadow-md 
+          group-focus-within:border-purple-500"
         placeholder={searchPlaceholder}
       />
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center">
@@ -167,8 +167,8 @@ const Header: React.FC<HeaderProps> = ({
         )}
         <FaSearch
           className="text-gray-400 ml-2 text-base
-        group-focus-within:text-blue-500 
-        hover:text-blue-500 hover:scale-110 transition-all duration-200"
+        group-focus-within:text-purple-500 
+        hover:text-purple-500 hover:scale-110 transition-all duration-200"
         />
       </div>
 
@@ -185,8 +185,8 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 key={index}
                 className="w-full px-4 py-2 text-left 
-                hover:bg-blue-50 flex items-center space-x-2 
-                transition-colors duration-200 hover:text-blue-600"
+                hover:bg-purple-50 flex items-center space-x-2 
+                transition-colors duration-200 hover:text-purple-600"
                 onClick={() => {
                   setSearchValue(text);
                   setIsFocused(false);
@@ -238,7 +238,7 @@ const Header: React.FC<HeaderProps> = ({
               {!isSearchVisible ? (
                 <button
                   onClick={toggleSearch}
-                  className="p-2 text-gray-600 hover:text-blue-500"
+                  className="p-2 text-gray-600 hover:text-purple-500"
                 >
                   <FaSearch className="w-4 h-4" />
                 </button>
@@ -290,10 +290,10 @@ const Header: React.FC<HeaderProps> = ({
                 onMouseUp={() => setActiveButton(null)}
                 onMouseLeave={() => setActiveButton(null)}
                 className={`relative flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full p-1 sm:px-2 sm:py-1 
-              hover:text-blue-600 transition-all duration-300 hover:scale-105 active:scale-95 
+              hover:text-purple-600 transition-all duration-300 hover:scale-105 active:scale-95 
               ${
                 location.pathname === "/mycart"
-                  ? "bg-blue-50 text-blue-600"
+                  ? "bg-purple-50 text-purple-600"
                   : ""
               }`}
               >
@@ -302,9 +302,9 @@ const Header: React.FC<HeaderProps> = ({
                   className={`sm:w-6 sm:h-6 transition-colors duration-300 
                 ${
                   location.pathname === "/mycart"
-                    ? "text-blue-600"
+                    ? "text-purple-600"
                     : activeButton === "cart"
-                    ? "text-blue-500"
+                    ? "text-purple-500"
                     : "text-gray-700"
                 }`}
                 />

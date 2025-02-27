@@ -433,12 +433,14 @@ const Subscription: React.FC = () => {
 
   const getPlans = async () => {
     try {
-      const response = await axios.get(`${BASEURL}/order-service/getAllPlans`);
-      setSubscriptionPlans(response.data);
+      const response = await axios.get<SubscriptionPlan[]>(`${BASEURL}/order-service/getAllPlans`);
+      const sortedData = response.data.sort((a, b) => a.amount - b.amount);
+      setSubscriptionPlans(sortedData);
     } catch (error) {
       console.error('Failed to fetch subscription plans:', error);
     }
   };
+  
 
   const userPlanDetails = async () => {
     try {
@@ -498,6 +500,8 @@ const Subscription: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                 {subscriptionPlans.map((plan) => (
+                  <>
+                  {plan.status&&(
                   <SubscriptionCard
                     key={plan.planId}
                     plan={plan}
@@ -506,6 +510,8 @@ const Subscription: React.FC = () => {
                     Loading={ loading }
                     planDetails={plandetails || {} as userSubscriptionPlan} // Ensure it's always a valid object
                   />
+                )}
+                </>
                 ))}
               </div>
 

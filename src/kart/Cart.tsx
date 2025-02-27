@@ -633,14 +633,14 @@ const CartPage: React.FC = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               {isLoading ? (
                 <div className="flex justify-center items-center h-64">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                  <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
                 </div>
               ) : !cartData || cartData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64">
                   <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
                   <button
                     onClick={() => navigate("/main/dashboard/products")}
-                    className="bg-purple-500 text-white px-6 py-2 rounded-md hover:bg-purple-700"
+                    className=" bg-gradient-to-r from-purple-600 to-purple-400 text-white px-6 py-2 rounded-md hover:bg-purple-700"
                   >
                     Browse items
                   </button>
@@ -775,7 +775,7 @@ const CartPage: React.FC = () => {
           <div className="w-full lg:w-1/4">
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border broder-black-500">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Delivery Address</h2>
+                <h2 className="text-lg font-bold">Delivery Address</h2>
                 <button
                   onClick={() => setIsAddressModalOpen(true)}
                   className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center gap-1"
@@ -806,7 +806,7 @@ const CartPage: React.FC = () => {
                       handleAddressChange(selected);
                     }
                   }}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="">Choose an Address</option>
                   {addresses.map((address, index) => (
@@ -903,7 +903,7 @@ const CartPage: React.FC = () => {
                     className={`w-full py-3 px-6 rounded-lg transition ${
                       isCheckoutDisabled()
                         ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-purple-500 hover:bg-purple-700 text-white"
+                        : " bg-gradient-to-r from-purple-700 to-purple-500 hover:bg-purple-800 text-white"
                     }`}
                     onClick={() => handleToProcess()}
                     disabled={isCheckoutDisabled()}
@@ -944,7 +944,7 @@ const CartPage: React.FC = () => {
                         flatNo: e.target.value,
                       }))
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {addressFormErrors.flatNo && (
                     <p className="text-red-500 text-sm">
@@ -962,7 +962,7 @@ const CartPage: React.FC = () => {
                         landMark: e.target.value,
                       }))
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {addressFormErrors.landmark && (
                     <p className="text-red-500 text-sm">
@@ -980,7 +980,7 @@ const CartPage: React.FC = () => {
                         address: e.target.value,
                       }))
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {addressFormErrors.address && (
                     <p className="text-red-500 text-sm">
@@ -998,7 +998,7 @@ const CartPage: React.FC = () => {
                         pincode: e.target.value,
                       }))
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {addressFormErrors.pincode && (
                     <p className="text-red-500 text-sm">
@@ -1017,7 +1017,7 @@ const CartPage: React.FC = () => {
                           | "Others",
                       }))
                     }
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="Home">Home</option>
                     <option value="Work">Work</option>
