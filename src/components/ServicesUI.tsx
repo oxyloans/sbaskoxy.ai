@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import HM1 from "../assets/img/1.png";
+import HM1 from "../assets/img/ORDER RICE ONLINE.png";
 import HM2 from "../assets/img/Groceries.png";
 import HM3 from "../assets/img/Tickets.png";
 import HM4 from "../assets/img/Transportation.png";
@@ -10,36 +10,36 @@ import HM6 from "../assets/img/Food & Beverage.png";
 import HM7 from "../assets/img/games.png";
 import HM8 from "../assets/img/legal services.png";
 import HM9 from "../assets/img/Pets.png";
-import HM10 from "../assets/img/10.png";
-import HM11 from "../assets/img/11.png";
+import HM10 from "../assets/img/event-management-strategy (1).png";
+import HM11 from "../assets/img/Influencers gpt (1).png";
 import HM12 from "../assets/img/Transportation.png";
-import HM13 from "../assets/img/X2.png";
-import HM14 from "../assets/img/X3.png";
+import HM13 from "../assets/img/financial advisory (1).png";
+import HM14 from "../assets/img/loan services.png";
 import HM15 from "../assets/img/Health & Wellness.png";
 import HM16 from "../assets/img/X5.png";
-import HM17 from "../assets/img/X6.png";
-import HM18 from "../assets/img/X7.png";
+import HM17 from "../assets/img/Advertising service (2).png";
+import HM18 from "../assets/img/Marketing services (1).png";
 import HM19 from "../assets/img/X8.png";
 import HM20 from "../assets/img/creative services.png";
-import HM21 from "../assets/img/X10.png";
+import HM21 from "../assets/img/freelancer and consulting service.png";
 import HM22 from "../assets/img/X11.png";
-import HM23 from "../assets/img/X12.png";
-import HM24 from "../assets/img/X13.png";
-import HM25 from "../assets/img/X14.png";
-import HM26 from "../assets/img/X15.png";
-import HM27 from "../assets/img/X27.png";
-import HM28 from "../assets/img/X28.png";
-import HM29 from "../assets/img/X29.png";
-import HM30 from "../assets/img/X30.png";
-import HM31 from "../assets/img/X31.png";
+import HM23 from "../assets/img/freelancer and consulting service.png";
+import HM24 from "../assets/img/ca services.png";
+import HM25 from "../assets/img/whole sale service (1).png";
+import HM26 from "../assets/img/Education.png";
+import HM27 from "../assets/img/Beauty (1).png";
+import HM28 from "../assets/img/Professional Gpt service (1).png";
+import HM29 from "../assets/img/Advertising service (2).png";
+import HM30 from "../assets/img/Marketing services (1).png";
+import HM31 from "../assets/img/Management service gpt (1).png";
 import HM32 from "../assets/img/Home Services.png";
 import HM33 from "../assets/img/Automotive.png";
-import HM34 from "../assets/img/X34.png";
-import HM35 from "../assets/img/X35.png";
-import HM36 from "../assets/img/X36.png";
-import HM37 from "../assets/img/X37.png";
+import HM34 from "../assets/img/realestate gpt (1).png";
+import HM35 from "../assets/img/Technical service (1).png";
+import HM36 from "../assets/img/Street wear gpt.png";
+import HM37 from "../assets/img/travell planner ai insurai.png";
 import HM38 from "../assets/img/X38.png";
-import HM39 from "../assets/img/X39.png";
+import HM39 from "../assets/img/Influencers gpt (1).png";
 import HM40 from "../assets/img/Shopping.png";
 import "./ServicesUi.css";
 
@@ -427,13 +427,13 @@ const HorizontalScrollGallery: React.FC = () => {
     <div className="relative bg-white min-h-screen">
       {/* Search Bar */}
       <div
-        className="search-container "
+        className="search-container flex flex-col items-center justify-center"
         style={{
           background:
             "radial-gradient(60% 100% at 50% 30%, color(display-p3 1 1 1) 55.89%, color(display-p3 1 1 1 / 0) 100%)",
         }}
       >
-        <h1 className="logo-heading font-bold mb-8 text-center text-3xl md:text-4xl">
+        <h1 className="logo-heading font-bold text-center text-3xl md:text-4xl">
           <span className="text-blue-900">ASK</span>
           <span className="text-blue-900">OXY</span>
           <span className="text-yellow-600">.AI</span>
@@ -484,14 +484,27 @@ const HorizontalScrollGallery: React.FC = () => {
       </div>
 
       {/* Scrolling Images Section */}
-      <div className="relative py-[104px] overflow-hidden">
+      <div className="relative  overflow-hidden">
         <div className="flex flex-col gap-4">
           {imageRows.map((rowImages, rowIndex) => (
-            <div key={rowIndex} className="relative overflow-hidden">
+            <div
+              key={rowIndex}
+              className="relative overflow-hidden"
+              onMouseEnter={(e) =>
+                e.currentTarget
+                  .querySelector(".scroll-animation")
+                  ?.classList.add("paused")
+              }
+              onMouseLeave={(e) =>
+                e.currentTarget
+                  .querySelector(".scroll-animation")
+                  ?.classList.remove("paused")
+              }
+            >
               <div
-                className={`flex space-x-4 w-max animate-infinite-scroll`}
+                className={`flex space-x-4 w-max animate-infinite-scroll scroll-animation`}
                 style={{
-                  animationDuration: `${rowIndex % 2 === 0 ? "100s" : "130s"}`,
+                  animationDuration: `${rowIndex % 2 === 0 ? "190s" : "240s"}`,
                   animationDirection: `${
                     rowIndex % 2 === 0 ? "normal" : "reverse"
                   }`,
@@ -506,7 +519,7 @@ const HorizontalScrollGallery: React.FC = () => {
                     <img
                       src={image.src}
                       alt={image.alt}
-                      className="w-[200px] h-[200px] object-cover rounded-lg"
+                      className="w-[180px] h-[180px]  rounded-lg"
                     />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity px-2">
                       <span className="text-white bg-black bg-opacity-50 px-3 py-1 rounded-lg text-sm font-semibold text-center break-words max-w-full">
@@ -545,7 +558,6 @@ const HorizontalScrollGallery: React.FC = () => {
       )}
     </div>
   );
-
 };
 
 export default HorizontalScrollGallery;

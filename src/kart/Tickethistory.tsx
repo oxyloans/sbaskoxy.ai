@@ -272,7 +272,7 @@ const TicketHistoryPage: React.FC = () => {
                           {selectedStatus !== "PENDING" && (
                             <div className="space-y-1">
                               <p className="text-sm font-medium text-gray-500">
-                                {selectedStatus === "CANCELLED" ? "Cancellation Reason" : "Resolution"}
+                                {selectedStatus === "CANCELLED" ? "Cancellation Reason" : "Admin Comments"}
                               </p>
                               <p className="font-medium">{ticket.comments}</p>
                               <p className="text-sm text-gray-500">{ticket.date}</p>

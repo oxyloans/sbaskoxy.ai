@@ -42,6 +42,8 @@ interface OrderDetailsResponse {
   subTotal: number | null;
   grandTotal: number;
   walletAmount: number;
+  discount:number;
+  gstAmount: number;
   deliveryFee: number;
   paymentType: number;
   orderDate: string;
@@ -402,8 +404,17 @@ const MyOrders: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Wallet Amount</span>
-                      <span>₹{selectedOrder.walletAmount}</span>
+                      <span>₹{selectedOrder.walletAmount || 0}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span>Coupon</span>
+                      <span>₹{selectedOrder.discount || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>GST Charges</span>
+                      <span>₹{selectedOrder.gstAmount || 0}</span>
+                    </div>
+                    
                     <div className="flex justify-between">
                       <span>Payment Method</span>
                       <span>{selectedOrder.paymentType === 2 ? "Online" : "COD"}</span>

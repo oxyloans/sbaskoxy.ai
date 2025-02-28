@@ -11,33 +11,34 @@ import FreeGPTs from './FreeGPTs';
 import BMVCoinPromo from './BMVCoinPromo';
 import OXYGroupCompanies from './OXYGroupCompanies';
 import Footer from './Footer';
+import OurPeople from './OurTeam';
+import PdfPages from './Presentation';
 
 // You can customize the styling based on your project's requirements
 const Landingpage: React.FC = () => {
   return (
     <>
       {/* Hero Section */}
-      <section>
+     
     <Header/>
-      </section>
+     
 
       {/* Info Section */}
-      <section>
-       <HorizontalScrollGallery/>
-      </section>
-      <section>
+      
+      
+     <section> <HorizontalScrollGallery/></section>
+     <section className='mt-0'>
         <ServicesSlider />
+        </section>
         
-      </section>
-      <section>
-        <FreeGPTs />
-      </section>
-      <section>
-        <BMVCoinPromo />
-      </section>
-      <section>
+      <FreeGPTs />
+      <OurPeople/>
+     
+      <BMVCoinPromo />
+      <PdfPages/>
+     
         <OXYGroupCompanies />
-      </section>
+    
 
       {/* Products Section */}
       {/* <section>
@@ -50,14 +51,11 @@ const Landingpage: React.FC = () => {
       </section> */}
 
       {/* Footer Section */}
-      <footer>
+     
         <Footer />
-      </footer>
+      
 
-      {/* Example of how to integrate the search icon (you can place it wherever appropriate) */}
-      {/* <div style={{ position: 'fixed', bottom: '20px', right: '20px', backgroundColor: '#fff', padding: '10px', borderRadius: '50%', boxShadow: '0 4px 8px rgba(0,0,0,0.2)' }}>
-        <FaSearch size={24} />
-      </div> */}
+      
     </>
   );
 };

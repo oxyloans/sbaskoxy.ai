@@ -1,85 +1,140 @@
-/* Header styles */
+/* Header Styles */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 11px 22px; /* Increased padding for a more spacious feel */
+  padding: 12px 20px;
   background-color: #ffffff;
-  color: #2d2d2d; /* Darker text for better contrast */
-  box-shadow: 0 6px 64px rgba(0, 0, 0, 0.1); /* Slightly stronger shadow for a more polished look */
+  color: #2d2d2d;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  font-family: 'Roboto', sans-serif; /* Professional font */
+  font-family: 'Roboto', sans-serif;
+  height: 70px;
+  width: 100%;
 }
 
+/* Push page content below the fixed header */
+.main-content {
+  padding-top: 90px;
+}
+
+/* Logo Styles */
 .logo img {
-  width: 130px; /* A more balanced logo size */
+  width: 120px;
   height: auto;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease-in-out;
 }
 
-.logo img:hover {
-  transform: scale(1.2); /* Slight zoom on hover */
-}
 
+
+/* Header Actions */
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 20px; /* Added gap between icons and buttons */
+  gap: 20px;
 }
 
+/* Cart Icon */
 .cart-icon {
-  font-size: 1.75rem; /* Larger size for more emphasis */
+  font-size: 1.8rem;
   cursor: pointer;
   transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .cart-icon:hover {
-  transform: scale(1.15); /* Hover effect with scaling */
-  color: #3d5afe; /* Subtle color change on hover */
+  transform: scale(1.15);
+  color: #3d5afe;
 }
 
+/* Sign-in Button */
 .sign-in-btn {
   padding: 10px 24px;
-  background-color: #351664; /* Primary blue color */
+  background-color: #351664;
   color: #ffffff;
   border: none;
-  border-radius: 30px; /* More rounded button edges */
-  font-size: 1.1rem; /* Slightly larger text */
-  font-weight: 500; /* Added font weight for boldness */
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .sign-in-btn:hover {
-  background-color: #351662; /* Orange hover effect */
-  transform: translateY(-3px); /* Lift effect */
+  background-color: #2a0d52;
+  transform: translateY(-3px);
 }
 
 .sign-in-btn:focus {
-  outline: none; /* Remove default outline */
-  box-shadow: 0 0 0 3px rgba(255, 128, 0, 0.5); /* Focus ring for accessibility */
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 128, 0, 0.5);
 }
 
-/* Additional styling for the page content */
-body {
-  margin-top: 80px; /* Adjust space for the larger header */
+/* Media Queries for Responsive Design */
+@media (max-width: 1024px) {
+  .header {
+    padding: 10px 18px;
+    height: 65px;
+  }
+
+  .logo img {
+    width: 110px;
+  }
+
+  .cart-icon {
+    font-size: 1.6rem;
+  }
+
+  .sign-in-btn {
+    font-size: 1rem;
+    padding: 8px 20px;
+  }
 }
 
-/* Media Queries */
 @media (max-width: 768px) {
   .header {
-    padding: 12px 16px; /* Less padding on smaller screens */
+    padding: 8px 15px;
+    height: 60px;
   }
-  
+
+  .logo img {
+    width: 100px;
+  }
+
   .cart-icon {
-    font-size: 1.5rem; /* Smaller cart icon on mobile */
+    font-size: 1.4rem;
   }
-  
+
   .sign-in-btn {
-    font-size: 1rem; /* Adjust button text size */
+    font-size: 0.95rem;
+    padding: 8px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 8px 12px;
+    height: 55px;
+  }
+
+  .logo img {
+    width: 90px;
+  }
+
+  .cart-icon {
+    font-size: 1.3rem;
+  }
+
+  .sign-in-btn {
+    font-size: 0.9rem;
+    padding: 7px 16px;
+    border-radius: 20px;
+  }
+
+  .header-actions {
+    gap: 15px;
   }
 }

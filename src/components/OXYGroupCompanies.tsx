@@ -47,7 +47,7 @@ const OXYGroupCompanies = () => {
   const settings = {
     dots: true,
     infinite: true,
-    speed: 800,
+    speed: 900,
     slidesToShow: 3,
     slidesToScroll: 1,
     autoplay: true,
@@ -73,7 +73,7 @@ const OXYGroupCompanies = () => {
   };
 
   return (
-    <section className="py-10 px-6 bg-gradient-to-b from-white to-white text-center">
+    <section className="py-16 px-6 bg-gradient-to-b from-gray-50 to-gray-50 text-center">
       {/* Gradient Colored Heading */}
       <h3 className="text-2xl font-extrabold mb-10">
         <span className="text-blue-800">OXY</span>{" "}
@@ -81,7 +81,7 @@ const OXYGroupCompanies = () => {
         <span className="text-gray-800">COMPANIES</span>
       </h3>
 
-      <div className="max-w-7xl mx-auto relative">
+      <div className="max-w-6xl mx-auto relative">
         <Slider {...settings}>
           {companies.map((company, index) => (
             <div key={index} className="flex flex-col items-center px-4">

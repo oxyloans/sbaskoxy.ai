@@ -460,11 +460,12 @@ const CheckoutPage: React.FC = () => {
                 orderStatus: selectedPayment,
                 pincode: selectedAddress.pincode,
                 walletAmount: usedWalletAmount,  // ✅ Send only the used wallet amount
-                couponCodeUsed: coupenApplied ? couponCode : null,
+                couponCodeUsed: coupenApplied ? couponCode.toUpperCase() : null,
                 couponCodeValue: coupenApplied ? coupenDetails : 0,
                 deliveryBoyFee,
                 amount: grandTotalAmount,
                 subTotal: grandTotal,
+                gstAmount:subGst,
             },
             {
                 headers: { Authorization: `Bearer ${token}` },
@@ -475,11 +476,11 @@ const CheckoutPage: React.FC = () => {
 
         if (response.status === 200 && response.data) {
             if (response.data.status) {
-                Modal.error({
-                    title: "Error",
+                Modal.success({
+                    title: "Success",
                     content: response.data.status,
                     okText: "Ok",
-                    onOk: () => navigate("/main/mycart"),
+                    onOk: () => navigate("/main/myorders"),
                 });
                 return;
             }
@@ -652,10 +653,10 @@ const CheckoutPage: React.FC = () => {
             console.log(data.paymentStatus);
             if (
               data.paymentStatus == "SUCCESS" ||
-              data.paymentStatus == "FAILURE"
+              data.paymentStatus == "FAILED"
             ) {
               // clearInterval(intervalId); 294182409
-              if (data.paymentStatus === "FAILURE") {
+              if (data.paymentStatus === "FAILED") {
                 const add = sessionStorage.getItem("address");
                 
                 if (add) {
@@ -709,10 +710,10 @@ const CheckoutPage: React.FC = () => {
                                         },
                                       })
                                     }else{
-                                      Modal.error({
+                                      Modal.success({
                                         content: secondResponse.data.status,
                                         onOk: () => {
-                                          navigate("/main/mycart");
+                                          navigate("/main/myorders");
                                           fetchCartData();
                                         },
                                       })
@@ -811,7 +812,7 @@ const CheckoutPage: React.FC = () => {
                       <div className="flex gap-3">
                         <input
                           type="text"
-                          value={couponCode}
+                          value={couponCode.toUpperCase()}
                           onChange={(e) => setCouponCode(e.target.value)}
                           placeholder="Enter coupon code"
                           className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
