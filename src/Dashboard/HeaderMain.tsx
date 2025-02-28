@@ -1,5 +1,4 @@
-// Header.tsx
-import React, { useEffect, useState,useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { ShoppingCart, UserCircle } from "lucide-react";
 import { FaBars, FaSearch, FaTimes } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -8,12 +7,23 @@ import AskOxyLogo from "../assets/img/askoxylogostatic.png";
 import { CartContext } from "../until/CartContext";
 import axios from "axios";
 
-
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface HeaderProps {
   cartCount: number;
   IsMobile5: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+interface Product {
+  id: string;
+  item_name: string;
+  brand: string;
+  category_name: string;
+  description: string;
+  rate: number;
+  weight: number;
+  weight_unit: string;
+  image_type: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -22,8 +32,8 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  // const [cartCount, setCartCount] = useState(propCartCount);
   const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [currentSearchIndex, setCurrentSearchIndex] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
   const [activeButton, setActiveButton] = useState<"profile" | "cart" | null>(
@@ -33,6 +43,8 @@ const Header: React.FC<HeaderProps> = ({
   const [searchPlaceholder, setSearchPlaceholder] = useState("");
   const [showValidationPopup, setShowValidationPopup] = useState(false);
   const [isToggled, setIsToggled] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  
   const toggleSidebar = () => {
     IsMobile5((prev: boolean) => !prev);
   };
@@ -57,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({
     throw new Error("CartDisplay must be used within a CartProvider");
   }
 
-  const { count,setCount } = context;
+  const { count, setCount } = context;
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -100,10 +112,10 @@ const Header: React.FC<HeaderProps> = ({
       const parsedData = JSON.parse(profileData);
       console.log("parsedData", parsedData);
       return !!(
-        parsedData.userFirstName &&  parsedData.userFirstName != "" &&
-        parsedData.userLastName &&   parsedData.userLastName != "" &&
-        parsedData.customerEmail && parsedData.customerEmail != ""&&
-        parsedData.alterMobileNumber && parsedData.alterMobileNumber !=""
+        parsedData.userFirstName && parsedData.userFirstName != "" &&
+        parsedData.userLastName && parsedData.userLastName != "" &&
+        parsedData.customerEmail && parsedData.customerEmail != "" &&
+        parsedData.alterMobileNumber && parsedData.alterMobileNumber != ""
       );
     }
     return false;
@@ -122,11 +134,63 @@ const Header: React.FC<HeaderProps> = ({
     handleNavigation("/main/profile");
   };
 
+  // Search API integration
+  const searchProducts = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
 
+    setIsSearching(true);
+    try {
+      const mobileNumber = localStorage.getItem("mobileNumber") || "";
+      
+      const response = await axios.get(
+        `${BASE_URL}/product-service/search`, {
+          params: {
+            page: 0,
+            size: 10,
+            itemName: query,
+            mobileNumber: mobileNumber
+          },
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }
+      );
+      
+      if (response.data && response.data.products) {
+        setSearchResults(response.data.products);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error searching products:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
+  // Add debounce function for search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchValue) {
+        searchProducts(searchValue);
+      } else {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchValue]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchValue(e.target.value);
+  };
+
+  const handleProductClick = (productId: string) => {
+    setSearchValue("");
+    setIsFocused(false);
+    navigate(`/main/product/${productId}`);
   };
 
   const toggleSearch = () => {
@@ -141,7 +205,51 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const renderSearchBar = () => (
+  const renderSearchResults = () => {
+    if (searchResults.length === 0 && searchValue && !isSearching) {
+      return (
+        <div className="p-4 text-gray-500 text-center">
+          No products found matching "{searchValue}"
+        </div>
+      );
+    }
+
+    return searchResults.map((product) => (
+      <button
+        key={product.id}
+        className="w-full px-4 py-2 text-left hover:bg-purple-50 flex items-center space-x-3 
+        transition-colors duration-200 hover:text-purple-600 border-b border-gray-100 last:border-0"
+        onClick={() => handleProductClick(product.id)}
+      >
+        {product.image_type ? (
+          <img 
+            src={product.image_type} 
+            alt={product.item_name} 
+            className="w-10 h-10 object-cover rounded-md"
+          />
+        ) : (
+          <div className="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center">
+            <FaSearch className="text-gray-400 text-xs" />
+          </div>
+        )}
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">{product.item_name}</span>
+          <div className="flex items-center text-xs text-gray-500 mt-1">
+            <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full mr-2">
+              ₹{product.rate}
+            </span>
+            {product.weight && (
+              <span className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-full">
+                {product.weight} {product.weight_unit || 'kg'}
+              </span>
+            )}
+          </div>
+        </div>
+      </button>
+    ));
+  };
+
+  const renderSearchBox = () => (
     <div className="relative w-full group">
       <input
         type="text"
@@ -166,36 +274,40 @@ const Header: React.FC<HeaderProps> = ({
           </button>
         )}
         <FaSearch
-          className="text-gray-400 ml-2 text-base
-        group-focus-within:text-purple-500 
-        hover:text-purple-500 hover:scale-110 transition-all duration-200"
+          className={`ml-2 text-base transition-all duration-200
+          ${isSearching 
+            ? 'text-purple-500 animate-pulse' 
+            : 'text-gray-400 group-focus-within:text-purple-500 hover:text-purple-500 hover:scale-110'}`}
         />
       </div>
 
       {(isFocused || searchValue) && (
-        <div
-          className="absolute w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 
-        animate-dropdown max-h-64 overflow-y-auto"
-        >
-          {searchTexts
-            .filter((text) =>
-              text.toLowerCase().includes(searchValue.toLowerCase())
+        <div className="absolute w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 
+          animate-dropdown max-h-64 overflow-y-auto">
+          {isSearching ? (
+            <div className="flex justify-center items-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-700"></div>
+              <span className="ml-2 text-sm text-gray-600">Searching...</span>
+            </div>
+          ) : (
+            searchValue ? renderSearchResults() : (
+              searchTexts.map((text, index) => (
+                <button
+                  key={index}
+                  className="w-full px-4 py-2 text-left 
+                  hover:bg-purple-50 flex items-center space-x-2 
+                  transition-colors duration-200 hover:text-purple-600"
+                  onClick={() => {
+                    setSearchValue(text);
+                    searchProducts(text);
+                  }}
+                >
+                  <FaSearch className="text-gray-400 text-xs" />
+                  <span className="text-sm">{text}</span>
+                </button>
+              ))
             )
-            .map((text, index) => (
-              <button
-                key={index}
-                className="w-full px-4 py-2 text-left 
-                hover:bg-purple-50 flex items-center space-x-2 
-                transition-colors duration-200 hover:text-purple-600"
-                onClick={() => {
-                  setSearchValue(text);
-                  setIsFocused(false);
-                }}
-              >
-                <FaSearch className="text-gray-400 text-xs" />
-                <span className="text-sm">{text}</span>
-              </button>
-            ))}
+          )}
         </div>
       )}
     </div>
@@ -230,7 +342,7 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Middle Section: Search Bar (visible only on desktop) */}
             <div className="hidden sm:block flex-grow mx-4">
-              {renderSearchBar()}
+              {renderSearchBox()}
             </div>
 
             {/* Right Section: Search Icon (visible only on mobile) */}
@@ -244,7 +356,7 @@ const Header: React.FC<HeaderProps> = ({
                 </button>
               ) : (
                 <div className="absolute left-0 right-0 top-0 bg-white p-2 h-14 flex items-center z-50">
-                  <div className="flex-grow mx-2">{renderSearchBar()}</div>
+                  <div className="flex-grow mx-2">{renderSearchBox()}</div>
                   <button
                     onClick={toggleSearch}
                     className="p-2 text-gray-600 hover:text-red-500"
