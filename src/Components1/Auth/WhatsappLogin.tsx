@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import PhoneInput, { isValidPhoneNumber,getCountryCallingCode,parsePhoneNumber, PhoneNumber  } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import {
   X,
@@ -13,6 +13,9 @@ import {
   MessageCircle,
   ArrowRight,
   RefreshCcw,
+  CheckCircle2,
+  Smartphone,
+  ShieldCheck,
 } from "lucide-react";
 
 const WhatsappLogin = () => {
@@ -25,8 +28,9 @@ const WhatsappLogin = () => {
   });
   const otpRefs = useRef<HTMLInputElement[]>([]);
   const [phoneNumber, setPhoneNumber] = useState<string | undefined>();
-  const [otpMethod, setOtpMethod] = useState<"whatsapp" | "sms">("whatsapp");
+  const [otpMethod, setOtpMethod] = useState<"whatsapp" | "mobile">("whatsapp");
   const [error, setError] = useState<string>("");
+  const [countryCode, setCountryCode] = useState<string>("91"); // Default to India
   const [otpError, setOtpError] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [otpSession, setOtpSession] = useState<string | null>(null);
@@ -37,6 +41,9 @@ const WhatsappLogin = () => {
   const [resendTimer, setResendTimer] = useState(30);
   const [isClosing, setIsClosing] = useState(false);
   const [isPhoneDisabled, setIsPhoneDisabled] = useState(false);
+  const [animateOtp, setAnimateOtp] = useState(false);
+  const [isMethodDisabled, setIsMethodDisabled] = useState(false);
+  const [changeNumberClicked, setChangeNumberClicked] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -62,6 +69,25 @@ const WhatsappLogin = () => {
       return () => clearInterval(timer);
     }
   }, [resendDisabled]);
+
+  // Extract country code from phone number
+  useEffect(() => {
+    if (phoneNumber) {
+      // Extract country code without the + sign
+      const code = phoneNumber.split(' ')[0].replace('+', '');
+      const phoneNumberS = parsePhoneNumber(phoneNumber)
+      // console.log("phoneNumberS", phoneNumberS);
+      console.log("phoneNumberS.country", phoneNumberS?.countryCallingCode);
+      const countryCode =`+${phoneNumberS?.countryCallingCode}`;
+      setCountryCode(countryCode 
+        ||
+         ""
+      );
+      setIsMethodDisabled(true); // Disable method selection when number is entered
+    } else {
+      setIsMethodDisabled(false); // Enable method selection when number is empty
+    }
+  }, [phoneNumber]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -95,24 +121,52 @@ const WhatsappLogin = () => {
     const pastedData = e.clipboardData
       .getData("text")
       .replace(/[^0-9]/g, "")
-      .slice(0, 4);
-    const newOtp = [...credentials.otp];
-    pastedData.split("").forEach((char, index) => {
-      if (index < 4) newOtp[index] = char;
-    });
-    setCredentials((prev) => ({
-      otp: otpMethod === "whatsapp" ? newOtp : prev.otp,
-      mobileOTP: otpMethod === "sms" ? newOtp : prev.mobileOTP,
-    }));
+      .slice(0, otpMethod === "whatsapp" ? 4 : 6);
+    
+    if (otpMethod === "whatsapp") {
+      const newOtp = [...credentials.otp];
+      pastedData.split("").forEach((char, index) => {
+        if (index < 4) newOtp[index] = char;
+      });
+      setCredentials((prev) => ({
+        ...prev,
+        otp: newOtp
+      }));
+    } else {
+      const newMobileOtp = [...credentials.mobileOTP];
+      pastedData.split("").forEach((char, index) => {
+        if (index < 6) newMobileOtp[index] = char;
+      });
+      setCredentials((prev) => ({
+        ...prev,
+        mobileOTP: newMobileOtp
+      }));
+    }
   };
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
     index: number
   ) => {
-    if (e.key === "Backspace" && !credentials.otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
+    if (e.key === "Backspace") {
+      if (otpMethod === "whatsapp") {
+        if (!credentials.otp[index] && index > 0) {
+          otpRefs.current[index - 1]?.focus();
+        }
+      } else {
+        if (!credentials.mobileOTP[index] && index > 0) {
+          otpRefs.current[index - 1]?.focus();
+        }
+      }
     }
+  };
+
+  // Extract phone number without country code
+  const extractPhoneWithoutCode = (phone: string) => {
+    if (!phone) return "";
+    // Remove the country code part (format is usually +XX XXXXXXXXXX)
+    const parts = phone.split(' ');
+    return parts.length > 1 ? parts.slice(1).join('') : phone;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -122,25 +176,27 @@ const WhatsappLogin = () => {
     setIsLoading(true);
 
     if (!phoneNumber || !isValidPhoneNumber(phoneNumber)) {
-      setError("Please enter a valid WhatsApp number with country code");
+      setError("Please enter a valid number with country code");
       setIsLoading(false);
       return;
     }
     localStorage.setItem("whatsappNumber", phoneNumber);
 
     try {
+      // Extract phone number without country code
+      const phoneWithoutCode = extractPhoneWithoutCode(phoneNumber);
+      
       const requestBody: Record<string, any> = {
-        registrationType: otpMethod, // Uses "whatsapp" or "sms"
+        registrationType: otpMethod, // Uses "whatsapp" or "mobile"
         userType: "Login",
+        countryCode // Just pass the country code number (e.g., "91" for India)
       };
 
       // Assign the correct number field based on user selection
       if (otpMethod === "whatsapp") {
-        requestBody.whatsappNumber = phoneNumber;
+        requestBody.whatsappNumber = phoneWithoutCode.replace(countryCode, '');
       } else {
-        requestBody.mobileNumber = phoneNumber?.startsWith("+91")
-          ? phoneNumber
-          : `+91${phoneNumber}`?.replace("+91", ""); // Remove country code for SMS
+        requestBody.mobileNumber = phoneWithoutCode.replace(countryCode, '');
       }
 
       const response = await axios.post(
@@ -156,21 +212,21 @@ const WhatsappLogin = () => {
         localStorage.setItem("salt", response.data.salt);
         localStorage.setItem("expiryTime", response.data.otpGeneratedTime);
 
-        if (response.data.userId !== null) {
+        if (response.data.userId === null && response.data.userId === undefined && response.data.mobileOtpSession === null && response.data.mobileOtpSession === undefined) {
           setShowSuccessPopup(true);
-          localStorage.setItem("userId", response.data.userId);
-          localStorage.setItem("accessToken", response.data.accessToken);
-          setTimeout(
-            () => navigate(location.state?.from || "/main/dashboard/products"),
-            2000
-          );
+          setMessage("This number is not registered. Please register now.")
+          setTimeout(() => navigate("/whatsappregister"), 1000);
         } else {
           setOtpShow(true);
+          setAnimateOtp(true);
+          setTimeout(() => setAnimateOtp(false), 1000);
           setShowSuccessPopup(true);
-          setMessage("OTP sent successfully to your WhatsApp number");
+          setMessage(`OTP sent successfully to your ${otpMethod === "whatsapp" ? "WhatsApp" : "mobile"} number`);
           setResendDisabled(true);
           setIsPhoneDisabled(true);
           setResendTimer(30);
+          // Reset change number clicked state
+          setChangeNumberClicked(false);
           setTimeout(() => {
             setShowSuccessPopup(false);
             setMessage("");
@@ -178,7 +234,8 @@ const WhatsappLogin = () => {
         }
       }
     } catch (err) {
-      setError("This number is not registered. Please register now.");
+      setError("An error occurred. Please try again.");
+      // setTimeout(() => navigate("/whatsappregister"), 1000);
     } finally {
       setIsLoading(false);
     }
@@ -198,20 +255,12 @@ const WhatsappLogin = () => {
 
     if (otpMethod === "whatsapp") {
       if (credentials.otp.join("").length !== 4) {
-        console.log(
-          "WhatsApp OTP Submitted:",
-          credentials.otp.join("").length === 4
-        );
         setOtpError("Please enter the complete WhatsApp OTP");
         setIsLoading(false);
         return;
       }
-    } else if (otpMethod === "sms") {
+    } else if (otpMethod === "mobile") {
       if (credentials.mobileOTP.join("").length !== 6) {
-        console.log(
-          "Mobile OTP Submitted:",
-          credentials.mobileOTP.join("").length === 6
-        );
         setOtpError("Please enter the complete Mobile OTP");
         setIsLoading(false);
         return;
@@ -219,22 +268,27 @@ const WhatsappLogin = () => {
     }
 
     try {
+      // Extract phone number without country code
+      const phoneWithoutCode = extractPhoneWithoutCode(phoneNumber || "");
+      
       const requestBody: Record<string, any> = {
         registrationType: otpMethod,
         userType: "Login",
+        countryCode // Just pass the country code number (e.g., "91" for India)
       };
 
       if (otpMethod === "whatsapp") {
-        requestBody.whatsappNumber = phoneNumber;
+        requestBody.whatsappNumber = phoneWithoutCode.replace(countryCode, '');
         requestBody.whatsappOtpSession =
           localStorage.getItem("mobileOtpSession");
         requestBody.whatsappOtpValue = credentials.otp.join("");
         requestBody.salt = localStorage.getItem("salt");
         requestBody.expiryTime = localStorage.getItem("expiryTime");
       } else {
-        requestBody.mobileNumber = phoneNumber
+        requestBody.mobileNumber = phoneWithoutCode.replace(countryCode, '');
         requestBody.mobileOtpSession = localStorage.getItem("mobileOtpSession");
         requestBody.mobileOtpValue = credentials.mobileOTP.join("");
+        requestBody.salt = localStorage.getItem("salt");
         requestBody.expiryTime = localStorage.getItem("expiryTime");
       }
 
@@ -272,17 +326,19 @@ const WhatsappLogin = () => {
       setOtpError("");
 
       try {
+        // Extract phone number without country code
+        const phoneWithoutCode = extractPhoneWithoutCode(phoneNumber || "");
+        
         const requestBody: Record<string, any> = {
           registrationType: otpMethod,
           userType: "Login",
+          countryCode // Just pass the country code number (e.g., "91" for India)
         };
 
         if (otpMethod === "whatsapp") {
-          requestBody.whatsappNumber = phoneNumber;
+          requestBody.whatsappNumber = phoneWithoutCode.replace(countryCode, '');
         } else {
-          requestBody.mobileNumber = phoneNumber?.startsWith("+91")
-            ? phoneNumber
-            : `+91${phoneNumber}`?.replace("+91", ""); // Remove country code for SMS
+          requestBody.mobileNumber = phoneWithoutCode.replace(countryCode, '');
         }
 
         const response = await axios.post(
@@ -298,12 +354,12 @@ const WhatsappLogin = () => {
           localStorage.setItem("expiryTime", response.data.otpGeneratedTime);
 
           setShowSuccessPopup(true);
-          setMessage("OTP resent successfully to your WhatsApp number");
+          setMessage(`OTP resent successfully to your ${otpMethod === "whatsapp" ? "WhatsApp" : "mobile"} number`);
           // Clear existing OTP
           setCredentials((prev) => ({
             otp: otpMethod === "whatsapp" ? ["", "", "", ""] : prev.otp,
             mobileOTP:
-              otpMethod === "sms" ? ["", "", "", "", "", ""] : prev.mobileOTP,
+              otpMethod === "mobile" ? ["", "", "", "", "", ""] : prev.mobileOTP,
           }));
           setTimeout(() => {
             setShowSuccessPopup(false);
@@ -318,20 +374,55 @@ const WhatsappLogin = () => {
     }
   };
 
+  // Phone input change handler that extracts country code
+  const handlePhoneChange = (value: string | undefined) => {
+    setPhoneNumber(value);
+    if (value) {
+      // Extract only the country code number without the + sign
+      const code = value.split(' ')[0].replace('+', '');
+      setCountryCode(code);
+    }
+  };
+
+  // Method for switching OTP method
+  const switchOtpMethod = (method: "whatsapp" | "mobile") => {
+    if (!isPhoneDisabled && !isMethodDisabled) { // Only allow switching when not in OTP verification mode and no phone number entered
+      setOtpMethod(method);
+    }
+  };
+
+  // Handle change number button click
+  const handleChangeNumber = () => {
+    setOtpShow(false);
+    setIsPhoneDisabled(false);
+    setIsButtonEnabled(false);
+    setPhoneNumber(undefined); // Clear the phone number
+    setError("");
+    setOtpError("");
+    setIsMethodDisabled(false); // Re-enable method selection
+    setChangeNumberClicked(true); // Mark as clicked once
+    
+    // Reset OTP fields
+    setCredentials({
+      otp: ["", "", "", ""],
+      mobileOTP: ["", "", "", "", "", ""],
+    });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div
-        className={`max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 ${
+        className={`max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
           isClosing ? "opacity-0 scale-95" : "opacity-100 scale-100"
         }`}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 relative">
+        <div className="bg-purple-600 p-6 relative">
           <button
             onClick={handleClose}
-            className="absolute right-4 top-4 p-2 rounded-full hover:bg-white/20 transition-colors"
+            className="absolute right-4 top-4 p-2 rounded-full hover:bg-white/20 transition-colors text-white/80 hover:text-white"
           >
-            <X className="w-5 h-5 text-white" />
+            <X className="w-5 h-5" />
           </button>
           <div className="flex flex-col items-center gap-3">
             <h2 className="text-2xl font-bold text-white text-center">
@@ -343,8 +434,8 @@ const WhatsappLogin = () => {
         {/* Success Message */}
         {showSuccessPopup && (
           <div className="mx-6 mt-6 animate-fadeIn">
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
-              <Send className="w-5 h-5" />
+            <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
               {message}
             </div>
           </div>
@@ -357,37 +448,40 @@ const WhatsappLogin = () => {
             className="space-y-6"
           >
             {/* OTP Method Selection UI */}
-            {!showOtp && !phoneNumber && (
-              <div className="flex flex-col items-center gap-4 p-4">
-                <h2 className="text-lg font-semibold">Choose Login Method</h2>
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    className={`px-4 py-2 rounded-lg ${
-                      otpMethod === "whatsapp"
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200"
-                    }`}
-                    onClick={() => setOtpMethod("whatsapp")}
-                  >
-                    Login via WhatsApp
-                  </button>
-                  <button
-                    type="button"
-                    className={`px-4 py-2 rounded-lg ${
-                      otpMethod === "sms"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200"
-                    }`}
-                    onClick={() => setOtpMethod("sms")}
-                  >
-                    Login via SMS
-                  </button>
-                </div>
+            <div className="flex flex-col items-center gap-4 p-4 border-b border-gray-100 pb-6">
+              <h2 className="text-lg font-semibold text-gray-800">Login Method</h2>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                    otpMethod === "whatsapp"
+                      ? "bg-green-500 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  } ${isPhoneDisabled || isMethodDisabled ? "opacity-70 cursor-not-allowed" : ""}`}
+                  onClick={() => switchOtpMethod("whatsapp")}
+                  disabled={isPhoneDisabled || isMethodDisabled}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  WhatsApp
+                </button>
+                <button
+                  type="button"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                    otpMethod === "mobile"
+                      ? "bg-purple-600 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  } ${isPhoneDisabled || isMethodDisabled ? "opacity-70 cursor-not-allowed" : ""}`}
+                  onClick={() => switchOtpMethod("mobile")}
+                  disabled={isPhoneDisabled || isMethodDisabled}
+                >
+                  <Smartphone className="w-5 h-5" />
+                  SMS
+                </button>
               </div>
-            )}
+            </div>
+
             <div className="relative w-full">
-              <label className="relative left-4 -top-2 text-gray-500 text-sm">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 {otpMethod === "whatsapp" ? "WhatsApp Number" : "Mobile Number"}{" "}
                 <span className="text-red-500">*</span>
               </label>
@@ -397,10 +491,10 @@ const WhatsappLogin = () => {
                   value={phoneNumber}
                   onChange={setPhoneNumber}
                   defaultCountry="IN"
-                  disabled={isPhoneDisabled} // Disable input only during OTP verification
-                  international={otpMethod === "whatsapp"} // Allow country change for WhatsApp
-                  countrySelectProps={{ disabled: otpMethod === "sms" }} // Disable country selection for SMS
-                  className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&.PhoneInputInput]:outline-none [&.PhoneInputInput]:border-none"
+                  disabled={isPhoneDisabled}
+                  international={otpMethod === "whatsapp"}
+                  countrySelectProps={{ disabled: otpMethod === "mobile" }}
+                  className="w-full p-3 bg-white shadow-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-gray-800 placeholder-gray-400 [&>*]:outline-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:border-none PhoneInput"
                   maxLength={15}
                   placeholder="Enter your number"
                   style={
@@ -422,9 +516,9 @@ const WhatsappLogin = () => {
 
             {/* OTP Input */}
             {showOtp && (
-              <div className="space-y-4 animate-fadeIn">
+              <div className={`space-y-4 ${animateOtp ? 'animate-fadeIn' : ''}`}>
                 <label className="block text-sm font-medium text-gray-700">
-                  Enter OTP
+                  Enter {otpMethod === "whatsapp" ? "4-digit WhatsApp" : "6-digit SMS"} OTP
                 </label>
                 <div className="flex justify-center gap-3">
                   {(otpMethod === "whatsapp"
@@ -441,7 +535,7 @@ const WhatsappLogin = () => {
                       onChange={(e) => handleOtpChange(e.target.value, index)}
                       onKeyDown={(e) => handleKeyDown(e, index)}
                       onPaste={handlePaste}
-                      className="w-14 h-14 text-center text-lg font-semibold border-2 rounded-xl"
+                      className="w-12 h-12 text-center text-lg font-semibold bg-white border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all text-gray-800 shadow-sm"
                     />
                   ))}
                 </div>
@@ -472,13 +566,13 @@ const WhatsappLogin = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
-                    {showOtp ? ( // Check if OTP is shown
+                    {showOtp ? (
                       <>
                         <KeyRound className="w-5 h-5" />
                         Verify OTP
@@ -493,15 +587,12 @@ const WhatsappLogin = () => {
                 )}
               </button>
 
-              {isButtonEnabled && (
+              {isButtonEnabled && !changeNumberClicked && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setOtpShow(false);
-                    setIsPhoneDisabled(false);
-                  }}
+                  onClick={handleChangeNumber}
                   disabled={isLoading}
-                  className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
                   Change Number
                 </button>
@@ -511,12 +602,12 @@ const WhatsappLogin = () => {
         </div>
 
         {/* Footer */}
-        <div className="border-t p-6 bg-gray-50">
+        <div className="border-t border-gray-100 p-6 bg-gray-50">
           <p className="text-sm text-gray-600 text-center flex items-center justify-center gap-2">
             Not registered yet?{" "}
             <Link
               to="/whatsappregister"
-              className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1 group"
+              className="text-purple-600 hover:text-purple-800 font-medium inline-flex items-center gap-1 group"
             >
               Register Now
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

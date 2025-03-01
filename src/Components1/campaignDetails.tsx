@@ -83,8 +83,8 @@ const CampaignDetails: React.FC = () => {
     }
     // Payload with the data to send to the API
     const payload = {
-      email: email, // You might want to replace this with dynamic values
-      mobileNumber: mobileNumber, // You might want to replace this with dynamic values
+      email: email,
+      mobileNumber: mobileNumber,
       queryStatus: "PENDING",
       projectType: "ASKOXY",
       askOxyOfers: "FREEAI",
@@ -105,7 +105,7 @@ const CampaignDetails: React.FC = () => {
 
     const apiUrl = `${BASE_URL}writetous-service/saveData`;
     const headers = {
-      Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
+      Authorization: `Bearer ${accessToken}`,
     };
 
     try {
@@ -121,7 +121,6 @@ const CampaignDetails: React.FC = () => {
     } catch (error) {
       // Handle error if the request fails
       console.error("Error sending the query:", error);
-      // alert("Failed to send query. Please try again.");
       message.error("Failed to send query. Please try again.");
     }
   };
@@ -139,7 +138,6 @@ const CampaignDetails: React.FC = () => {
           projectType: "ASKOXY",
         }
       );
-      // localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
       notification.success({
         message: "Success!",
         description: `Your interest has been submitted successfully!`,
@@ -181,9 +179,50 @@ const CampaignDetails: React.FC = () => {
       setIsButtonDisabled(false);
     }
   };
+
   const handlePopUOk = () => {
     setIsOpen(false);
-    navigate("/user-profile");
+    navigate("/main/profile");
+  };
+
+  const renderNotFoundPage = () => {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] py-10">
+        <div className="text-center">
+          <div className="mb-6 text-red-500">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="120"
+              height="120"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mx-auto"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <h1 className="text-5xl font-bold text-gray-800 mb-4">404</h1>
+          <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+            Campaign Not Found
+          </h2>
+          <p className="text-lg text-gray-600 mb-6">
+            The campaign "{campaignType}" is currently inactive or unavailable.
+          </p>
+          <button
+            onClick={() => navigate("/main")}
+            className="px-6 py-3 bg-[#3d2a71] text-white rounded-lg shadow-lg hover:bg-[#2a1d4e] transition-all"
+          >
+            Return Home
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -191,14 +230,17 @@ const CampaignDetails: React.FC = () => {
       {isLoading ? (
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <Spin size="large" />
-            <p className="mt-4 text-gray-600">Loading campaigns...</p>
+            <Spin
+              indicator={<LoadingOutlined style={{ fontSize: 36 }} spin />}
+              size="large"
+            />
+            <p className="mt-4 text-gray-600">Loading campaign details...</p>
           </div>
         </div>
       ) : !campaign ? (
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-xl text-gray-600">Campaign not found</div>
-        </div>
+        renderNotFoundPage()
+      ) : !campaign.campaignStatus ? (
+        renderNotFoundPage()
       ) : (
         <div>
           <div className="flex flex-col mb-6 w-full">
@@ -208,14 +250,13 @@ const CampaignDetails: React.FC = () => {
 
             <div className="flex flex-col md:flex-row gap-4 items-center justify-end">
               <button
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:bg-purple-700 transition-all"
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleSubmit}
                 aria-label="Visit our site"
                 disabled={isButtonDisabled}
               >
                 I'm Interested
               </button>
-
               <button
                 className="px-4 py-2 bg-[#f9b91a] text-white rounded-lg shadow-lg hover:bg-[#f9b91a] transition-all"
                 aria-label="Write To Us"
@@ -405,7 +446,7 @@ const CampaignDetails: React.FC = () => {
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
           <div className="relative bg-white rounded-lg shadow-md p-6 w-96">
             {/* Close Button */}
             <i
@@ -432,7 +473,6 @@ const CampaignDetails: React.FC = () => {
                 id="phone"
                 disabled={true}
                 value={mobileNumber || ""}
-                // value={"9908636995"}
                 className="block w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3d2a71] focus:border-[#3d2a71] transition-all duration-200"
                 placeholder="Enter your mobile number"
                 style={{ fontSize: "0.8rem" }}
@@ -451,7 +491,6 @@ const CampaignDetails: React.FC = () => {
                 type="email"
                 id="email"
                 value={email || ""}
-                // value={"kowthavarapuanusha@gmail.com"}
                 disabled={true}
                 className="block w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3d2a71] focus:border-[#3d2a71] transition-all duration-200"
                 placeholder="Enter your email"

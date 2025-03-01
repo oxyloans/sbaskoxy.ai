@@ -325,7 +325,9 @@ const MyOrders: React.FC = () => {
               <div className="p-6 space-y-6">
                 <div className="text-center">
                   <Package2 className="h-12 w-12 text-purple-600 mx-auto mb-2" />
-                  <h3 className="text-xl font-semibold text-purple-900">Order #{selectedOrder.orderId}</h3>
+                  <h3 className="text-xl font-semibold text-purple-900">
+                    Order #{selectedOrder?.orderId?.slice(-4)}
+                  </h3>
                   <p className="text-gray-600">{formatDate(selectedOrder.orderDate)}</p>
 
                   {/* Write to Us button moved here for more prominence */}
@@ -400,19 +402,19 @@ const MyOrders: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Delivery Fee</span>
-                      <span>₹{selectedOrder.deliveryFee}</span>
+                      <span>+ ₹{selectedOrder.deliveryFee}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Wallet Amount</span>
-                      <span>₹{selectedOrder.walletAmount || 0}</span>
+                      <span>- ₹{selectedOrder.walletAmount || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Coupon</span>
-                      <span>₹{selectedOrder.discount || 0}</span>
+                      <span>- ₹{selectedOrder.discount || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>GST Charges</span>
-                      <span>₹{selectedOrder.gstAmount || 0}</span>
+                      <span>+ ₹{selectedOrder.gstAmount || 0}</span>
                     </div>
                     
                     <div className="flex justify-between">
