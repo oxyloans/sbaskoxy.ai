@@ -460,8 +460,8 @@ const CheckoutPage: React.FC = () => {
                 orderStatus: selectedPayment,
                 pincode: selectedAddress.pincode,
                 walletAmount: usedWalletAmount,  // ✅ Send only the used wallet amount
-                couponCodeUsed: coupenApplied ? couponCode.toUpperCase() : null,
-                couponCodeValue: coupenApplied ? coupenDetails : 0,
+                couponCode: coupenApplied ? couponCode.toUpperCase() : null,
+                couponValue: coupenApplied ? coupenDetails : 0,
                 deliveryBoyFee,
                 amount: grandTotalAmount,
                 subTotal: grandTotal,
