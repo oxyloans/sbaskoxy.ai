@@ -17,12 +17,33 @@ const FreeGPTs = () => {
 
   // Handle search input
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      window.location.href = userId
-        ? `/dashboard?query=${encodeURIComponent(searchQuery)}`
-        : `/normal?query=${encodeURIComponent(searchQuery)}`;
+    const trimmedQuery = searchQuery.trim();
+
+    // Validation: Check if search query is empty
+    if (!trimmedQuery) {
+        alert("Please enter a search query.");  // You can replace this with a toast or some other UI message
+        return;
     }
-  };
+
+    // Validation: Minimum length check
+    if (trimmedQuery.length < 3) {
+        alert("Search query must be at least 3 characters long.");
+        return;
+    }
+
+    // Optional: Check for invalid characters (you can customize the regex)
+    const invalidChars = /[^a-zA-Z0-9\s]/;
+    if (invalidChars.test(trimmedQuery)) {
+        alert("Search query contains invalid characters. Please use only letters, numbers, and spaces.");
+        return;
+    }
+
+    // Proceed with navigation if validations pass
+    window.location.href = userId
+        ? `/main/dashboard/freegpts?query=${encodeURIComponent(trimmedQuery)}`
+        : `/freechatgptnormal?query=${encodeURIComponent(trimmedQuery)}`;
+};
+
 
   // Handle "Enter" key press
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

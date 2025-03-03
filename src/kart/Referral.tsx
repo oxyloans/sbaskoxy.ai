@@ -33,6 +33,14 @@ interface Stats {
   conversionRate: number;
 }
 
+interface UserDetail {
+  whatsappNumber: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  id: string;
+}
+
 const ReferralPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +48,7 @@ const ReferralPage: React.FC = () => {
   const [refereeDetails, setRefereeDetails] = useState<RefereeDetail[]>([]);
   const [phoneNumber, setPhoneNumber] = useState<string | undefined>(undefined);
   const [error, setError] = useState('');
+  const [userDetails, setUserDetails] = useState<UserDetail | null>(null);
   const [stats, setStats] = useState<Stats>({
     totalReferrals: 0,
     activeReferrals: 0,
@@ -53,8 +62,29 @@ const ReferralPage: React.FC = () => {
   useEffect(() => {
     if (token) {
       fetchRefereeDetails();
+      fetchUserDetails();
     }
   }, [token]);
+
+  const fetchUserDetails = async () => {
+    try {
+      const response = await axios.get(
+        `https://meta.oxyglobal.tech/api/user-service/user/${customerId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.data) {
+        setUserDetails(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
 
   const formatDate = (dateArray: number[]): string => {
     if (Array.isArray(dateArray) && dateArray.length >= 3) {
@@ -101,9 +131,55 @@ const ReferralPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  // Function to normalize phone numbers for comparison
+  const normalizePhoneNumber = (number: string): string => {
+    // Remove all non-digit characters
+    return number.replace(/\D/g, '');
+  };
+
+  // Check if the input phone number matches the user's registered number
+  const isSelfReferral = (inputNumber: string | undefined): boolean => {
+    if (!inputNumber || !userDetails?.whatsappNumber) return false;
+    
+    const normalizedInput = normalizePhoneNumber(inputNumber);
+    const normalizedUserNumber = normalizePhoneNumber(userDetails.whatsappNumber);
+    
+    // Check if the last digits match (to handle country code differences)
+    // Using at least last 10 digits for comparison or the entire number if shorter
+    const minLength = Math.min(10, normalizedInput.length, normalizedUserNumber.length);
+    const inputSuffix = normalizedInput.slice(-minLength);
+    const userSuffix = normalizedUserNumber.slice(-minLength);
+    
+    return inputSuffix === userSuffix;
+  };
+
   const handleSubmit = async () => {
+    // Reset error state
+    setError('');
+    
+    // Validate phone number format
     if (!phoneNumber || !isValidPhoneNumber(phoneNumber)) {
       setError('Please enter a valid phone number');
+      return;
+    }
+
+     // Check for self-referral
+     if (localStorage.getItem("whatsappNumber") === phoneNumber) {
+      setError('Self-referral is not allowed. Enter a different referral number.');
+      return;
+    }
+
+    // Check if number has already been referred
+    const normalizedInput = normalizePhoneNumber(phoneNumber);
+    const alreadyReferred = refereeDetails.some(detail => {
+      const normalizedRefNumber = normalizePhoneNumber(detail.whatsappnumber);
+      const refSuffix = normalizedRefNumber.slice(-Math.min(10, normalizedRefNumber.length));
+      const inputSuffix = normalizedInput.slice(-Math.min(10, normalizedInput.length));
+      return refSuffix === inputSuffix;
+    });
+
+    if (alreadyReferred) {
+      setError('This number has already been referred.');
       return;
     }
 
@@ -126,19 +202,30 @@ const ReferralPage: React.FC = () => {
       setIsModalOpen(false);
       fetchRefereeDetails();
       Modal.success({
-        content: response.data.message,
+        content: response.data.message || 'Referral sent successfully!',
         onOk: () => {},
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error inviting user:', error);
-      if (error) {
-        Modal.error({
-          content: 'An invitation has already been sent to this user.',
-          onOk: () => {},
-        });
-      } else {
-        setError('Failed to invite user. Please try again.');
+      
+      // Handle different error scenarios
+      let errorMessage = 'Failed to invite user. Please try again.';
+      
+      if (error.response) {
+        if (error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.status === 409) {
+          errorMessage = 'An invitation has already been sent to this user.';
+        } else if (error.response.status === 400) {
+          // Check if it's a self-referral error from backend
+          if (error.response.data && error.response.data.error && 
+              error.response.data.error.includes('self')) {
+            errorMessage = 'Self-referral is not allowed. Enter a different referral number.';
+          }
+        }
       }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -278,7 +365,10 @@ const ReferralPage: React.FC = () => {
                     countryCallingCodeEditable={false}
                     defaultCountry="IN"
                     value={phoneNumber}
-                    onChange={setPhoneNumber}
+                    onChange={(value) => {
+                      setPhoneNumber(value);
+                      setError(''); // Clear error when user types
+                    }}
                     className="w-full p-3 bg-white/30 backdrop-blur-md shadow-md rounded-lg border-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-800 placeholder-transparent [&>*]:outline-none [&.PhoneInputInput]:outline-none [&.PhoneInputInput]:border-none"
                   />
                   {error && (

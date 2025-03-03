@@ -400,28 +400,31 @@ const Header: React.FC<HeaderProps> = ({
                 onMouseDown={() => setActiveButton("cart")}
                 onMouseUp={() => setActiveButton(null)}
                 onMouseLeave={() => setActiveButton(null)}
-                className={`relative p-2 text-gray-700 hover:bg-gray-50 rounded-full hover:text-purple-600 transition-all duration-300 flex items-center
-                  ${location.pathname === "/main/mycart" ? "bg-purple-50 text-purple-600" : ""}`}
-                aria-label="Cart"
+                className={`relative flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full p-1 sm:px-2 sm:py-1 
+              hover:text-purple-600 transition-all duration-300 hover:scale-105 active:scale-95 
+              ${
+                location.pathname === "/mycart"
+                  ? "bg-purple-50 text-purple-600"
+                  : ""
+              }`}
               >
-                <div className="relative">
-                  <ShoppingCart
-                    size={20}
-                    className={`transition-colors duration-300 
-                      ${location.pathname === "/main/mycart"
-                        ? "text-purple-600"
-                        : activeButton === "cart"
-                        ? "text-purple-500"
-                        : "text-gray-700"
-                      }`}
-                  />
-                  {count > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                      {count}
-                    </span>
-                  )}
-                </div>
-                <span className="ml-1 hidden sm:block text-sm font-medium">Cart</span>
+                <ShoppingCart
+                  size={16}
+                  className={`sm:w-6 sm:h-6 transition-colors duration-300 
+                ${
+                  location.pathname === "/main/mycart"
+                    ? "text-purple-600"
+                    : activeButton === "cart"
+                    ? "text-purple-500"
+                    : "text-gray-700"
+                }`}
+                />
+                <span className="hidden sm:inline text-sm">Cart</span>
+                {count > 0 && (
+                  <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full w-3 h-3 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs">
+                    {count}
+                  </span>
+                )}
               </button>
             </div>
           </div>

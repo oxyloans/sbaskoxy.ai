@@ -69,6 +69,8 @@ import FreeChatGPTmain from "./Dashboard/FreechatGPTmain";
 import BMVCOINmain from "./Dashboard/BMVcoinmain";
 import Content1 from "./Dashboard/Content";
 import CampaignDetails from "./Components1/campaignDetails";
+import FreeChatGPTnormal
+ from "./Dashboard/Freechatgptnormal";
 import HiddenLogin from "./Components1/Auth/HiddenLogin";
 const App: React.FC = () => {
   return (
@@ -83,6 +85,7 @@ const App: React.FC = () => {
           <Route path="/communities/maruthielite" element={<RiceSalePage />} />
           <Route path="/qrcode" element={<QR />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
+          <Route path="/freechatgptnormal" element={<FreeChatGPTnormal />} />
 
           {/* Landing Page (First Page) */}
           <Route path="/" element={<Landingpage />} />

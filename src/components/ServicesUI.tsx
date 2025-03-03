@@ -48,6 +48,7 @@ const HorizontalScrollGallery: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [lastSubmittedQuery, setLastSubmittedQuery] = useState<string>("");
 
   const [modalContent, setModalContent] = useState(
     "You are being transferred to the powerful ChatGPT. Please login to continue your experience."
@@ -62,8 +63,7 @@ const HorizontalScrollGallery: React.FC = () => {
   ];
 
   const navigate = useNavigate();
-
-  const images = [
+const images = [
     {
       id: 1,
       src: HM1,
@@ -378,16 +378,23 @@ const HorizontalScrollGallery: React.FC = () => {
     setQuery(e.target.value);
   };
   const handleSearch = () => {
-    if (userId) {
-      // If user is signed in, redirect to dashboard
-      window.location.href = `/dashboard/free-chatgpt?query=${encodeURIComponent(
-        query
-      )}`;
-    } else {
-      // Otherwise, redirect to normal page
-      window.location.href = `/normal?query=${encodeURIComponent(query)}`;
+    const trimmedQuery = query.trim();
+
+    // Validation: Check if search query is empty
+    if (!trimmedQuery) {
+        alert("Please enter a search query.");  // You can replace this with a toast or some other UI message
+        return;
     }
-  };
+
+
+  
+
+    // Proceed with navigation if validations pass
+    window.location.href = userId
+        ? `/main/dashboard/freegpts?query=${encodeURIComponent(trimmedQuery)}`
+        : `/freechatgptnormal?query=${encodeURIComponent(trimmedQuery)}`;
+};
+
 
   useEffect(() => {
     const interval = setInterval(() => {

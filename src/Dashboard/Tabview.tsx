@@ -166,9 +166,13 @@ const Tabview = () => {
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
       {/* Blockchain ID Section */}
       <div className="flex items-center overflow-hidden gap-2 bg-white p-3 rounded-lg shadow-lg w-full md:w-auto mt-4">
-        <span className="text-sm font-medium text-purple-600">
-          Blockchain ID: {multichainId}
-        </span>
+            <button
+              className="text-sm font-medium text-purple-600"
+              onClick={() => window.open('http://bmv.money:2750/')}
+            >
+              Blockchain ID: {multichainId}
+            </button>
+
         <button
           onClick={handleCopyMultichainId}
           className="p-1 bg-white border border-purple-600 text-purple-600 hover:bg-purple-100 rounded transition-colors"

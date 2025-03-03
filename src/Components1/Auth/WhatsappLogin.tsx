@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import PhoneInput, { isValidPhoneNumber,getCountryCallingCode,parsePhoneNumber, PhoneNumber  } from "react-phone-number-input";
+import PhoneInput, { isValidPhoneNumber, parsePhoneNumber } from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import {
   X,
@@ -44,6 +44,7 @@ const WhatsappLogin = () => {
   const [animateOtp, setAnimateOtp] = useState(false);
   const [isMethodDisabled, setIsMethodDisabled] = useState(false);
   const [changeNumberClicked, setChangeNumberClicked] = useState(false);
+  const [isGetOtpButtonDisabled, setIsGetOtpButtonDisabled] = useState(true);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -70,19 +71,23 @@ const WhatsappLogin = () => {
     }
   }, [resendDisabled]);
 
+  // Check if phone number is valid to enable/disable "Get OTP" button
+  useEffect(() => {
+    if (phoneNumber && isValidPhoneNumber(phoneNumber)) {
+      setIsGetOtpButtonDisabled(false);
+    } else {
+      setIsGetOtpButtonDisabled(true);
+    }
+  }, [phoneNumber]);
+
   // Extract country code from phone number
   useEffect(() => {
     if (phoneNumber) {
-      // Extract country code without the + sign
-      const code = phoneNumber.split(' ')[0].replace('+', '');
-      const phoneNumberS = parsePhoneNumber(phoneNumber)
-      // console.log("phoneNumberS", phoneNumberS);
-      console.log("phoneNumberS.country", phoneNumberS?.countryCallingCode);
-      const countryCode =`+${phoneNumberS?.countryCallingCode}`;
-      setCountryCode(countryCode 
-        ||
-         ""
-      );
+      const phoneNumberObj = parsePhoneNumber(phoneNumber);
+      const countryCode = phoneNumberObj?.countryCallingCode 
+        ? `+${phoneNumberObj.countryCallingCode}` 
+        : "";
+      setCountryCode(countryCode);
       setIsMethodDisabled(true); // Disable method selection when number is entered
     } else {
       setIsMethodDisabled(false); // Enable method selection when number is empty
@@ -164,7 +169,11 @@ const WhatsappLogin = () => {
   // Extract phone number without country code
   const extractPhoneWithoutCode = (phone: string) => {
     if (!phone) return "";
-    // Remove the country code part (format is usually +XX XXXXXXXXXX)
+    const phoneNumberObj = parsePhoneNumber(phone);
+    if (phoneNumberObj && phoneNumberObj.nationalNumber) {
+      return phoneNumberObj.nationalNumber;
+    }
+    // Fallback to simple extraction
     const parts = phone.split(' ');
     return parts.length > 1 ? parts.slice(1).join('') : phone;
   };
@@ -194,9 +203,9 @@ const WhatsappLogin = () => {
 
       // Assign the correct number field based on user selection
       if (otpMethod === "whatsapp") {
-        requestBody.whatsappNumber = phoneWithoutCode.replace(countryCode, '');
+        requestBody.whatsappNumber = phoneWithoutCode;
       } else {
-        requestBody.mobileNumber = phoneWithoutCode.replace(countryCode, '');
+        requestBody.mobileNumber = phoneWithoutCode;
       }
 
       const response = await axios.post(
@@ -278,14 +287,14 @@ const WhatsappLogin = () => {
       };
 
       if (otpMethod === "whatsapp") {
-        requestBody.whatsappNumber = phoneWithoutCode.replace(countryCode, '');
+        requestBody.whatsappNumber = phoneWithoutCode;
         requestBody.whatsappOtpSession =
           localStorage.getItem("mobileOtpSession");
         requestBody.whatsappOtpValue = credentials.otp.join("");
         requestBody.salt = localStorage.getItem("salt");
         requestBody.expiryTime = localStorage.getItem("expiryTime");
       } else {
-        requestBody.mobileNumber = phoneWithoutCode.replace(countryCode, '');
+        requestBody.mobileNumber = phoneWithoutCode;
         requestBody.mobileOtpSession = localStorage.getItem("mobileOtpSession");
         requestBody.mobileOtpValue = credentials.mobileOTP.join("");
         requestBody.salt = localStorage.getItem("salt");
@@ -341,9 +350,9 @@ const WhatsappLogin = () => {
         };
 
         if (otpMethod === "whatsapp") {
-          requestBody.whatsappNumber = phoneWithoutCode.replace(countryCode, '');
+          requestBody.whatsappNumber = phoneWithoutCode;
         } else {
-          requestBody.mobileNumber = phoneWithoutCode.replace(countryCode, '');
+          requestBody.mobileNumber = phoneWithoutCode;
         }
 
         const response = await axios.post(
@@ -379,13 +388,12 @@ const WhatsappLogin = () => {
     }
   };
 
-  // Phone input change handler that extracts country code
+  // Phone input change handler
   const handlePhoneChange = (value: string | undefined) => {
     setPhoneNumber(value);
-    if (value) {
-      // Extract only the country code number without the + sign
-      const code = value.split(' ')[0].replace('+', '');
-      setCountryCode(code);
+    // Clear error message when phone number changes
+    if (error) {
+      setError("");
     }
   };
 
@@ -393,6 +401,9 @@ const WhatsappLogin = () => {
   const switchOtpMethod = (method: "whatsapp" | "mobile") => {
     if (!isPhoneDisabled && !isMethodDisabled) { // Only allow switching when not in OTP verification mode and no phone number entered
       setOtpMethod(method);
+      // Clear errors when switching methods
+      setError("");
+      setOtpError("");
     }
   };
 
@@ -406,6 +417,7 @@ const WhatsappLogin = () => {
     setOtpError("");
     setIsMethodDisabled(false); // Re-enable method selection
     setChangeNumberClicked(true); // Mark as clicked once
+    setIsGetOtpButtonDisabled(true); // Disable "Get OTP" button again
     
     // Reset OTP fields
     setCredentials({
@@ -454,7 +466,7 @@ const WhatsappLogin = () => {
           >
             {/* OTP Method Selection UI */}
             <div className="flex flex-col items-center gap-4 p-4 border-b border-gray-100 pb-6">
-              <h2 className="text-lg font-semibold text-gray-800">Login Method</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Login</h2>
               <div className="flex gap-4">
                 <button
                   type="button"
@@ -494,7 +506,7 @@ const WhatsappLogin = () => {
               <div className="relative">
                 <PhoneInput
                   value={phoneNumber}
-                  onChange={setPhoneNumber}
+                  onChange={handlePhoneChange}
                   defaultCountry="IN"
                   disabled={isPhoneDisabled}
                   international={otpMethod === "whatsapp"}
@@ -570,8 +582,8 @@ const WhatsappLogin = () => {
             <div className="space-y-3">
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                disabled={isLoading || (!showOtp && isGetOtpButtonDisabled)}
+                className={`w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg ${(!showOtp && isGetOtpButtonDisabled) || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
