@@ -69,6 +69,7 @@ import FreeChatGPTmain from "./Dashboard/FreechatGPTmain";
 import BMVCOINmain from "./Dashboard/BMVcoinmain";
 import Content1 from "./Dashboard/Content";
 import CampaignDetails from "./Components1/campaignDetails";
+import HiddenLogin from "./Components1/Auth/HiddenLogin";
 const App: React.FC = () => {
   return (
     <CartProvider>
@@ -78,6 +79,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/whatsapplogin" element={<WhatsappLogin />} />
           <Route path="/whatsappregister" element={<WhatsappRegister />} />
+          <Route path="/hiddenlogin" element = {<HiddenLogin/>}/>
           <Route path="/communities/maruthielite" element={<RiceSalePage />} />
           <Route path="/qrcode" element={<QR />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
