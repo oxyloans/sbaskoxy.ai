@@ -6,7 +6,7 @@ import { Menu, X, Plus, ArrowUpRight, ArrowDownRight, CreditCard, Wallet, Chevro
 
 interface Transaction {
   id: string;
-  type: 'credit' | 'debit';
+  type: '1' | '2';
   amount: number;
   date: string;
   method: string;
@@ -23,7 +23,7 @@ const MyWalletPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<'all' | 'credit' | 'debit'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | '1' | '2'>('all');
   const [amount, setAmount] = useState<string>('0');
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -88,14 +88,14 @@ const MyWalletPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* <div className="bg-white rounded-2xl p-6 shadow-sm">
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <h2 className="text-lg font-semibold mb-4">Quick Stats</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-green-50 rounded-xl">
                       <p className="text-sm text-green-600 mb-1">Total Income</p>
                       <p className="text-xl font-bold text-green-700">
                         ₹{transactions
-                          .filter(t => t.type === 'credit')
+                          .filter(t => t.type === '1')
                           .reduce((sum, t) => sum + t.amount, 0)
                           .toLocaleString()}
                       </p>
@@ -104,13 +104,13 @@ const MyWalletPage: React.FC = () => {
                       <p className="text-sm text-red-600 mb-1">Total Spent</p>
                       <p className="text-xl font-bold text-red-700">
                         ₹{transactions
-                          .filter(t => t.type === 'debit')
+                          .filter(t => t.type === '2')
                           .reduce((sum, t) => sum + t.amount, 0)
                           .toLocaleString()}
                       </p>
                     </div>
                   </div>
-                </div> */}
+                </div>
               </div>
 
               <div className="mt-8">
@@ -150,11 +150,11 @@ const MyWalletPage: React.FC = () => {
                         >
                           <div className="flex items-center gap-4">
                             <div className={`p-2 rounded-full ${
-                              transaction.type === 'credit' 
+                              transaction.type === '1' 
                                 ? 'bg-green-100 text-green-600' 
                                 : 'bg-red-100 text-red-600'
                             }`}>
-                              {transaction.type === 'credit' 
+                              {transaction.type === '1' 
                                 ? <ArrowUpRight className="w-5 h-5" />
                                 : <ArrowDownRight className="w-5 h-5" />
                               }
@@ -168,11 +168,11 @@ const MyWalletPage: React.FC = () => {
                           </div>
                           <div className="text-right">
                             <p className={`font-semibold ${
-                              transaction.type === 'credit' 
+                              transaction.type === '1' 
                                 ? 'text-green-600' 
                                 : 'text-red-600'
                             }`}>
-                              {/* {transaction.type === 'credit' ? '+' : '-'} */}
+                              {/* {transaction.type === '1' ? '+' : '-'} */}
                               ₹{transaction.walletTxAmount}
                             </p>
                             {/* <span className={`text-xs px-2 py-1 rounded-full

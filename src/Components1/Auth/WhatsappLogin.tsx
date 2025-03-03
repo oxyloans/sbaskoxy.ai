@@ -180,7 +180,7 @@ const WhatsappLogin = () => {
       setIsLoading(false);
       return;
     }
-    localStorage.setItem("whatsappNumber", phoneNumber);
+  
 
     try {
       // Extract phone number without country code
@@ -300,6 +300,11 @@ const WhatsappLogin = () => {
         setShowSuccessPopup(true);
         localStorage.setItem("userId", response.data.userId);
         localStorage.setItem("accessToken", response.data.accessToken);
+        if(otpMethod === "whatsapp") {
+          localStorage.setItem("whatsappNumber", phoneWithoutCode.replace(countryCode, ''));
+        } else {
+          localStorage.setItem("mobileNumber", phoneWithoutCode.replace(countryCode, ''));
+        }
         localStorage.removeItem("mobileOtpSession");
         localStorage.removeItem("salt");
         localStorage.removeItem("expiryTime");

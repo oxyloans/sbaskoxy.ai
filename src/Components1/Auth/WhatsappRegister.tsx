@@ -157,7 +157,6 @@ const WhatsappRegister = () => {
       setIsLoading(false);
       return;
     }
-    localStorage.setItem("whatsappNumber", phoneNumber);
 
     try {
       const requestBody: Record<string, any> = {
@@ -278,6 +277,11 @@ const WhatsappRegister = () => {
         localStorage.setItem("userId", response.data.userId);
         localStorage.setItem("accessToken", response.data.accessToken);
         setMessage("Registration Successful");
+        if(otpMethod === "whatsapp") {
+          localStorage.setItem("whatsappNumber", requestBody.whatsappNumber);
+        } else {
+          localStorage.setItem("mobileNumber", requestBody.mobileNumber);
+        }
         localStorage.removeItem("refferrerId");
         setTimeout(() => navigate(location.state?.from || "/main/dashboard/products"), 500);
         setTimeout(() => window.location.reload(), 1000);

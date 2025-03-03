@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { message } from "antd";
+import { message, Modal } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Package, AlertCircle, Loader2 } from "lucide-react";
+import  checkProfileCompletion  from "../until/ProfileCheck";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
@@ -154,6 +155,20 @@ const Categories: React.FC<CategoriesProps> = ({
       }, 2000);
       return;
     }
+    
+    if(!checkProfileCompletion()){
+      console.log(checkProfileCompletion());
+      Modal.error({
+        title: "Profile Incomplete",
+        content: "Please complete your profile to add items to the cart.",
+        onOk: () => navigate("/main/profile"),
+      }); 
+      // message.warning("Please complete your profile to add items to the cart.");
+      setTimeout(() => {
+        navigate("/main/profile");
+      }, 4000);
+      return;
+    }
 
     try {
       setLoadingItems((prev) => ({
@@ -194,6 +209,20 @@ const Categories: React.FC<CategoriesProps> = ({
   ) => {
       if (cartItems[item.itemId] === item.quantity && increment) {
         message.warning("Sorry, Maximum quantity reached.");
+        return;
+      }
+
+      if(!checkProfileCompletion()){
+        console.log(checkProfileCompletion());
+        Modal.error({
+          title: "Profile Incomplete",
+          content: "Please complete your profile to add items to the cart.",
+          onOk: () => navigate("/main/profile"),
+        }); 
+        // message.warning("Please complete your profile to add items to the cart.");
+        setTimeout(() => {
+          navigate("/main/profile");
+        }, 4000);
         return;
       }
     try {

@@ -59,6 +59,7 @@ const ProfilePage = () => {
     addressType: "Home",
   });
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [whatsappStatus,setWhatsappStatus] = useState(false);
   const [addressFormErrors, setAddressFormErrors] = useState({
     flatNo: "",
     landmark: "",
@@ -116,6 +117,16 @@ const ProfilePage = () => {
         customerId: customerId,
         whatsappNumber: data.whatsappNumber || "",
       };
+      if(data.whatsappNumber === ""){
+        if(localStorage.getItem("whatsappNumber")){
+          setWhatsappStatus(true);
+        }else{
+          setWhatsappStatus(false);
+        }
+      }else{
+        console.log("Whatsapp Number is already present");
+        setWhatsappStatus(true);
+      }
       setFormData(profileData);
       localStorage.setItem("profileData", JSON.stringify(profileData));
     } catch (error) {
@@ -173,6 +184,13 @@ const ProfilePage = () => {
       errors.alterMobileNumber = "Please enter a valid 10-digit mobile number";
     } else if (formData.alterMobileNumber === formData.whatsappNumber) {
       errors.alterMobileNumber =
+        "Alternate mobile number and WhatsApp number must be different.";
+    }
+
+    if (!formData.whatsappNumber.trim()) {
+      errors.whatsappNumber = "WhatsApp number is required";
+    }else if (formData.whatsappNumber === formData.alterMobileNumber) {
+      errors.whatsappNumber =
         "Alternate mobile number and WhatsApp number must be different.";
     }
 
@@ -504,7 +522,7 @@ const ProfilePage = () => {
                       type="text"
                       maxLength={10}
                       pattern="\d*"
-                      value={formData.alterMobileNumber}
+                      value={formData.alterMobileNumber.trim()}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -534,9 +552,26 @@ const ProfilePage = () => {
                     <input
                       type="text"
                       value={formData.whatsappNumber}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 cursor-not-allowed"
-                      readOnly
+                      disabled = {whatsappStatus}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          whatsappNumber: e.target.value,
+                        })
+                      }
+                      placeholder="Enter WhatsApp number"
+                      className={`w-full px-4 py-3 rounded-lg border transition-all
+                        ${
+                          validationErrors.whatsappNumber
+                            ? "border-red-500 ring-1 ring-red-500"
+                            : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                        }`}
                     />
+                    {validationErrors.whatsappNumber && (
+                      <p className="text-red-500 text-sm">
+                        {validationErrors.whatsappNumber}
+                      </p>
+                    )}
                   </div>
                 </div>
 

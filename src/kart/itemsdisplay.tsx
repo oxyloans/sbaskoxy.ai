@@ -266,6 +266,7 @@ const ItemDisplayPage = () => {
     }
     if (!checkProfileCompletion()) {
       setShowValidationPopup(true);
+      return;
     }
 
     try {
@@ -293,6 +294,10 @@ const ItemDisplayPage = () => {
   };
 
   const handleQuantityChange = async (item: Item, increment: boolean) => {
+    if (!checkProfileCompletion()) {
+      setShowValidationPopup(true);
+      return;
+    }
     const endpoint = increment
       ? `${BASE_URL}/cart-service/cart/incrementCartData`
       : `${BASE_URL}/cart-service/cart/decrementCartData`;
