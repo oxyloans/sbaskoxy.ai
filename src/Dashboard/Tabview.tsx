@@ -4,6 +4,7 @@ import { Bot, Check, Coins, Copy, Settings, ShoppingBag } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DashboardMain from "./Dashboardmain";
+import BASE_URL from "../Config";
 
 interface DashboardItem {
   title: string;
@@ -60,7 +61,7 @@ const Tabview = () => {
     try {
       const userId = localStorage.getItem("userId");
       const response = await axios.get(
-        `https://meta.oxyglobal.tech/api/user-service/getProfile/${userId}`
+        `${BASE_URL}/user-service/getProfile/${userId}`
       );
       setMultichainId(response.data.multiChainId);
       setBmvCoin(response.data.coinAllocated);

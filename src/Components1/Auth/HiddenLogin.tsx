@@ -15,7 +15,6 @@ import {
   Eye,
   ChevronDown 
 } from "lucide-react";
-import  BASE_URL  from "../../Config";
 
 const HiddenLogin = () => {
   const navigate = useNavigate();
@@ -139,6 +138,10 @@ const HiddenLogin = () => {
             setIsLoading(false);
             return;
     }
+
+    const BASE_URL = userType === "live" 
+    ? "https://meta.oxyloans.com/api" 
+    : "https://meta.oxyglobal.tech/api";
   
 
     try {

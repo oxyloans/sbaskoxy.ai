@@ -160,7 +160,7 @@ const UserProfile = () => {
 
     try {
       await axios.patch(
-        `${BASE_URL}user-service/profile/update`,
+        `${BASE_URL}/user-service/profile/update`,
         requestPayload
       );
 
