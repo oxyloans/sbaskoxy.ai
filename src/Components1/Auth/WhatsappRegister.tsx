@@ -272,6 +272,7 @@ const WhatsappRegister = () => {
         userType: "Register",
         countryCode: countryCode,
       };
+
       // Assign the correct OTP fields
       if (otpMethod === "whatsapp") {
         requestBody.whatsappNumber = phoneNumber?.replace(countryCode, '');
@@ -309,7 +310,7 @@ const WhatsappRegister = () => {
         localStorage.setItem("accessToken", response.data.accessToken);
         setMessage("Registration Successful");
         if(otpMethod === "whatsapp") {
-          localStorage.setItem("whatsappNumber", requestBody.whatsappNumber);
+          localStorage.setItem("whatsappNumber", phoneNumber || "");
         } else {
           localStorage.setItem("mobileNumber", requestBody.mobileNumber);
         }

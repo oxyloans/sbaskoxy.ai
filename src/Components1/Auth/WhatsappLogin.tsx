@@ -242,9 +242,18 @@ const WhatsappLogin = () => {
           }, 2000);
         }
       }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-      // setTimeout(() => navigate("/whatsappregister"), 1000);
+    } catch (err:any) {
+      if (err.response && err.response.data) {
+        // Check if the error message indicates user is already registered
+        if (err.response.data.message === "User already registered with this Mobile Number, please log in.") {
+          setError("You are already registered with this number. Please log in.");
+          setTimeout(() => navigate("/whatsapplogin"), 1500);
+        } else {
+          setError(err.response.data.message || "An error occurred. Please try again later.");
+        }
+      } else {
+        setError("An error occurred. Please try again later.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -310,7 +319,7 @@ const WhatsappLogin = () => {
         localStorage.setItem("userId", response.data.userId);
         localStorage.setItem("accessToken", response.data.accessToken);
         if(otpMethod === "whatsapp") {
-          localStorage.setItem("whatsappNumber", phoneWithoutCode.replace(countryCode, ''));
+          localStorage.setItem("whatsappNumber", phoneWithoutCode);
         } else {
           localStorage.setItem("mobileNumber", phoneWithoutCode.replace(countryCode, ''));
         }
@@ -324,9 +333,13 @@ const WhatsappLogin = () => {
         );
         setTimeout(() => window.location.reload(), 1000);
       }
-    } catch (err) {
-      setOtpError("Invalid OTP");
-      setOtpSession(null);
+    } catch (err:any) {
+      if (err.response && err.response.data) {
+        setOtpError(err.response.data.message || "An error occurred. Please try again later.");
+      } else {
+        setError("An error occurred. Please try again later.");
+      }
+      // setOtpSession(null);
     } finally {
       setIsLoading(false);
     }
@@ -380,8 +393,12 @@ const WhatsappLogin = () => {
             setMessage("");
           }, 2000);
         }
-      } catch (err) {
-        setError("Failed to resend OTP. Please try again.");
+      } catch (err:any) {
+        if (err.response && err.response.data) {
+          setError(err.response.data.message || "An error occurred. Please try again later.");
+      } else {
+        setError("An error occurred. Please try again later.");
+      }
       } finally {
         setIsLoading(false);
       }

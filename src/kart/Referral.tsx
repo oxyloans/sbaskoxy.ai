@@ -9,7 +9,7 @@ import {
   Users,
   TrendingUp
 } from 'lucide-react';
-import PhoneInput, { isValidPhoneNumber } from "react-phone-number-input";
+import PhoneInput, { isValidPhoneNumber,parsePhoneNumber } from "react-phone-number-input";
 import Footer from '../components/Footer';
 import axios from 'axios';
 import 'react-phone-number-input/style.css';
@@ -48,6 +48,7 @@ const ReferralPage: React.FC = () => {
   const [refereeDetails, setRefereeDetails] = useState<RefereeDetail[]>([]);
   const [phoneNumber, setPhoneNumber] = useState<string | undefined>(undefined);
   const [error, setError] = useState('');
+  const [countryCode, setCountryCode] = useState('');
   const [userDetails, setUserDetails] = useState<UserDetail | null>(null);
   const [stats, setStats] = useState<Stats>({
     totalReferrals: 0,
@@ -137,21 +138,17 @@ const ReferralPage: React.FC = () => {
     return number.replace(/\D/g, '');
   };
 
-  // Check if the input phone number matches the user's registered number
-  const isSelfReferral = (inputNumber: string | undefined): boolean => {
-    if (!inputNumber || !userDetails?.whatsappNumber) return false;
-    
-    const normalizedInput = normalizePhoneNumber(inputNumber);
-    const normalizedUserNumber = normalizePhoneNumber(userDetails.whatsappNumber);
-    
-    // Check if the last digits match (to handle country code differences)
-    // Using at least last 10 digits for comparison or the entire number if shorter
-    const minLength = Math.min(10, normalizedInput.length, normalizedUserNumber.length);
-    const inputSuffix = normalizedInput.slice(-minLength);
-    const userSuffix = normalizedUserNumber.slice(-minLength);
-    
-    return inputSuffix === userSuffix;
-  };
+   useEffect(() => {
+      if (phoneNumber) {
+        // Extract country code without the + sign
+        const phoneNumberS = parsePhoneNumber(phoneNumber)
+        console.log("phoneNumberS.country", phoneNumberS?.countryCallingCode);
+        const countryCode = phoneNumberS?.countryCallingCode ? `+${phoneNumberS.countryCallingCode}` : "";
+        setCountryCode(countryCode || ""); 
+      } else { 
+      }
+    }, [phoneNumber]);
+
 
   const handleSubmit = async () => {
     // Reset error state
@@ -179,7 +176,7 @@ const ReferralPage: React.FC = () => {
     });
 
     if (alreadyReferred) {
-      setError('This number has already been referred.');
+      setError('Self-referral is not allowed. Enter a different referral number.');
       return;
     }
 
@@ -189,7 +186,8 @@ const ReferralPage: React.FC = () => {
         'https://meta.oxyglobal.tech/api/user-service/inviteaUser',
         {
           referealId: customerId,
-          refereeMobileNumber: phoneNumber
+          refereeMobileNumber: phoneNumber.replace(countryCode, ''), // Remove country code
+          countryCode: countryCode
         },
         {
           headers: {
