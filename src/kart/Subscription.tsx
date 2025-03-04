@@ -9,6 +9,7 @@ import decryptEas from './decryptEas';
 import encryptEas from './encryptEas'; 
 import { motion, AnimatePresence } from "framer-motion";
 import  BASE_URL  from "../Config";
+import { log } from "node:console";
 
 // Types
 type SubscriptionPlan = {
@@ -23,6 +24,7 @@ interface UserSubscriptionPlan {
   subscriptionId: string;
   status: boolean;
   message: string;
+  planId : string;
 }
 
 interface SubscriptionHistoryItem {
@@ -120,7 +122,7 @@ const SubscriptionCard: React.FC<{
       <button
         onClick={() => onSubscribe(plan.planId)}
         className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 
-          ${isSelected || planDetails?.status
+          ${isSelected || planDetails?.planId === plan.planId
             ? 'bg-purple-700 text-white shadow-lg cursor-not-allowed'
             : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
           } transform hover:scale-[1.02]`}
@@ -131,7 +133,7 @@ const SubscriptionCard: React.FC<{
             <Loader2 className="animate-spin mr-2 h-5 w-5" />
             Processing...
           </span>
-        ) : isSelected || planDetails?.status ? 'Selected' : 'Choose Plan'}
+        ) : isSelected ? 'Selected' : planDetails?.planId === plan.planId ? 'Subscribed' : 'Choose Plan'}
       </button>
     </div>
   </div>
@@ -144,17 +146,34 @@ const TransactionHistoryCard: React.FC<{ transaction: SubscriptionHistoryItem }>
     PENDING: 'bg-yellow-100 text-yellow-800',
   }[transaction.paymentStatus] || 'bg-gray-100 text-gray-800';
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
+  // Check the full transaction and its createdAt field
+  console.log("Transaction createdAt:", transaction.createdAt);
+  
+  const formatDate = (timestamp?: any) => {
+    if (!timestamp) {
+      console.error("Timestamp is undefined or null");
+      return "Invalid Date";
+    }
 
+    const parsedTimestamp = Number(timestamp);
+
+    if (isNaN(parsedTimestamp)) {
+      console.error("Invalid timestamp:", timestamp);
+      return "Invalid Date";
+    }
+
+    return new Date(parsedTimestamp).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true, // AM/PM format
+    });
+  };
+  
+  
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 transition-all duration-300 hover:shadow-md">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -173,7 +192,7 @@ const TransactionHistoryCard: React.FC<{ transaction: SubscriptionHistoryItem }>
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <Clock className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-600">{formatDate(transaction.createdAt)}</span>
+                <span className="text-sm text-gray-600">{new Date(transaction.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
@@ -255,16 +274,19 @@ const Subscription: React.FC = () => {
     }
   }, [subscriptionId]);
 
+  
+  
+  
+
   const getSubscriptionHistory = async () => {
     if (!userId) return;
     
     setIsHistoryLoading(true);
     try {
       const response = await axios.post(
-        `${BASE_URL}/order-service/getSubscriptionsDetailsForaCustomer`,
+        `${BASE_URL}/order-service/getallsubscriptionsforacustomer?customerId=${userId}`,
         {
-          customerId: userId,
-          active: null, // Get all subscriptions (active and inactive)
+         
         },
         {
           headers: { "Authorization": `Bearer ${token}` }
@@ -272,10 +294,10 @@ const Subscription: React.FC = () => {
       );
       
       if (Array.isArray(response.data)) {
-        // Sort by date (newest first)
-        const sortedHistory = response.data.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        // Sort by transaction date (newest first)
+        const sortedHistory = response.data
+  .filter(item => item.transcationDate && !isNaN(item.transcationDate)) // Filter invalid dates
+  .sort((a, b) => b.transcationDate - a.transcationDate);
         setSubscriptionHistory(sortedHistory);
       } else {
         setSubscriptionHistory([]);

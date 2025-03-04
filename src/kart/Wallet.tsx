@@ -18,7 +18,8 @@ interface Transaction {
   walletTxDesc:string;
   createdAt:string;
   orderId:string;
-  walletTxBalance:number
+  walletTxBalance:number;
+  walletTxPurpose : number;
 }
 
 const MyWalletPage: React.FC = () => {
@@ -98,7 +99,7 @@ const MyWalletPage: React.FC = () => {
                       <p className="text-xl font-bold text-green-700">
                         ₹{transactions
                           .filter(t => t.walletTxType === 1)
-                          .reduce((sum, t) => sum + t.refereedTo, 0)
+                          .reduce((sum, t) => sum + t.refereedTo+t.walletTxAmount, 0)
                           .toLocaleString()}
                       </p>
                     </div>
@@ -162,9 +163,9 @@ const MyWalletPage: React.FC = () => {
                               }
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-600 mb-1 w-1/1">Order ID : #{transaction.orderId}</p>
+                              <p className="font-semibold text-gray-600 mb-1 w-1/1"> {transaction.walletTxType === 1 ? transaction.walletTxPurpose === 2 ? `Order ID : #${transaction.orderId}` : transaction.walletTxPurpose === 3? "Subscription" :`Refereed To : #${transaction.refereedTo}`:"Debit"}</p>
                               <p className="text-sm text-gray-600">
-                                {new Date(transaction.createdAt).toLocaleDateString()} • wallet
+                                {new Date(transaction.createdAt).toLocaleDateString()} • {transaction.walletTxDesc}
                               </p>
                             </div>
                           </div>
