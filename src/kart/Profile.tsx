@@ -114,8 +114,8 @@ const ProfilePage = () => {
         userLastName: data.lastName || "",
         customerEmail: data.email || "",
         alterMobileNumber: data.alterMobileNumber || "",
-        customerId: customerId,
         whatsappNumber: data.whatsappNumber || "",
+        customerId: data.customerId || "",
       };
       if(data.whatsappNumber === ""){
         if(localStorage.getItem("whatsappNumber")){

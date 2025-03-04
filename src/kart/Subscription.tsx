@@ -69,7 +69,7 @@ const Alert: React.FC<AlertProps> = ({
   const baseStyles = "rounded-lg p-4 flex items-start gap-3 shadow-sm";
   const variantStyles = variant === 'destructive'
     ? 'bg-red-50 text-red-700 border border-red-200'
-    : 'bg-blue-50 text-blue-700 border border-blue-200';
+    : 'bg-purple-50 text-purple-700 border border-purple-200';
 
   return (
     <div className={`${baseStyles} ${variantStyles} ${className}`}>
@@ -609,7 +609,7 @@ const Subscription: React.FC = () => {
                   key: "1",
                   label: (
                     <span className="flex items-center gap-2">
-                      <CreditCard size={16} />
+                      <CreditCard size={20} />
                       Available Plans
                     </span>
                   ),
@@ -645,7 +645,7 @@ const Subscription: React.FC = () => {
                   key: "2",
                   label: (
                     <span className="flex items-center gap-2">
-                      <ArrowDownUp size={16} />
+                      <ArrowDownUp size={20} />
                       Transaction History
                     </span>
                   ),

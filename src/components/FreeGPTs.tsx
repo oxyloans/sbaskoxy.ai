@@ -25,18 +25,6 @@ const FreeGPTs = () => {
         return;
     }
 
-    // Validation: Minimum length check
-    if (trimmedQuery.length < 3) {
-        alert("Search query must be at least 3 characters long.");
-        return;
-    }
-
-    // Optional: Check for invalid characters (you can customize the regex)
-    const invalidChars = /[^a-zA-Z0-9\s]/;
-    if (invalidChars.test(trimmedQuery)) {
-        alert("Search query contains invalid characters. Please use only letters, numbers, and spaces.");
-        return;
-    }
 
     // Proceed with navigation if validations pass
     window.location.href = userId

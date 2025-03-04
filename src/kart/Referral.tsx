@@ -238,7 +238,7 @@ const ReferralPage: React.FC = () => {
     bgColor, 
     iconColor 
   }) => (
-    <div className="bg-white rounded-xl shadow-sm p-6">
+    <div className="bg-white rounded-xl shadow-sm p-4">
       <div className="flex items-center gap-4">
         <div className={`p-3 ${bgColor} rounded-lg`}>
           <div className={`h-6 w-6 ${iconColor}`}>{icon}</div>
@@ -274,7 +274,7 @@ const ReferralPage: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-white rounded-xl shadow-sm p-4">
             <h2 className="text-2xl font-bold mb-6 text-purple-600">Refer a Friend & Earn</h2>
 
             <div className="grid md:grid-cols-2 gap-6">

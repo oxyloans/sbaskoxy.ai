@@ -53,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCollapse, onItemClick }) => {
     {
       to: "/main/profile",
       icon: <User size={20} />,
-      label: "Profile Information",
+      label: "Profile",
     },
     {
       to: "/main/wallet",

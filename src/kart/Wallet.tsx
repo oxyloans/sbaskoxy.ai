@@ -6,8 +6,9 @@ import { Menu, X, Plus, ArrowUpRight, ArrowDownRight, CreditCard, Wallet, Chevro
 
 interface Transaction {
   id: string;
-  type: '1' | '2';
+  walletTxType: 1 | 2 ;
   amount: number;
+  refereedTo:number;
   date: string;
   method: string;
   description: string;
@@ -23,14 +24,14 @@ const MyWalletPage: React.FC = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<'all' | '1' | '2'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 1 | 2 >('all');
   const [amount, setAmount] = useState<string>('0');
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const filteredTransactions = transactions.filter(transaction => {
     if (activeTab === 'all') return true;
-    return transaction.type === activeTab;
+    return transaction.walletTxType === activeTab;
   });
 
   useEffect(() => {
@@ -95,8 +96,8 @@ const MyWalletPage: React.FC = () => {
                       <p className="text-sm text-green-600 mb-1">Total Income</p>
                       <p className="text-xl font-bold text-green-700">
                         ₹{transactions
-                          .filter(t => t.type === '1')
-                          .reduce((sum, t) => sum + t.amount, 0)
+                          .filter(t => t.walletTxType === 1)
+                          .reduce((sum, t) => sum + t.refereedTo, 0)
                           .toLocaleString()}
                       </p>
                     </div>
@@ -104,8 +105,8 @@ const MyWalletPage: React.FC = () => {
                       <p className="text-sm text-red-600 mb-1">Total Spent</p>
                       <p className="text-xl font-bold text-red-700">
                         ₹{transactions
-                          .filter(t => t.type === '2')
-                          .reduce((sum, t) => sum + t.amount, 0)
+                          .filter(t => t.walletTxType === 2)
+                          .reduce((sum, t) => sum + t.walletTxAmount, 0)
                           .toLocaleString()}
                       </p>
                     </div>
@@ -117,7 +118,7 @@ const MyWalletPage: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-6">Transaction History</h2>
                 
                 <div className="flex gap-4 mb-6 border-b">
-                  {(['all'] as const).map((tab) => (
+                  {(['all', 1, 2] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
@@ -127,7 +128,7 @@ const MyWalletPage: React.FC = () => {
                           : 'text-gray-600 hover:text-purple-600'
                       }`}
                     >
-                      {tab}
+                      {tab==='all' ? 'All' : tab === 1 ? 'Credit' : 'Debit'}
                     </button>
                   ))}
                 </div>
@@ -150,11 +151,11 @@ const MyWalletPage: React.FC = () => {
                         >
                           <div className="flex items-center gap-4">
                             <div className={`p-2 rounded-full ${
-                              transaction.type === '1' 
+                              transaction.walletTxType === 1 
                                 ? 'bg-green-100 text-green-600' 
                                 : 'bg-red-100 text-red-600'
                             }`}>
-                              {transaction.type === '1' 
+                              {transaction.walletTxType === 1 
                                 ? <ArrowUpRight className="w-5 h-5" />
                                 : <ArrowDownRight className="w-5 h-5" />
                               }
@@ -168,7 +169,7 @@ const MyWalletPage: React.FC = () => {
                           </div>
                           <div className="text-right">
                             <p className={`font-semibold ${
-                              transaction.type === '1' 
+                              transaction.walletTxType === 1 
                                 ? 'text-green-600' 
                                 : 'text-red-600'
                             }`}>
