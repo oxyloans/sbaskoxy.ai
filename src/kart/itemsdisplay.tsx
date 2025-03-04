@@ -507,7 +507,7 @@ const ItemDisplayPage = () => {
                       <span className="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-lg">
                         {calculateDiscount(
                           Number(itemDetails.itemMrp) ||
-                            Number(itemDetails.priceMrp),
+                          Number(itemDetails.priceMrp),
                           Number(itemDetails.itemPrice)
                         )}
                         % OFF
@@ -519,9 +519,8 @@ const ItemDisplayPage = () => {
                   {itemDetails && (
                     <div className="absolute top-4 left-4">
                       <div
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 ${
-                          getStockStatus(itemDetails.quantity).color
-                        }`}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 ${getStockStatus(itemDetails.quantity).color
+                          }`}
                       >
                         {itemDetails.quantity <= 5 && (
                           <AlertCircle className="w-4 h-4" />
@@ -566,11 +565,10 @@ const ItemDisplayPage = () => {
                         <div className="flex flex-col gap-3">
                           <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
                             <button
-                              className={`p-2 rounded-lg transition-all ${
-                                cartItems[itemDetails.itemId] <= 1
+                              className={`p-2 rounded-lg transition-all ${cartItems[itemDetails.itemId] <= 1
                                   ? "bg-red-100 text-red-600 hover:bg-red-200"
                                   : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                              }`}
+                                }`}
                               onClick={() =>
                                 itemDetails &&
                                 handleQuantityChange(itemDetails, false)
@@ -587,11 +585,10 @@ const ItemDisplayPage = () => {
                               </span>
                             )}
                             <button
-                              className={`p-2 rounded-lg transition-all ${
-                                isMaxStockReached(itemDetails)
+                              className={`p-2 rounded-lg transition-all ${isMaxStockReached(itemDetails)
                                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                   : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                              }`}
+                                }`}
                               onClick={() =>
                                 !isMaxStockReached(itemDetails) &&
                                 handleQuantityChange(itemDetails, true)
@@ -599,7 +596,7 @@ const ItemDisplayPage = () => {
                               // disabled={isMaxStockReached(itemDetails)}
                               disabled={
                                 cartItems[itemDetails.itemId] >=
-                                  itemDetails.quantity ||
+                                itemDetails.quantity ||
                                 loadingItems.items[itemDetails.itemId]
                               }
                             >
@@ -624,7 +621,7 @@ const ItemDisplayPage = () => {
                             transform transition-all hover:scale-105 flex items-center justify-center gap-2"
                         >
                           {itemDetails &&
-                          loadingItems.items[itemDetails.itemId] ? (
+                            loadingItems.items[itemDetails.itemId] ? (
                             <Loader2 className="mr-2 animate-spin inline-block" />
                           ) : (
                             <>
@@ -661,8 +658,8 @@ const ItemDisplayPage = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 bg-purple-50 p-3 rounded-lg">
-                  
-                  
+
+
                   <span className="font-medium"> {itemDetails?.itemDescription}</span>
                 </div>
               </div>
@@ -696,18 +693,16 @@ const ItemDisplayPage = () => {
                       {messages.map((msg, idx) => (
                         <div
                           key={idx}
-                          className={`flex ${
-                            msg.type === "sent"
+                          className={`flex ${msg.type === "sent"
                               ? "justify-end"
                               : "justify-start"
-                          }`}
+                            }`}
                         >
                           <div
-                            className={`max-w-[75%] p-3 rounded-lg ${
-                              msg.type === "sent"
+                            className={`max-w-[75%] p-3 rounded-lg ${msg.type === "sent"
                                 ? "bg-purple-600 text-white"
                                 : "bg-purple-50 border border-purple-100"
-                            }`}
+                              }`}
                           >
                             {msg.type === "system" && (
                               <Bot className="w-4 h-4 text-purple-600 mb-1" />
@@ -745,58 +740,103 @@ const ItemDisplayPage = () => {
                   {relatedItems.map((item, index) => (
                     <div
                       key={index}
-                      className="bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                      className="relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all"
+                      onClick={() => handleRelatedItemClick(item)}
                     >
-                      <div className="aspect-square relative">
-                        <img
-                          src={item.itemImage || item.image}
-                          alt={item.itemName}
-                          className="w-full h-full object-cover"
-                          onClick={() => handleRelatedItemClick(item)}
-                        />
-                        <div className="absolute top-2 right-2 bg-purple-600 text-white px-2 py-0.5 rounded-full text-xs">
-                          {calculateDiscount(item.itemMrp, item.itemPrice)}% OFF
-                        </div>
+                      {/* Discount badge */}
+                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                        {calculateDiscount(item.itemMrp, item.itemPrice)}% OFF
                       </div>
-                      <div className="p-4">
-                        <h3 className="font-medium text-sm mb-2 line-clamp-2">
+
+                      {/* Item image and details */}
+                      <div className="p-3">
+                        <div className="h-32 bg-gray-100 rounded-md mb-3"></div>
+                        <h3 className="font-medium text-gray-800 line-clamp-2 mb-1">
                           {item.itemName}
                         </h3>
-                        <div className="flex items-baseline justify-between mb-3">
-                          <span className="text-purple-600 font-bold">
-                            ₹{item.itemPrice}
-                          </span>
-                          <span className="text-gray-500 text-xs line-through">
-                            ₹{item.itemMrp}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">₹{item.itemPrice}</span>
+                          <span className="text-gray-500 text-sm line-through">₹{item.itemMrp}</span>
                         </div>
-                        {cartItems[item.itemId] ? (
-                          <div className="flex items-center justify-center space-x-3">
+
+                        {/* Add to cart functionality with stock check */}
+                        <div className="mt-3">
+                          {item.quantity !== 0 ? (
+                            cartItems[item.itemId] ? (
+                              <div className="flex items-center justify-between bg-purple-50 rounded-lg p-2">
+                                <button
+                                  className={`p-1.5 rounded-lg transition-all ${cartItems[item.itemId] <= 1
+                                      ? "bg-red-100 text-red-600 hover:bg-red-200"
+                                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                                    }`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuantityChange(item, false);
+                                  }}
+                                  disabled={loadingItems.items[item.itemId]}
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </button>
+
+                                {loadingItems.items[item.itemId] ? (
+                                  <Loader2 className="animate-spin text-purple-600 w-4 h-4" />
+                                ) : (
+                                  <span className="font-medium text-purple-700">
+                                    {cartItems[item.itemId]}
+                                  </span>
+                                )}
+
+                                <button
+                                  className={`p-1.5 rounded-lg transition-all ${cartItems[item.itemId] >= item.quantity
+                                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                                    }`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (cartItems[item.itemId] < item.quantity) {
+                                      handleQuantityChange(item, true);
+                                    }
+                                  }}
+                                  disabled={
+                                    cartItems[item.itemId] >= item.quantity ||
+                                    loadingItems.items[item.itemId]
+                                  }
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!loadingItems.items[item.itemId]) {
+                                    handleAddToCart(item);
+                                  }
+                                }}
+                                className="w-full py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 
+                transform transition-all flex items-center justify-center gap-1.5"
+                              >
+                                {loadingItems.items[item.itemId] ? (
+                                  <Loader2 className="animate-spin w-4 h-4" />
+                                ) : (
+                                  <>
+                                    <ShoppingCart className="w-4 h-4" />
+                                    Add to Cart
+                                  </>
+                                )}
+                              </button>
+                            )
+                          ) : (
                             <button
-                              className="p-1.5 bg-purple-100 text-purple-600 rounded-md hover:bg-purple-200"
-                              onClick={() => handleQuantityChange(item, false)}
+                              disabled
+                              className="w-full py-2 bg-gray-200 text-gray-600 text-sm rounded-lg 
+              flex items-center justify-center gap-1.5 cursor-not-allowed"
                             >
-                              <Minus className="w-3 h-3" />
+                              <ShoppingCart className="w-4 h-4" />
+                              Out of Stock
                             </button>
-                            <span className="font-bold text-sm w-6 text-center">
-                              {cartItems[item.itemId]}
-                            </span>
-                            <button
-                              className="p-1.5 bg-purple-100 text-purple-600 rounded-md hover:bg-purple-200"
-                              onClick={() => handleQuantityChange(item, true)}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            className="w-full py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center justify-center gap-1.5 text-sm"
-                            onClick={() => handleAddToCart(item)}
-                          >
-                            <ShoppingCart className="w-3 h-3" />
-                            Add to Cart
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
