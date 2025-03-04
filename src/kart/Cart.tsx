@@ -7,6 +7,7 @@ import { Button, message, Modal, } from "antd";
 import Footer from "../components/Footer";
 import { CartContext } from "../until/CartContext";
 import { LoadingOutlined } from "@ant-design/icons";
+import  BASE_URL  from "../Config";
 
 interface Address {
   id?: string;
@@ -78,7 +79,6 @@ const CartPage: React.FC = () => {
   });
 
   const navigate = useNavigate();
-  const BASE_URL = "https://meta.oxyglobal.tech/api";
   const customerId = localStorage.getItem("userId");
   const token = localStorage.getItem("accessToken");
 

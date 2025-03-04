@@ -15,6 +15,7 @@ import axios from 'axios';
 import 'react-phone-number-input/style.css';
 import { Modal } from 'antd';
 import { Navigate } from 'react-router-dom';
+import BASE_URL from '../Config';
 
 interface RefereeDetail {
   id: string;
@@ -70,7 +71,7 @@ const ReferralPage: React.FC = () => {
   const fetchUserDetails = async () => {
     try {
       const response = await axios.get(
-        `https://meta.oxyglobal.tech/api/user-service/user/${customerId}`,
+        `${BASE_URL}/user-service/user/${customerId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -102,7 +103,7 @@ const ReferralPage: React.FC = () => {
   const fetchRefereeDetails = async () => {
     try {
       const response = await axios.get<RefereeDetail[]>(
-        `https://meta.oxyglobal.tech/api/reference-service/getreferencedetails/${customerId}`,
+        `${BASE_URL}/reference-service/getreferencedetails/${customerId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -183,7 +184,7 @@ const ReferralPage: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        'https://meta.oxyglobal.tech/api/user-service/inviteaUser',
+        BASE_URL+'/user-service/inviteaUser',
         {
           referealId: customerId,
           refereeMobileNumber: phoneNumber.replace(countryCode, ''), // Remove country code

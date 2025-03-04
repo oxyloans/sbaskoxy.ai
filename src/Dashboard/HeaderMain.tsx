@@ -7,7 +7,7 @@ import AskOxyLogo from "../assets/img/askoxylogostatic.png";
 import { CartContext } from "../until/CartContext";
 import axios from "axios";
 
-const BASE_URL = "https://meta.oxyglobal.tech/api";
+import  BASE_URL  from "../Config";
 
 interface HeaderProps {
   cartCount: number;

@@ -4,6 +4,7 @@ import axios from "axios";
 import Sidebar from "./SidebarMain";
 import Header from "./HeaderMain";
 import Tabview from "./Tabview";
+import  BASE_URL  from "../Config";
 
 const Content1: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -20,7 +21,7 @@ const Content1: React.FC = () => {
     }
   };
 
-  const BASE_URL = "https://meta.oxyglobal.tech/api";
+
   const customerId = localStorage.getItem("userId") || "";
   const token = localStorage.getItem("token") || "";
 

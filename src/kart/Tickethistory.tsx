@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { FaBars, FaTimes, FaArrowLeft, FaFilter, FaFile, FaComments, FaBan, FaPen } from "react-icons/fa";
 import { Modal, Spin } from "antd";
 import { Menu, X, Plus, ArrowUpRight, ArrowDownRight, CreditCard, Wallet, ChevronRight } from 'lucide-react';
+import  BASE_URL  from "../Config";
 
 type TicketStatus = "PENDING" | "COMPLETED" | "CANCELLED";
 
@@ -80,7 +81,7 @@ const TicketHistoryPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://meta.oxyglobal.tech/api/user-service/write/getAllQueries",
+        BASE_URL+"/user-service/write/getAllQueries",
         {
           askOxyOfers: "FREESAMPLE",
           userId: storedUserId,
@@ -128,7 +129,7 @@ const TicketHistoryPage: React.FC = () => {
     setCancelLoader(true);
     try {
       await axios.post(
-        "https://meta.oxyglobal.tech/api/user-service/write/saveData",
+        BASE_URL+"/user-service/write/saveData",
         {
           adminDocumentId: "",
           askOxyOfers: "FREESAMPLE",

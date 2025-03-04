@@ -38,6 +38,7 @@ import MMServices from "../assets/img/manufacturing.png";
 import hiring from "../assets/img/wearehiring.png";
 import FreeChatGPTmain from "./FreechatGPTmain";
 import BMVCOINmain from "./BMVcoinmain";
+import BASE_URL from "../Config";
 interface DashboardItem {
   title: string;
   image: string;
@@ -80,7 +81,7 @@ const DashboardMain: React.FC = () => {
     const fetchCampaigns = async () => {
       try {
         const response = await axios.get<Campaign[]>(
-          "https://meta.oxyglobal.tech/api/marketing-service/campgin/getAllCampaignDetails"
+          BASE_URL+"/marketing-service/campgin/getAllCampaignDetails"
         );
         setCampaigns(response.data);
       } catch (err) {

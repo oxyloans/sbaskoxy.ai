@@ -5,8 +5,7 @@ import { message, Modal } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Package, AlertCircle, Loader2 } from "lucide-react";
 import  checkProfileCompletion  from "../until/ProfileCheck";
-
-const BASE_URL = "https://meta.oxyglobal.tech/api";
+import  BASE_URL  from "../Config";
 
 interface Item {
   itemName: string;

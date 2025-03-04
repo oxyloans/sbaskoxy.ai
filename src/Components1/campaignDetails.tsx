@@ -5,6 +5,7 @@ import axios from "axios";
 import { message, notification } from "antd";
 import { Spin } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
+import BASE_URL from "../Config";
 
 interface Image {
   imageId: string;
@@ -42,7 +43,6 @@ const CampaignDetails: React.FC = () => {
     userId: userId,
     projectType: "ASKOXY",
   });
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   // Fetch campaigns from the API
   useEffect(() => {
@@ -50,7 +50,7 @@ const CampaignDetails: React.FC = () => {
       setIsLoading(true);
       try {
         const response = await axios.get<Campaign[]>(
-          `${BASE_URL}marketing-service/campgin/getAllCampaignDetails`
+          `${BASE_URL}/marketing-service/campgin/getAllCampaignDetails`
         );
         setCampaigns(response.data);
       } catch (err) {

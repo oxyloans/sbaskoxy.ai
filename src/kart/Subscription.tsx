@@ -8,6 +8,7 @@ import { message, Modal, Tabs, Empty } from 'antd';
 import decryptEas from './decryptEas';
 import encryptEas from './encryptEas'; 
 import { motion, AnimatePresence } from "framer-motion";
+import  BASE_URL  from "../Config";
 
 // Types
 type SubscriptionPlan = {
@@ -226,7 +227,6 @@ const Subscription: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("1");
   
   const navigate = useNavigate();
-  const BASEURL = "https://meta.oxyglobal.tech/api";
   const token = localStorage.getItem('accessToken');
   const userId = localStorage.getItem('userId');
 
@@ -261,7 +261,7 @@ const Subscription: React.FC = () => {
     setIsHistoryLoading(true);
     try {
       const response = await axios.post(
-        `${BASEURL}/order-service/getSubscriptionsDetailsForaCustomer`,
+        `${BASE_URL}/order-service/getSubscriptionsDetailsForaCustomer`,
         {
           customerId: userId,
           active: null, // Get all subscriptions (active and inactive)
@@ -297,7 +297,7 @@ const Subscription: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        `${BASEURL}/order-service/userSubscriptionAmount`, 
+        `${BASE_URL}/order-service/userSubscriptionAmount`, 
         { 
           planId, 
           customerId: localStorage.getItem('userId'),
@@ -487,7 +487,7 @@ const Subscription: React.FC = () => {
             if (data.paymentStatus == "SUCCESS" || data.paymentStatus == "FAILURE") {
               axios({
                 method: "POST",
-                url: `${BASEURL}/order-service/userSubscriptionAmount`,
+                url: `${BASE_URL}/order-service/userSubscriptionAmount`,
                 data: {
                   paymentId: localStorage.getItem('merchantTransactionId'),
                   paymentStatus: data.paymentStatus,
@@ -538,7 +538,7 @@ const Subscription: React.FC = () => {
 
   const getPlans = async () => {
     try {
-      const response = await axios.get<SubscriptionPlan[]>(`${BASEURL}/order-service/getAllPlans`);
+      const response = await axios.get<SubscriptionPlan[]>(`${BASE_URL}/order-service/getAllPlans`);
       const sortedData = response.data.sort((a, b) => a.amount - b.amount);
       setSubscriptionPlans(sortedData);
     } catch (error) {
@@ -550,7 +550,7 @@ const Subscription: React.FC = () => {
   const userPlanDetails = async () => {
     try {
       const response = await axios.post(
-        `${BASEURL}/order-service/getSubscriptionsDetailsForaCustomer`, 
+        `${BASE_URL}/order-service/getSubscriptionsDetailsForaCustomer`, 
         { 
           customerId: localStorage.getItem('userId'),
           active: true

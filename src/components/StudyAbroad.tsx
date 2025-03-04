@@ -23,6 +23,7 @@ import S5 from "../assets/img/1.6.png";
 
 import Footer from "./Footer";
 import { message } from "antd";
+import BASE_URL from "../Config";
 
 import img1 from "../assets/img/image1.png";
 import img2 from "../assets/img/image2.png";
@@ -76,7 +77,6 @@ const StudyAbroad: React.FC = () => {
     mobileNumber: mobileNumber,
     projectType: "ASKOXY",
   });
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -92,7 +92,7 @@ const StudyAbroad: React.FC = () => {
       setIsButtonDisabled(true);
       // API request to submit the form data
       const response = await axios.post(
-        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        `${BASE_URL}/marketing-service/campgin/askOxyOfferes`,
         formData
       );
       console.log("API Response:", response.data);
@@ -189,7 +189,7 @@ const StudyAbroad: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `${BASE_URL}writetous-service/saveData`;
+    const apiUrl = `${BASE_URL}/writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`,
     };

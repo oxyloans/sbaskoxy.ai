@@ -17,6 +17,7 @@ import {
   Smartphone,
   ShieldCheck,
 } from "lucide-react";
+import BASE_URL from "../../Config";
 
 const WhatsappLogin = () => {
   const navigate = useNavigate();
@@ -209,7 +210,7 @@ const WhatsappLogin = () => {
       }
 
       const response = await axios.post(
-        "https://meta.oxyglobal.tech/api/user-service/registerwithMobileAndWhatsappNumber",
+        BASE_URL+"/user-service/registerwithMobileAndWhatsappNumber",
         requestBody
       );
       setIsButtonEnabled(true);
@@ -311,7 +312,7 @@ const WhatsappLogin = () => {
       }
 
       const response = await axios.post(
-        "https://meta.oxyglobal.tech/api/user-service/registerwithMobileAndWhatsappNumber",
+        BASE_URL+"/user-service/registerwithMobileAndWhatsappNumber",
         requestBody
       );
       if (response.data) {
@@ -369,7 +370,7 @@ const WhatsappLogin = () => {
         }
 
         const response = await axios.post(
-          "https://meta.oxyglobal.tech/api/user-service/registerwithMobileAndWhatsappNumber",
+          BASE_URL+"/user-service/registerwithMobileAndWhatsappNumber",
           requestBody
         );
         if (response.data) {

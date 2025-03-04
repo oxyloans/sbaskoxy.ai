@@ -14,6 +14,7 @@ import {
   ArrowRight,
   RefreshCcw,
 } from "lucide-react";
+import BASE_URL from "../../Config";
 
 const WhatsappRegister = () => {
   const navigate = useNavigate();
@@ -187,7 +188,7 @@ const WhatsappRegister = () => {
       }
 
       const response = await axios.post(
-        "https://meta.oxyglobal.tech/api/user-service/registerwithMobileAndWhatsappNumber",
+        BASE_URL+"/user-service/registerwithMobileAndWhatsappNumber",
         requestBody
       );
       
@@ -293,7 +294,7 @@ const WhatsappRegister = () => {
       }
 
       const response = await axios.post(
-        "https://meta.oxyglobal.tech/api/user-service/registerwithMobileAndWhatsappNumber",
+        BASE_URL+"/user-service/registerwithMobileAndWhatsappNumber",
         requestBody
       );
 
@@ -350,7 +351,7 @@ const WhatsappRegister = () => {
           requestBody.mobileNumber = phoneNumber?.replace(countryCode, '');
         }
         const response = await axios.post(
-          "https://meta.oxyglobal.tech/api/user-service/registerwithMobileAndWhatsappNumber",
+          BASE_URL+"/user-service/registerwithMobileAndWhatsappNumber",
           requestBody
         );
         if (response.data) {

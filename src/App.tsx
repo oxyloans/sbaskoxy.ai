@@ -49,8 +49,8 @@ import ThankYouPage from "./components/ThankYouPage";
 import BMVCOIN from "./Components1/BMVCOIN";
 import WhatsappLogin from "./Components1/Auth/WhatsappLogin";
 import WhatsappRegister from "./Components1/Auth/WhatsappRegister";
-  import AllQueries from "./Pages/AllQueries";
-  import RequireAuth from "./auth/RequireAuth";
+import AllQueries from "./Pages/AllQueries";
+import RequireAuth from "./auth/RequireAuth";
 import ItemDisplayPage from "./kart/itemsdisplay";
 import MyWalletPage from "./kart/Wallet";
 import CartPage from "./kart/Cart";
@@ -72,6 +72,7 @@ import CampaignDetails from "./Components1/campaignDetails";
 import FreeChatGPTnormal
  from "./Dashboard/Freechatgptnormal";
 import HiddenLogin from "./Components1/Auth/HiddenLogin";
+
 const App: React.FC = () => {
   return (
     <CartProvider>
@@ -166,8 +167,6 @@ const App: React.FC = () => {
           <Route path="/privacypolicy" element={<PrivacyPolicy/>}/>
           <Route path="/bmvpdf" element={<BMVPDF />} />
           
-         
-
           {/* {Dashboard Main routes} */}
           <Route path="/main" element={<RequireAuth><Content1/></RequireAuth>} >
           <Route

@@ -13,6 +13,7 @@ import { Loader2, X } from "lucide-react";
 import Checkbox from 'antd';
 import { CartContext } from '../until/CartContext';
 import { log } from 'console';
+import  BASE_URL  from "../Config";
 
 interface CartItem {
   itemId: string;
@@ -74,7 +75,6 @@ const CheckoutPage: React.FC = () => {
   const [paymentStatus,setPaymentStatus] = useState(null)
   const navigate = useNavigate();
 
-  const BASE_URL = 'https://meta.oxyglobal.tech/api';
   const customerId = localStorage.getItem('userId');
   const token = localStorage.getItem('accessToken');
   const userData = localStorage.getItem('profileData')

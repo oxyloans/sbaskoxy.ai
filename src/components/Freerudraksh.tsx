@@ -23,6 +23,7 @@ import img4 from "../assets/img/image4.png";
 import img5 from "../assets/img/image5.png";
 import img6 from "../assets/img/image6.png";
 import { FaSquareWhatsapp } from "react-icons/fa6";
+import BASE_URL from "../Config";
 
 const images = [
   { src: img1, alt: "Image 1" },
@@ -35,7 +36,6 @@ const images = [
 
 const Freerudraksha: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   const handleNext = () => {
     if (currentIndex < images.length - 1) {
@@ -98,7 +98,7 @@ const Freerudraksha: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `${BASE_URL}auth-service/auth/getuserAddress?userId=${userId}`
+        `${BASE_URL}/auth-service/auth/getuserAddress?userId=${userId}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -131,7 +131,7 @@ const Freerudraksha: React.FC = () => {
       return; // Prevent submitting again
     }
 
-    const endpoint = `${BASE_URL}marketing-service/campgin/rudhrakshaDistribution`;
+    const endpoint = `${BASE_URL}/marketing-service/campgin/rudhrakshaDistribution`;
     const payload = { address, userId };
 
     try {
@@ -190,7 +190,7 @@ const Freerudraksha: React.FC = () => {
       return; // Prevent submitting again
     }
 
-    const endpoint = `${BASE_URL}marketing-service/campgin/rudhrakshaDistribution`;
+    const endpoint = `${BASE_URL}/marketing-service/campgin/rudhrakshaDistribution`;
     const payload = { userId, deliveryType };
 
     try {
@@ -294,7 +294,7 @@ const Freerudraksha: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `${BASE_URL}writetous-service/saveData`;
+    const apiUrl = `${BASE_URL}/writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };

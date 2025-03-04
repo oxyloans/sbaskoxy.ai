@@ -3,6 +3,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
+import BASE_URL from "../../Config";
 
 interface EducationDetail {
   graduationType: string;
@@ -94,14 +95,14 @@ const UserProfile = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
+
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!userId) return;
       try {
         const response = await axios.get<UserProfile>(
-          `${BASE_URL}user-service/getProfile/${userId}`
+          `${BASE_URL}/user-service/getProfile/${userId}`
         );
         setIsLoading(true);
         console.log(response.data);

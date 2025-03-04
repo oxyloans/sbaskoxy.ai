@@ -10,6 +10,7 @@ import {
   PencilSquareIcon,
   ChatBubbleLeftEllipsisIcon,
 } from "@heroicons/react/24/outline";
+import BASE_URL from "../Config";
 type ChatHistoryItem = {
   id: string;
   userQuestions: string;
@@ -250,7 +251,7 @@ const FreeChatGpt: React.FC = () => {
     const handleMultichainID = () => {
       axios
         .get(
-          `https://meta.oxyglobal.tech/api/user-service/getProfile/${localStorage.getItem(
+          `${BASE_URL}/user-service/getProfile/${localStorage.getItem(
             "userId"
           )}`
         )

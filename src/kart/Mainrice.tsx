@@ -9,6 +9,7 @@ import rice2 from "../assets/img/ricecard2.png";
 import rice3 from "../assets/img/ricecard3.png";
 import { CartContext } from "../until/CartContext";
 import { FaSearch } from "react-icons/fa";
+import  BASE_URL  from "../Config";
 
 interface Item {
   itemName: string;
@@ -108,7 +109,7 @@ const Ricebags: React.FC = () => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          "https://meta.oxyglobal.tech/api/product-service/showItemsForCustomrs"
+          BASE_URL+"/product-service/showItemsForCustomrs"
         );
         const data: Category[] = response.data;
         

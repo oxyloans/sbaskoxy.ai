@@ -5,6 +5,7 @@ import Image1 from "../assets/img/WEBSITE (1).png";
 import Image2 from "../assets/img/R2.png";
 import { Modal, Button, Input, message, Form } from "antd";
 import Footer from '../components/Footer';
+import  BASE_URL  from "../Config";
 
 const FreeRudrakshaPage = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const FreeRudrakshaPage = () => {
     details: ''
   });
 
+
   const storedPhoneNumber = localStorage.getItem("whatsappNumber");
   const [savedAddress, setSavedAddress] = useState<string>("");
   const [delivery, setDelivery] = useState<string>("");
@@ -40,7 +42,6 @@ const FreeRudrakshaPage = () => {
   const userId = localStorage.getItem('userId');
   const email = localStorage.getItem('email');
   const whatsappNumber = localStorage.getItem('whatsappNumber');
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   // Other services
   const otherServices = [
@@ -86,7 +87,7 @@ const FreeRudrakshaPage = () => {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${BASE_URL}contact-service/contact/submit`, {
+      const response = await fetch(`${BASE_URL}/contact-service/contact/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ const FreeRudrakshaPage = () => {
   const fetchUserAddress = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${BASE_URL}auth-service/auth/getuserAddress?userId=${userId}`);
+      const response = await fetch(`${BASE_URL}/auth-service/auth/getuserAddress?userId=${userId}`);
       if (response.ok) {
         const data = await response.json();
         setSavedAddress(data.address);
@@ -165,7 +166,7 @@ const FreeRudrakshaPage = () => {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${BASE_URL}marketing-service/campgin/rudhrakshaDistribution`, {
+      const response = await fetch(`${BASE_URL}/marketing-service/campgin/rudhrakshaDistribution`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address, userId }),
@@ -204,7 +205,7 @@ const FreeRudrakshaPage = () => {
 
     try {
       setIsLoading(true);
-      const response = await fetch(`${BASE_URL}marketing-service/campgin/rudhrakshaDistribution`, {
+      const response = await fetch(`${BASE_URL}/marketing-service/campgin/rudhrakshaDistribution`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, deliveryType }),

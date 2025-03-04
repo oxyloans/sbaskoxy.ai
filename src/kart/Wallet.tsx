@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Footer from "../components/Footer";
 import axios from 'axios';
 import { Menu, X, Plus, ArrowUpRight, ArrowDownRight, CreditCard, Wallet, ChevronRight } from 'lucide-react';
+import BASE_URL from '../Config';
 
 interface Transaction {
   id: string;
@@ -42,7 +43,7 @@ const MyWalletPage: React.FC = () => {
   const getTransactions = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.post('https://meta.oxyglobal.tech/api/order-service/customerWalletData', {
+      const response = await axios.post(BASE_URL+'/order-service/customerWalletData', {
         customerId: localStorage.getItem("userId")
       });
       setTransactions(response.data.walletTransactions || []);

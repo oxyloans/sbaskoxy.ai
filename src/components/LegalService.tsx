@@ -12,6 +12,7 @@ import img5 from "../assets/img/image5.png";
 import img6 from "../assets/img/image6.png";
 import axios from "axios";
 import { notification } from "antd";
+import BASE_URL from "../Config";
 
 import { message } from "antd";
 
@@ -37,7 +38,6 @@ const LegalService: React.FC = () => {
   const [query, setQuery] = useState("");
   const [queryError, setQueryError] = useState<string | undefined>(undefined);
   const mobileNumber = localStorage.getItem("whatsappNumber");
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
   const handleNext = () => {
     if (currentIndex < images.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -75,7 +75,7 @@ const LegalService: React.FC = () => {
       setIsButtonDisabled(true);
       // API request to submit the form data
       const response = await axios.post(
-        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        `${BASE_URL}/marketing-service/campgin/askOxyOfferes`,
         formData
       );
       console.log("API Response:", response.data);
@@ -154,7 +154,7 @@ const LegalService: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `${BASE_URL}writetous-service/saveData`;
+    const apiUrl = `${BASE_URL}/writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };

@@ -21,7 +21,7 @@ import ValidationPopup from "./ValidationPopup";
 import Footer from "../components/Footer";
 import { CartContext } from "../until/CartContext";
 
-const BASE_URL = "https://meta.oxyglobal.tech/api";
+import  BASE_URL  from "../Config";
 
 interface Item {
   itemId: string;

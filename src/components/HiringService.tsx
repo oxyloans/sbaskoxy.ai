@@ -8,6 +8,7 @@ import img4 from "../assets/img/image4.png";
 import img5 from "../assets/img/image5.png";
 import img6 from "../assets/img/image6.png";
 import { useNavigate } from "react-router-dom";
+import BASE_URL from "../Config";
 
 import Footer from "./Footer";
 const { Title, Paragraph } = Typography;
@@ -32,7 +33,6 @@ const HiringService: React.FC = () => {
   const [queryError, setQueryError] = useState<string | undefined>();
   const [isprofileOpen, setIsprofileOpen] = useState<boolean>(false);
   const [query, setQuery] = useState("");
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
   const handleNext = () => {
     if (currentIndex < images.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -71,7 +71,7 @@ const HiringService: React.FC = () => {
       setIsButtonDisabled(true);
       // API request to submit the form data
       const response = await axios.post(
-        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        `${BASE_URL}/marketing-service/campgin/askOxyOfferes`,
         formData
       );
       console.log("API Response:", response.data);
@@ -138,7 +138,7 @@ const HiringService: React.FC = () => {
 
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `${BASE_URL}writetous-service/saveData`;
+    const apiUrl = `${BASE_URL}/writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`,
     };

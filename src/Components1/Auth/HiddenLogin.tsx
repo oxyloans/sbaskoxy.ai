@@ -6,18 +6,16 @@ import PhoneInput, { isValidPhoneNumber,getCountryCallingCode,parsePhoneNumber, 
 import "react-phone-number-input/style.css";
 import {
   X,
-  Send,
   KeyRound,
   PhoneCall,
   Loader2,
   MessageCircle,
-  ArrowRight,
-  RefreshCcw,
   CheckCircle2,
   Smartphone,
-  ShieldCheck,
   Eye,
+  ChevronDown 
 } from "lucide-react";
+import  BASE_URL  from "../../Config";
 
 const HiddenLogin = () => {
   const navigate = useNavigate();
@@ -47,6 +45,8 @@ const HiddenLogin = () => {
   const [changeNumberClicked, setChangeNumberClicked] = useState(false);
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [userType, setUserType] = useState<string>("");
+  const [userTypeError, setUserTypeError] = useState<string>("");
   const [showPasswordError, setShowPasswordError] = useState<string>("");
 
   useEffect(() => {
@@ -88,6 +88,7 @@ const HiddenLogin = () => {
          ""
       );
       setIsMethodDisabled(true); // Disable method selection when number is entered
+      setError(""); // Clear error message when number is entered
     } else {
       setIsMethodDisabled(false); // Enable method selection when number is empty
     }
@@ -114,6 +115,12 @@ const HiddenLogin = () => {
     setShowPasswordError("");
     setMessage("");
     setIsLoading(true);
+
+    if(userType === "") {
+      setUserTypeError("Please select environment");
+      setIsLoading(false);
+      return;
+    }
 
     if (!phoneNumber || !isValidPhoneNumber(phoneNumber)) {
       setError("Pleas   e enter a valid number with country code");
@@ -152,7 +159,7 @@ const HiddenLogin = () => {
       }
 
       const response = await axios.post(
-        `https://meta.oxyglobal.tech/api/user-service/hiddenLoginByMobileNumber/${otpMethod === "whatsapp"?requestBody.whatsappNumber:requestBody.mobileNumber}`,
+        `${BASE_URL}/user-service/hiddenLoginByMobileNumber/${otpMethod === "whatsapp"?requestBody.whatsappNumber:requestBody.mobileNumber}`,
         {}
       );
       if (response.data) {
@@ -269,6 +276,39 @@ const HiddenLogin = () => {
             </div>
 
             <div className="relative w-full">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Select Environment <span className="text-red-500">*</span>
+      </label>
+
+      <div className="relative">
+        <select
+          value={userType}
+          onChange={(e) => {
+            setUserType(e.target.value);
+            localStorage.setItem("userType", e.target.value || "live");
+            setUserTypeError("");
+          }}
+          className="w-full p-3 bg-white shadow-sm rounded-lg border border-gray-200 
+                     focus:outline-none focus:ring-2 focus:ring-purple-500 
+                     focus:border-purple-500 transition-all text-gray-800 
+                     placeholder-gray-400 appearance-none"
+        >
+          <option value="">Select Environment</option>
+          <option value="live">Live</option>
+          <option value="test">Test</option>
+        </select>
+
+        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      </div>
+      {userTypeError && (
+                <p className="text-red-500 text-sm mt-2 flex items-center gap-1 animate-fadeIn">
+                  <X className="w-4 h-4" />
+                  {userTypeError}
+                </p>
+              )}
+    </div>
+
+            <div className="relative w-full">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {otpMethod === "whatsapp" ? "WhatsApp Number" : "Mobile Number"}{" "}
                 <span className="text-red-500">*</span>
@@ -312,7 +352,7 @@ const HiddenLogin = () => {
                 <input 
                     type="text" 
                     value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
+                    onChange={(e) => {setPassword(e.target.value); setShowPasswordError("")}} 
                     className="w-full p-3 bg-white shadow-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-gray-800 placeholder-gray-400"
                     maxLength={15}
                     placeholder="Enter your password"
@@ -328,6 +368,8 @@ const HiddenLogin = () => {
                 </p>
               )}
             </div>
+
+
 
 
             {/* Action Buttons */}

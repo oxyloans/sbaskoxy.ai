@@ -8,6 +8,7 @@ import Footer from "./Footer";
 import { message } from "antd";
 import { ArrowLeft, ShoppingBag, Coins, Bot, Settings, X, Mail, Heart } from 'lucide-react';
 import { notification } from "antd";
+import BASE_URL from "../Config";
 
 import FG from "../assets/img/genai.png";
 import img1 from "../assets/img/image1.png";
@@ -58,7 +59,7 @@ const FreeAiandGenAi: React.FC = () => {
     userId: userId,
     projectType: "ASKOXY",
   });
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
+  
   const askOxyOfers = localStorage.getItem("askOxyOfers");
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -73,7 +74,7 @@ const FreeAiandGenAi: React.FC = () => {
       setIsButtonDisabled(true);
       // API request to submit the form data
       const response = await axios.post(
-        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        `${BASE_URL}/marketing-service/campgin/askOxyOfferes`,
         formData
       );
       console.log("API Response:", response.data);
@@ -155,7 +156,7 @@ const FreeAiandGenAi: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `${BASE_URL}writetous-service/saveData`;
+    const apiUrl = `${BASE_URL}/writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };

@@ -6,6 +6,7 @@ import { BiLogoPlayStore } from "react-icons/bi";
 import { useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import { HiOutlineDocument } from "react-icons/hi";
+import BASE_URL from "../Config";
 
 import Container from "./ContainerPolicy";
 import FR from "../assets/img/WhatsApp Image 2025-01-23 at 15.50.44.png";
@@ -63,7 +64,6 @@ const FreeSample: React.FC = () => {
     projectType: "ASKOXY",
   });
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -79,7 +79,7 @@ const FreeSample: React.FC = () => {
       setIsButtonDisabled(true);
       // API request to submit the form data
       const response = await axios.post(
-        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        `${BASE_URL}/marketing-service/campgin/askOxyOfferes`,
         formData
       );
       console.log("API Response:", response.data);
@@ -156,7 +156,7 @@ const FreeSample: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `${BASE_URL}writetous-service/saveData`;
+    const apiUrl = `${BASE_URL}/writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };

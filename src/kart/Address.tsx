@@ -5,8 +5,8 @@ import { Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { isWithinRadius } from "./LocationCheck";
 import { message } from "antd";
+import BASE_URL from "../Config";
 
-const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Address {
   id?: string;

@@ -3,8 +3,8 @@ import { Menu, X, Filter, Search, Package2, ChevronDown, MessageSquare, External
 import Footer from '../components/Footer';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import  BASE_URL  from "../Config";
 
-const BASE_URL = "https://meta.oxyglobal.tech/api/";
 
 interface OrderAddress {
   flatNo: string;
@@ -95,7 +95,7 @@ const MyOrders: React.FC = () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const API_URL = `${BASE_URL}order-service/getAllOrders_customerId`;
+      const API_URL = `${BASE_URL}/order-service/getAllOrders_customerId`;
       
       const response = await axios.post(
         API_URL,
@@ -138,8 +138,8 @@ const MyOrders: React.FC = () => {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
       const API_URL = userStage === "test1" 
-        ? `${BASE_URL}erice-service/checkout/feedback?feedbackUserId=${customerId}&orderid=${orderId}`
-        : `${BASE_URL}order-service/feedback?feedbackUserId=${userId}&orderid=${orderId}`;
+        ? `${BASE_URL}/erice-service/checkout/feedback?feedbackUserId=${customerId}&orderid=${orderId}`
+        : `${BASE_URL}/order-service/feedback?feedbackUserId=${userId}&orderid=${orderId}`;
       
       const response = await axios({
         method: "get",
@@ -178,7 +178,7 @@ const MyOrders: React.FC = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${BASE_URL}order-service/getOrdersByOrderId/${orderId}`,
+        `${BASE_URL}/order-service/getOrdersByOrderId/${orderId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -223,8 +223,8 @@ const MyOrders: React.FC = () => {
       };
       
       const API_URL = userStage === "test1"
-        ? `${BASE_URL}erice-service/checkout/submitfeedback`
-        : `${BASE_URL}order-service/submitfeedback`;
+        ? `${BASE_URL}/erice-service/checkout/submitfeedback`
+        : `${BASE_URL}/order-service/submitfeedback`;
       
       await axios({
         method: "post",

@@ -4,6 +4,7 @@ import axios from "axios";
 import Footer from "../components/Footer";
 import { FiUploadCloud, FiClock, FiMessageSquare, FiCheckCircle, FiPackage } from "react-icons/fi";
 import { Menu, X } from 'lucide-react';
+import BASE_URL from "../Config";
 
 interface ProfileData {
   userFirstName: string;
@@ -150,7 +151,7 @@ const WriteToUs: React.FC = () => {
 
     try {
       const response = await axios.get(
-        `https://meta.oxyglobal.tech/api/user-service/write/getQuery/${id}`
+        `${BASE_URL}/user-service/write/getQuery/${id}`
       );
       if (response.data) {
         setFormData(prev => ({
@@ -246,7 +247,7 @@ const WriteToUs: React.FC = () => {
 
     try {
       await axios.post(
-        "https://meta.oxyglobal.tech/api/user-service/write/saveData",
+        BASE_URL+"/user-service/write/saveData",
         data
       );
       setFormData({ query: "", documentName: "", documentId: "" });
@@ -277,7 +278,7 @@ const WriteToUs: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `https://meta.oxyglobal.tech/api/user-service/write/uploadQueryScreenShot?userId=${storedUserId}`,
+        `${BASE_URL}/user-service/write/uploadQueryScreenShot?userId=${storedUserId}`,
         formData,
         {
           onUploadProgress: (progressEvent) => {

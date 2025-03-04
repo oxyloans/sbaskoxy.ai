@@ -14,8 +14,8 @@ import Footer from "../components/Footer";
 
 import axios from "axios";
 import { isWithinRadius } from "./LocationCheck";
+import  BASE_URL  from "../Config";
 
-const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Address {
   id?: string;

@@ -14,6 +14,7 @@ import img4 from "../assets/img/image4.png";
 import img5 from "../assets/img/image5.png";
 import img6 from "../assets/img/image6.png";
 import { notification } from "antd";
+import BASE_URL from "../Config";
 
 const images = [
   { src: img1, alt: "Image 1" },
@@ -55,7 +56,6 @@ const MyRotaryServices = () => {
     mobileNumber: mobileNumber,
     projectType: "ASKOXY",
   });
-  const BASE_URL = `https://meta.oxyglobal.tech/api/`;
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -70,7 +70,7 @@ const MyRotaryServices = () => {
       setIsButtonDisabled(true);
       // API request to submit the form data
       const response = await axios.post(
-        `${BASE_URL}marketing-service/campgin/askOxyOfferes`,
+        `${BASE_URL}/marketing-service/campgin/askOxyOfferes`,
         formData
       );
       console.log("API Response:", response.data);
@@ -149,7 +149,7 @@ const MyRotaryServices = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `${BASE_URL}writetous-service/saveData`;
+    const apiUrl = `${BASE_URL}/writetous-service/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
