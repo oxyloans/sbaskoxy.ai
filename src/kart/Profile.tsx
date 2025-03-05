@@ -10,11 +10,13 @@ import {
   FaPen,
 } from "react-icons/fa";
 import { Loader2, AlertCircle, X, CheckCircle2 } from "lucide-react";
-import PhoneInput, { isValidPhoneNumber, parsePhoneNumber } from "react-phone-number-input";
+import PhoneInput, { parsePhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import Footer from "../components/Footer";
 
 import axios from "axios";
 import { isWithinRadius } from "./LocationCheck";
+import { WhatsApp } from "@mui/icons-material";
 
 const BASE_URL = "https://meta.oxyglobal.tech/api";
 
@@ -34,6 +36,7 @@ interface ProfileFormData {
   alterMobileNumber: string;
   customerId: string;
   whatsappNumber: string;
+  mobileNumber: string;
 }
 
 interface ApiError {
@@ -50,12 +53,13 @@ const ProfilePage = () => {
   const [cartCount, setCartCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [countryCode, setCountryCode] = useState("+91");  // Default India
-const [whatsappVerificationCode, setWhatsappVerificationCode] = useState("");
-const [isWhatsappVerified, setIsWhatsappVerified] = useState(false);
-const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useState(false);
+  const [whatsappVerificationCode, setWhatsappVerificationCode] = useState("");
+  const [isWhatsappVerified, setIsWhatsappVerified] = useState(false);
+  const [isMobileNumberVerified,setIsMobileNumberVerified] = useState(false)
+  const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [verifyLoader,setVerifyLoader] = useState(false)
   const [addressFormData, setAddressFormData] = useState<Address>({
     flatNo: "",
     landmark: "",
@@ -64,7 +68,6 @@ const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useSta
     addressType: "Home",
   });
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
-  const [whatsappStatus,setWhatsappStatus] = useState(false);
   const [addressFormErrors, setAddressFormErrors] = useState({
     flatNo: "",
     landmark: "",
@@ -72,45 +75,114 @@ const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useSta
     pincode: "",
   });
   const customerId = localStorage.getItem("userId") || "";
-  const [formData, setFormData] = useState<ProfileFormData & { mobileNumber: string }>({
+  const [formData, setFormData] = useState<ProfileFormData>({
     userFirstName: "",
     userLastName: "",
     customerEmail: "",
     alterMobileNumber: "",
-    customerId: customerId || "",  // customerId is used here
+    customerId: customerId || "",
     whatsappNumber: "",
     mobileNumber: "",
-});
+  });
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
   const [isValidationPopupOpen, setIsValidationPopupOpen] = useState(false);
+  const [countryCode, setCountryCode] = useState("+91");
+  const [isMethodDisabled, setIsMethodDisabled] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [editStatus, setEditStatus] = useState(true);
-
+  const [salt,setSalt] = useState();
+  const [whatsappOtpSession,setWhatsappOtpSession] = useState()
  
   const token = localStorage.getItem("token") || "";
-  const isFromWhatsApp = !!localStorage.getItem("whatsappNumber");
+  const loginMethod = localStorage.getItem("loginMethod") || "";
+  const isFromWhatsApp = loginMethod === "whatsapp";
+
+
+  useEffect(() => {
+    // Determine login method and set numbers accordingly
+    if (loginMethod === "whatsapp") {
+      const whatsappNumber = localStorage.getItem("whatsappNumber") || "";
+      setFormData(prev => ({
+        ...prev,
+        whatsappNumber: whatsappNumber,
+        mobileNumber: "", // Clear mobile number
+      }));
+    } else if (loginMethod === "mobile") {
+      const mobileNumber = localStorage.getItem("mobileNumber") || "";
+      setFormData(prev => ({
+        ...prev,
+        mobileNumber: mobileNumber,
+        whatsappNumber: "", // Clear WhatsApp number
+      }));
+    }
+  }, [loginMethod]);
+
+  useEffect(() => {
+    const phoneNumber = formData.mobileNumber || formData.whatsappNumber;
+    
+    if (phoneNumber) {
+      try {
+        const phoneNumberS = parsePhoneNumber(phoneNumber);
+        console.log("phoneNumberS.country", phoneNumberS?.countryCallingCode);
+        
+        const detectedCountryCode = phoneNumberS?.countryCallingCode 
+          ? `+${phoneNumberS.countryCallingCode}` 
+          : "+91"; // Default to India if unable to detect
+        
+        setCountryCode(detectedCountryCode);
+        setIsMethodDisabled(true); // Disable method selection when number is entered
+      } catch (error) {
+        console.error("Error parsing phone number", error);
+        setCountryCode("+91");
+        setIsMethodDisabled(false);
+      }
+    } else {
+      setCountryCode("+91"); // Reset to default
+      setIsMethodDisabled(false); // Enable method selection when number is empty
+    }
+  }, [formData.mobileNumber, formData.whatsappNumber]);
+
 
   useEffect(() => {
     if (isFromWhatsApp) {
-        setFormData((prev) => ({
-            ...prev,
-            whatsappNumber: localStorage.getItem("whatsappNumber") || "",
-            mobileNumber: "",  // mobileNumber should be empty if from WhatsApp
-        }));
+      setFormData((prev) => ({
+        ...prev,
+        whatsappNumber: localStorage.getItem("whatsappNumber") || "",
+        mobileNumber: "",  // mobileNumber should be empty if from WhatsApp
+      }));
     } else {
-        setFormData((prev) => ({
-            ...prev,
-            mobileNumber: localStorage.getItem("mobileNumber") || "",
-            whatsappNumber: "",  // whatsappNumber should be empty if from Mobile login
-        }));
+      setFormData((prev) => ({
+        ...prev,
+        mobileNumber: localStorage.getItem("mobileNumber") || "",
+        whatsappNumber: "",  // whatsappNumber should be empty if from Mobile login
+      }));
     }
-}, [isFromWhatsApp]);
+  }, [isFromWhatsApp]);
 
   useEffect(() => {
+    // Determine login method and set numbers accordingly
+    if (loginMethod === "whatsapp") {
+      const whatsappNumber = localStorage.getItem("whatsappNumber") || "";
+      setFormData(prev => ({
+        ...prev,
+        whatsappNumber: whatsappNumber,
+        mobileNumber: "", // Clear mobile number
+      }));
+    } else if (loginMethod === "mobile") {
+      const mobileNumber = localStorage.getItem("mobileNumber") || "";
+      setFormData(prev => ({
+        ...prev,
+        mobileNumber: mobileNumber,
+        whatsappNumber: "", // Clear WhatsApp number
+      }));
+    }
+  }, [loginMethod]);
+
+useEffect(() => {
     if (customerId) {
       fetchProfileData();
       fetchAddresses();
@@ -118,7 +190,7 @@ const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useSta
     setCartCount(parseInt(localStorage.getItem("cartCount") || "0"));
   }, [customerId]);
 
-  const fetchProfileData = async () => {
+ const fetchProfileData = async () => {
     try {
       setIsLoading(true);
       const response = await axios.get(
@@ -140,25 +212,97 @@ const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useSta
         customerEmail: data.email || "",
         alterMobileNumber: data.alterMobileNumber || "",
         whatsappNumber: data.whatsappNumber || "",
-        mobileNumber: data.mobileNumber || "",  // Add this
+        mobileNumber: data.mobileNumber || "",
         customerId: customerId || "",
-    };
-    
-    setFormData(profileData);
-      if(data.whatsappNumber === ""){
-        if(localStorage.getItem("whatsappNumber")){
-          setWhatsappStatus(true);
-        }else{
-          setWhatsappStatus(false);
-        }
-      }else{
-        console.log("Whatsapp Number is already present");
-        setWhatsappStatus(true);
-      }
+      };
+
       setFormData(profileData);
-      localStorage.setItem("profileData", JSON.stringify(profileData));
+      
+      // Determine WhatsApp verification status
+      setIsWhatsappVerified(data.whatsappVerified);
+      setIsMobileNumberVerified(data.mobileVerified)
     } catch (error) {
       setError("Error fetching profile data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendWhatsappOTP = async () => {
+    try {
+      setIsLoading(true);
+      if(formData.whatsappNumber==""){
+        setError('Please enter whatsapp number')
+        return
+      }
+      
+      const response = await axios.post(
+        `${BASE_URL}/user-service/sendWhatsappOtpqAndVerify`,
+        {
+          chatId: formData.whatsappNumber,
+          countryCode: countryCode,
+          id:customerId
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data) {
+          if(response.data.whatsappOtpSession==null || response.data.salt==null){
+            setError("This whatsapp number is already in use")
+          }else{
+        setSalt(response.data.salt)
+        setWhatsappOtpSession(response.data.whatsappOtpSession)
+        setSuccessMessage("OTP sent to your WhatsApp number");
+        setTimeout(()=>{
+        setShowWhatsappVerificationModal(true);
+         },1000)
+          }
+      } else {
+        setError("Failed to send OTP");
+      }
+    } catch (error) {
+      setError("Failed to send OTP");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWhatsappVerification = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(
+        `${BASE_URL}/user-service/sendWhatsappOtpqAndVerify`,
+        {
+          chatId: formData.whatsappNumber,
+          countryCode: countryCode,
+          id:customerId,
+          whatsappOtp: whatsappVerificationCode,
+          whatsappOtpSession:whatsappOtpSession,
+          salt:salt
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setIsWhatsappVerified(true);
+        setShowWhatsappVerificationModal(false);
+        setSuccessMessage("WhatsApp number verified successfully!");
+
+        // Update profile with verified WhatsApp number
+        await handleSaveProfile();
+      } else {
+        setError("Invalid verification code");
+      }
+    } catch (error) {
+      setError("Failed to verify WhatsApp number");
     } finally {
       setIsLoading(false);
     }
@@ -210,16 +354,17 @@ const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useSta
       errors.alterMobileNumber = "Alternate mobile number is required";
     } else if (!/^\d{10}$/.test(formData.alterMobileNumber)) {
       errors.alterMobileNumber = "Please enter a valid 10-digit mobile number";
-    } else if (formData.alterMobileNumber === formData.whatsappNumber) {
-      errors.alterMobileNumber =
-        "Alternate mobile number and WhatsApp number must be different.";
     }
 
-    if (!formData.whatsappNumber.trim()) {
+    // WhatsApp number validation
+    if (!formData.whatsappNumber) {
       errors.whatsappNumber = "WhatsApp number is required";
-    }else if (formData.whatsappNumber === formData.alterMobileNumber) {
-      errors.whatsappNumber =
-        "Alternate mobile number and WhatsApp number must be different.";
+    }
+
+    // Cross-number validations
+    if (formData.alterMobileNumber === formData.whatsappNumber) {
+      errors.alterMobileNumber = "Alternate mobile number and WhatsApp number must be different.";
+      errors.whatsappNumber = "Alternate mobile number and WhatsApp number must be different.";
     }
 
     setValidationErrors(errors);
@@ -250,67 +395,36 @@ const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useSta
 
   const handleSaveProfile = async () => {
     if (!validateProfileForm()) {
-        setIsValidationPopupOpen(true);
-        return;
+      setIsValidationPopupOpen(true);
+      return;
     }
 
     try {
-        setIsLoading(true);
-        const payload = {
-            ...formData,
-            whatsappNumber: isFromWhatsApp ? countryCode + formData.whatsappNumber : formData.whatsappNumber,
-            mobileNumber: isFromWhatsApp ? formData.mobileNumber : countryCode + formData.mobileNumber,
-        };
+      setIsLoading(true);
+      const payload = {
+        ...formData,
+        whatsappNumber: formData.whatsappNumber,
+        mobileNumber: formData.mobileNumber,
+      };
 
-        await axios.patch(`${BASE_URL}/user-service/profileUpdate`, payload, {
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-        });
+      await axios.patch(`${BASE_URL}/user-service/profileUpdate`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        setSuccessMessage("Profile updated successfully!");
-        setEditStatus(true);
-        localStorage.setItem("profileData", JSON.stringify(payload));
+      setSuccessMessage("Profile updated successfully!");
+      setEditStatus(true);
+      localStorage.setItem("profileData", JSON.stringify(payload));
     } catch (error) {
-        setError("Error updating profile. Please try again.");
+      setError("Error updating profile. Please try again.");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-};
+  };
 
-const handleWhatsappVerification = async () => {
-    try {
-        setIsLoading(true);
-        const response = await axios.post(
-            `${BASE_URL}/user-service/verifyWhatsapp`,
-            {
-                whatsappNumber: countryCode + formData.whatsappNumber,
-                verificationCode: whatsappVerificationCode,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
 
-        if (response.data.success) {
-            setIsWhatsappVerified(true);
-            setShowWhatsappVerificationModal(false);
-            setSuccessMessage("WhatsApp number verified successfully!");
-
-            // Immediately save profile after successful verification
-            await handleSaveProfile();
-        } else {
-            setError("Invalid verification code");
-        }
-    } catch (error) {
-        setError("Failed to verify WhatsApp number");
-    } finally {
-        setIsLoading(false);
-    }
-};
 
   // Auto-hide messages after 5 seconds
   React.useEffect(() => {
@@ -448,6 +562,48 @@ const handleWhatsappVerification = async () => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {showWhatsappVerificationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Verify WhatsApp Number</h2>
+              <button
+                onClick={() => setShowWhatsappVerificationModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Enter the 4-digit verification code sent to your WhatsApp number
+              </p>
+              <input
+                type="text"
+                value={whatsappVerificationCode}
+                onChange={(e) => setWhatsappVerificationCode(e.target.value)}
+                placeholder="Enter 4-digit code"
+                maxLength={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              />
+              <div className="flex gap-4">
+                <button
+                  onClick={handleWhatsappVerification}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Verify
+                </button>
+                <button
+                  onClick={() => setShowWhatsappVerificationModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6"></div>
         {/* Mobile Navigation Bar */}
@@ -458,21 +614,19 @@ const handleWhatsappVerification = async () => {
           <div className="border-b border-gray-200 mb-2">
             <div className="flex space-x-8">
               <button
-                className={`pb-4 px-4 ${
-                  activeTab === "personal"
-                    ? "border-b-2 border-purple-600 text-purple-600 font-semibold"
-                    : "text-gray-500"
-                }`}
+                className={`pb-4 px-4 ${activeTab === "personal"
+                  ? "border-b-2 border-purple-600 text-purple-600 font-semibold"
+                  : "text-gray-500"
+                  }`}
                 onClick={() => setActiveTab("personal")}
               >
                 Personal Information
               </button>
               <button
-                className={`pb-4 px-4 ${
-                  activeTab === "addresses"
-                    ? "border-b-2 border-purple-600 text-purple-600 font-semibold"
-                    : "text-gray-500"
-                }`}
+                className={`pb-4 px-4 ${activeTab === "addresses"
+                  ? "border-b-2 border-purple-600 text-purple-600 font-semibold"
+                  : "text-gray-500"
+                  }`}
                 onClick={() => setActiveTab("addresses")}
               >
                 Address
@@ -500,11 +654,10 @@ const handleWhatsappVerification = async () => {
                         })
                       }
                       className={`w-full px-4 py-3 rounded-lg border transition-all
-                                     ${
-                                       validationErrors.userFirstName
-                                         ? "border-red-500 ring-1 ring-red-500"
-                                         : "border-gray-300 focus:ring-2 focus:ring-purple-500"
-                                     }`}
+                                     ${validationErrors.userFirstName
+                          ? "border-red-500 ring-1 ring-red-500"
+                          : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                        }`}
                       placeholder="Enter your first name"
                       disabled={editStatus}
                     />
@@ -530,11 +683,10 @@ const handleWhatsappVerification = async () => {
                         })
                       }
                       className={`w-full px-4 py-3 rounded-lg border transition-all
-                                     ${
-                                       validationErrors.userLastName
-                                         ? "border-red-500 ring-1 ring-red-500"
-                                         : "border-gray-300 focus:ring-2 focus:ring-purple-500"
-                                     }`}
+                                     ${validationErrors.userLastName
+                          ? "border-red-500 ring-1 ring-red-500"
+                          : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                        }`}
                       placeholder="Enter your last name"
                       disabled={editStatus}
                     />
@@ -559,11 +711,10 @@ const handleWhatsappVerification = async () => {
                         })
                       }
                       className={`w-full px-4 py-3 rounded-lg border transition-all
-                                     ${
-                                       validationErrors.customerEmail
-                                         ? "border-red-500 ring-1 ring-red-500"
-                                         : "border-gray-300 focus:ring-2 focus:ring-purple-500"
-                                     }`}
+                                     ${validationErrors.customerEmail
+                          ? "border-red-500 ring-1 ring-red-500"
+                          : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                        }`}
                       placeholder="Enter your email"
                       disabled={editStatus}
                     />
@@ -594,11 +745,10 @@ const handleWhatsappVerification = async () => {
                         })
                       }
                       className={`w-full px-4 py-3 rounded-lg border transition-all
-                                     ${
-                                       validationErrors.alterMobileNumber
-                                         ? "border-red-500 ring-1 ring-red-500"
-                                         : "border-gray-300 focus:ring-2 focus:ring-purple-500"
-                                     }`}
+                                     ${validationErrors.alterMobileNumber
+                          ? "border-red-500 ring-1 ring-red-500"
+                          : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                        }`}
                       placeholder="Enter alternate number"
                       disabled={editStatus}
                     />
@@ -610,62 +760,59 @@ const handleWhatsappVerification = async () => {
                   </div>
 
                   <div className="space-y-2">
-    <label className="text-sm font-medium text-gray-700">
-        Mobile Number {isFromWhatsApp ? "" : <span className="text-red-500">*</span>}
-    </label>
-    <PhoneInput
-        international
-        defaultCountry="IN"
-        value={formData.mobileNumber}
-        disabled={isFromWhatsApp}
-        onChange={(value) => setFormData({ ...formData, mobileNumber: value || "" })}
-        className={`w-full px-4 py-3 rounded-lg border transition-all
-            ${validationErrors.mobileNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
+                    <label className="text-sm font-medium text-gray-700">
+                      Mobile Number {isFromWhatsApp ? "" : <span className="text-red-500">*</span>}
+                    </label>
+                    <PhoneInput
+                      international
+                      defaultCountry="IN"
+                      value={formData.mobileNumber}
+                      disabled={isMobileNumberVerified}
+                      onChange={(value) => setFormData({ ...formData, mobileNumber: value || "" })}
+                      className={`w-full px-4 py-3 rounded-lg border transition-all
+          ${validationErrors.mobileNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
         `}
-        placeholder="Enter mobile number"
-    />
-    {validationErrors.mobileNumber && (
-        <p className="text-red-500 text-sm">{validationErrors.mobileNumber}</p>
-    )}
-</div>
+                      placeholder="Enter mobile number"
+                    />
+                    {validationErrors.mobileNumber && (
+                      <p className="text-red-500 text-sm">{validationErrors.mobileNumber}</p>
+                    )}
+                  </div>
 
-<div className="space-y-2">
-    <label className="text-sm font-medium text-gray-700">
-        WhatsApp Number {isFromWhatsApp ? <span className="text-red-500">*</span> : ""}
-    </label>
-    <PhoneInput
-        international
-        defaultCountry="IN"
-        value={formData.whatsappNumber}
-        disabled={!isFromWhatsApp || isWhatsappVerified}
-        onChange={(value) => setFormData({ ...formData, whatsappNumber: value || "" })}
-        className={`w-full px-4 py-3 rounded-lg border transition-all
-            ${validationErrors.whatsappNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
-        `}
-        placeholder="Enter WhatsApp number"
-    />
-    {validationErrors.whatsappNumber && (
-        <p className="text-red-500 text-sm">{validationErrors.whatsappNumber}</p>
-    )}
-
-    {!isWhatsappVerified && isFromWhatsApp && (
-        <div className="flex gap-2 mt-2">
-            <input
-                type="text"
-                value={whatsappVerificationCode}
-                onChange={(e) => setWhatsappVerificationCode(e.target.value)}
-                placeholder="Enter verification code"
-                className="w-1/2 px-4 py-2 rounded-lg border border-gray-300"
-            />
-            <button
-                onClick={handleWhatsappVerification}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-            >
-                Verify
-            </button>
-        </div>
-    )}
-</div>
+                  <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  WhatsApp Number <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center space-x-2">
+                  <PhoneInput
+                    defaultCountry="IN"
+                    disabled={isWhatsappVerified} // Disable input only during OTP verification
+                    international={true} // Allow country change for WhatsApp
+                    value={formData.whatsappNumber}
+                    onChange={(value) => {
+                      setFormData({ ...formData, whatsappNumber: value || "" });
+                      setIsWhatsappVerified(false);
+                    }}
+                    className={`flex-grow px-4 py-3 rounded-lg border transition-all
+                      ${validationErrors.whatsappNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
+                    `}
+                    placeholder="Enter WhatsApp number"
+                  />
+                  {!isWhatsappVerified && (
+                    <button
+                      onClick={sendWhatsappOTP}
+                      className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                    >
+                      Send OTP
+                    </button>
+                  )}
+                </div>
+                {validationErrors.whatsappNumber && (
+                  <p className="text-red-500 text-sm">
+                    {validationErrors.whatsappNumber}
+                  </p>
+                )}
+              </div>
                 </div>
 
                 <div className="space-y-4">
