@@ -17,7 +17,7 @@ import {
   Smartphone,
   ShieldCheck,
 } from "lucide-react";
-import BASE_URL from "../../Config";
+// import BASE_URL from "../../Config";
 
 const WhatsappLogin = () => {
   const navigate = useNavigate();
@@ -46,6 +46,12 @@ const WhatsappLogin = () => {
   const [isMethodDisabled, setIsMethodDisabled] = useState(false);
   const [changeNumberClicked, setChangeNumberClicked] = useState(false);
   const [isGetOtpButtonDisabled, setIsGetOtpButtonDisabled] = useState(true);
+  const queryParams = new URLSearchParams(window.location.search);
+    const params = Object.fromEntries(queryParams.entries());
+    const userType = params.userType;
+  const BASE_URL = userType === "live" 
+    ? "https://meta.oxyloans.com/api" 
+    : "https://meta.oxyglobal.tech/api";
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -221,6 +227,7 @@ const WhatsappLogin = () => {
         );
         localStorage.setItem("salt", response.data.salt);
         localStorage.setItem("expiryTime", response.data.otpGeneratedTime);
+        localStorage.setItem("userType", userType);
 
         if (response.data.userId === null && response.data.userId === undefined && response.data.mobileOtpSession === null && response.data.mobileOtpSession === undefined) {
           setShowSuccessPopup(true);

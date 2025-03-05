@@ -10,12 +10,13 @@ import {
   FaPen,
 } from "react-icons/fa";
 import { Loader2, AlertCircle, X, CheckCircle2 } from "lucide-react";
+import PhoneInput, { isValidPhoneNumber, parsePhoneNumber } from "react-phone-number-input";
 import Footer from "../components/Footer";
 
 import axios from "axios";
 import { isWithinRadius } from "./LocationCheck";
-import  BASE_URL  from "../Config";
 
+const BASE_URL = "https://meta.oxyglobal.tech/api";
 
 interface Address {
   id?: string;
@@ -49,6 +50,10 @@ const ProfilePage = () => {
   const [cartCount, setCartCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [countryCode, setCountryCode] = useState("+91");  // Default India
+const [whatsappVerificationCode, setWhatsappVerificationCode] = useState("");
+const [isWhatsappVerified, setIsWhatsappVerified] = useState(false);
+const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [addressFormData, setAddressFormData] = useState<Address>({
@@ -66,14 +71,17 @@ const ProfilePage = () => {
     address: "",
     pincode: "",
   });
-  const [formData, setFormData] = useState<ProfileFormData>({
+  const customerId = localStorage.getItem("userId") || "";
+  const [formData, setFormData] = useState<ProfileFormData & { mobileNumber: string }>({
     userFirstName: "",
     userLastName: "",
     customerEmail: "",
     alterMobileNumber: "",
-    customerId: "",
+    customerId: customerId || "",  // customerId is used here
     whatsappNumber: "",
-  });
+    mobileNumber: "",
+});
+
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
@@ -82,8 +90,25 @@ const ProfilePage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [editStatus, setEditStatus] = useState(true);
 
-  const customerId = localStorage.getItem("userId") || "";
+ 
   const token = localStorage.getItem("token") || "";
+  const isFromWhatsApp = !!localStorage.getItem("whatsappNumber");
+
+  useEffect(() => {
+    if (isFromWhatsApp) {
+        setFormData((prev) => ({
+            ...prev,
+            whatsappNumber: localStorage.getItem("whatsappNumber") || "",
+            mobileNumber: "",  // mobileNumber should be empty if from WhatsApp
+        }));
+    } else {
+        setFormData((prev) => ({
+            ...prev,
+            mobileNumber: localStorage.getItem("mobileNumber") || "",
+            whatsappNumber: "",  // whatsappNumber should be empty if from Mobile login
+        }));
+    }
+}, [isFromWhatsApp]);
 
   useEffect(() => {
     if (customerId) {
@@ -115,8 +140,11 @@ const ProfilePage = () => {
         customerEmail: data.email || "",
         alterMobileNumber: data.alterMobileNumber || "",
         whatsappNumber: data.whatsappNumber || "",
+        mobileNumber: data.mobileNumber || "",  // Add this
         customerId: customerId || "",
-      };
+    };
+    
+    setFormData(profileData);
       if(data.whatsappNumber === ""){
         if(localStorage.getItem("whatsappNumber")){
           setWhatsappStatus(true);
@@ -222,31 +250,67 @@ const ProfilePage = () => {
 
   const handleSaveProfile = async () => {
     if (!validateProfileForm()) {
-      setIsValidationPopupOpen(true);
-      return;
+        setIsValidationPopupOpen(true);
+        return;
     }
+
     try {
-      setIsLoading(true);
-      const { whatsappNumber, ...updatedFormData } = formData;
-      await axios.patch(
-        `${BASE_URL}/user-service/profileUpdate`,
-        updatedFormData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setSuccessMessage("Profile updated successfully!");
-      setEditStatus(true);
-      localStorage.setItem("profileData", JSON.stringify(updatedFormData));
+        setIsLoading(true);
+        const payload = {
+            ...formData,
+            whatsappNumber: isFromWhatsApp ? countryCode + formData.whatsappNumber : formData.whatsappNumber,
+            mobileNumber: isFromWhatsApp ? formData.mobileNumber : countryCode + formData.mobileNumber,
+        };
+
+        await axios.patch(`${BASE_URL}/user-service/profileUpdate`, payload, {
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        setSuccessMessage("Profile updated successfully!");
+        setEditStatus(true);
+        localStorage.setItem("profileData", JSON.stringify(payload));
     } catch (error) {
-      setError("Error updating profile. Please try again.");
+        setError("Error updating profile. Please try again.");
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
+
+const handleWhatsappVerification = async () => {
+    try {
+        setIsLoading(true);
+        const response = await axios.post(
+            `${BASE_URL}/user-service/verifyWhatsapp`,
+            {
+                whatsappNumber: countryCode + formData.whatsappNumber,
+                verificationCode: whatsappVerificationCode,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (response.data.success) {
+            setIsWhatsappVerified(true);
+            setShowWhatsappVerificationModal(false);
+            setSuccessMessage("WhatsApp number verified successfully!");
+
+            // Immediately save profile after successful verification
+            await handleSaveProfile();
+        } else {
+            setError("Invalid verification code");
+        }
+    } catch (error) {
+        setError("Failed to verify WhatsApp number");
+    } finally {
+        setIsLoading(false);
+    }
+};
 
   // Auto-hide messages after 5 seconds
   React.useEffect(() => {
@@ -545,34 +609,63 @@ const ProfilePage = () => {
                     )}
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      WhatsApp Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.whatsappNumber}
-                      disabled = {whatsappStatus}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          whatsappNumber: e.target.value,
-                        })
-                      }
-                      placeholder="Enter WhatsApp number"
-                      className={`w-full px-4 py-3 rounded-lg border transition-all
-                        ${
-                          validationErrors.whatsappNumber
-                            ? "border-red-500 ring-1 ring-red-500"
-                            : "border-gray-300 focus:ring-2 focus:ring-purple-500"
-                        }`}
-                    />
-                    {validationErrors.whatsappNumber && (
-                      <p className="text-red-500 text-sm">
-                        {validationErrors.whatsappNumber}
-                      </p>
-                    )}
-                  </div>
+                  <div className="space-y-2">
+    <label className="text-sm font-medium text-gray-700">
+        Mobile Number {isFromWhatsApp ? "" : <span className="text-red-500">*</span>}
+    </label>
+    <PhoneInput
+        international
+        defaultCountry="IN"
+        value={formData.mobileNumber}
+        disabled={isFromWhatsApp}
+        onChange={(value) => setFormData({ ...formData, mobileNumber: value || "" })}
+        className={`w-full px-4 py-3 rounded-lg border transition-all
+            ${validationErrors.mobileNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
+        `}
+        placeholder="Enter mobile number"
+    />
+    {validationErrors.mobileNumber && (
+        <p className="text-red-500 text-sm">{validationErrors.mobileNumber}</p>
+    )}
+</div>
+
+<div className="space-y-2">
+    <label className="text-sm font-medium text-gray-700">
+        WhatsApp Number {isFromWhatsApp ? <span className="text-red-500">*</span> : ""}
+    </label>
+    <PhoneInput
+        international
+        defaultCountry="IN"
+        value={formData.whatsappNumber}
+        disabled={!isFromWhatsApp || isWhatsappVerified}
+        onChange={(value) => setFormData({ ...formData, whatsappNumber: value || "" })}
+        className={`w-full px-4 py-3 rounded-lg border transition-all
+            ${validationErrors.whatsappNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
+        `}
+        placeholder="Enter WhatsApp number"
+    />
+    {validationErrors.whatsappNumber && (
+        <p className="text-red-500 text-sm">{validationErrors.whatsappNumber}</p>
+    )}
+
+    {!isWhatsappVerified && isFromWhatsApp && (
+        <div className="flex gap-2 mt-2">
+            <input
+                type="text"
+                value={whatsappVerificationCode}
+                onChange={(e) => setWhatsappVerificationCode(e.target.value)}
+                placeholder="Enter verification code"
+                className="w-1/2 px-4 py-2 rounded-lg border border-gray-300"
+            />
+            <button
+                onClick={handleWhatsappVerification}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            >
+                Verify
+            </button>
+        </div>
+    )}
+</div>
                 </div>
 
                 <div className="space-y-4">
@@ -891,52 +984,6 @@ const ProfilePage = () => {
             )}
           </div>
         </div>
-
-        {/* Validation Popup */}
-        {/* {isValidationPopupOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-4 lg:p-6 max-w-md w-full">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <AlertCircle size={24} className="text-red-600" />
-                  <h2 className="text-lg font-semibold">
-                    Required Fields Missing
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setIsValidationPopupOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="mb-4">
-                <p className="text-gray-600 mb-2">
-                  Please fill in all required fields:
-                </p>
-                <ul className="space-y-1">
-                  {Object.entries(validationErrors).map(([field, error]) => (
-                    <li
-                      key={field}
-                      className="flex items-center gap-2 text-red-600"
-                    >
-                      <span>•</span>
-                      {error}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setIsValidationPopupOpen(false)}
-                  className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          </div>
-        )} */}
         <Footer />
       </div>
     </div>

@@ -14,7 +14,6 @@ import {
   ArrowRight,
   RefreshCcw,
 } from "lucide-react";
-import BASE_URL from "../../Config";
 
 const WhatsappRegister = () => {
   const navigate = useNavigate();
@@ -41,6 +40,13 @@ const WhatsappRegister = () => {
   const reffererId = localStorage.getItem("refferrerId");
   const [isPhoneDisabled, setisPhoneDisabled] = useState(false);
   const [isMethodDisabled, setIsMethodDisabled] = useState(false);
+
+  const queryParams = new URLSearchParams(window.location.search);
+  const params = Object.fromEntries(queryParams.entries());
+  const userType = params.userType;
+const BASE_URL = userType === "live" 
+  ? "https://meta.oxyloans.com/api" 
+  : "https://meta.oxyglobal.tech/api";
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -204,6 +210,7 @@ const WhatsappRegister = () => {
         localStorage.setItem("mobileOtpSession", response.data.mobileOtpSession);
         localStorage.setItem("salt", response.data.salt);
         localStorage.setItem("expiryTime", response.data.otpGeneratedTime);
+        localStorage.setItem("userType", userType);
 
         if (response.data.mobileOtpSession === null) {
           setShowSuccessPopup(false);
