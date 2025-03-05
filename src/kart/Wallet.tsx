@@ -99,7 +99,7 @@ const MyWalletPage: React.FC = () => {
                       <p className="text-xl font-bold text-green-700">
                         ₹{transactions
                           .filter(t => t.walletTxType === 1)
-                          .reduce((sum, t) => sum + t.refereedTo+t.walletTxAmount, 0)
+                          .reduce((sum, t) => sum +t.walletTxAmount, 0)
                           .toLocaleString()}
                       </p>
                     </div>

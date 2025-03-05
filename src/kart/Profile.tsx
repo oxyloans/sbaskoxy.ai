@@ -891,52 +891,6 @@ const ProfilePage = () => {
             )}
           </div>
         </div>
-
-        {/* Validation Popup */}
-        {/* {isValidationPopupOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg p-4 lg:p-6 max-w-md w-full">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <AlertCircle size={24} className="text-red-600" />
-                  <h2 className="text-lg font-semibold">
-                    Required Fields Missing
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setIsValidationPopupOpen(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="mb-4">
-                <p className="text-gray-600 mb-2">
-                  Please fill in all required fields:
-                </p>
-                <ul className="space-y-1">
-                  {Object.entries(validationErrors).map(([field, error]) => (
-                    <li
-                      key={field}
-                      className="flex items-center gap-2 text-red-600"
-                    >
-                      <span>•</span>
-                      {error}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setIsValidationPopupOpen(false)}
-                  className="w-full md:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          </div>
-        )} */}
         <Footer />
       </div>
     </div>
