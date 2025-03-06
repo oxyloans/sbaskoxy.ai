@@ -73,7 +73,7 @@ const OXYGroupCompanies = () => {
   };
 
   return (
-    <section className="py-16 px-6 bg-gradient-to-b from-gray-50 to-gray-50 text-center">
+    <section className="py-16 px-6 bg-gradient-to-b from-gray-100 to-gray-100 text-center">
       {/* Gradient Colored Heading */}
       <h3 className="text-2xl font-extrabold mb-10">
         <span className="text-blue-800">OXY</span>{" "}
