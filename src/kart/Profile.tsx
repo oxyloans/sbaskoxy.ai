@@ -291,11 +291,10 @@ useEffect(() => {
         }
       );
 
-      if (response.data.success) {
+      if (response.data) {
         setIsWhatsappVerified(true);
         setShowWhatsappVerificationModal(false);
         setSuccessMessage("WhatsApp number verified successfully!");
-
         // Update profile with verified WhatsApp number
         await handleSaveProfile();
       } else {
@@ -844,7 +843,7 @@ useEffect(() => {
                     {!editStatus ? (
                       <button
                         onClick={handleSaveProfile}
-                        disabled={isLoading}
+                        disabled={isLoading || !isWhatsappVerified}
                         className="w-full md:w-auto px-6 py-3  bg-gradient-to-r from-purple-600 to-purple-400 text-white rounded-lg transition-colors shadow-md hover:bg-purple-700 disabled:opacity-50"
                       >
                         {isLoading ? "Saving..." : "Save Changes"}
