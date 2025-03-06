@@ -167,7 +167,7 @@ const FreeChatGPTnormal: React.FC = () => {
         setIsFirstVisit(false);
         setHasProcessedUrlQuery(false);
         setLastQuery(""); // Clear last query on new chat
-        navigate("/main/dashboard/freegpts");
+        navigate("/freechatgptnormal");
     };
     
     const handleNavigation = (path: string) => {
