@@ -403,7 +403,7 @@ useEffect(() => {
       const payload = {
         ...formData,
         whatsappNumber: formData.whatsappNumber,
-        mobileNumber: formData.mobileNumber,
+        mobileNumber: formData.mobileNumber.replace(countryCode,"")
       };
 
       await axios.patch(`${BASE_URL}/user-service/profileUpdate`, payload, {
