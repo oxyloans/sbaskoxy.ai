@@ -94,7 +94,7 @@ const OurPeople = () => {
   };
 
   return (
-    <section className="bg-gradient-to-b from-purple-50 to-white py-12 px-4 md:px-8">
+    <section className="bg-gradient-to-b from-purple-50 to-white shadow-lg py-12 px-4 md:px-8">
       {/* Header Section with improved styling */}
       <div className="text-center mb-20">
         <motion.div

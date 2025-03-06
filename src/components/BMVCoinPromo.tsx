@@ -29,7 +29,7 @@ const BMVCoinPromo = () => {
   }, []);
   
   return (
-    <section className={`relative py-8 px-4 sm:py-12 sm:px-6 md:py-8 lg:py-10 md:px-8 lg:px-16 bg-gradient-to-br from-white via-purple-50 to-purple-100 text-purple-900  shadow-xl overflow-hidden transition-all duration-700 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+    <section className={`relative py-8 px-4 sm:py-12 sm:px-6 md:py-8 lg:py-10 md:px-8 lg:px-16 bg-gradient-to-br from-white via-purple-50 to-purple-100 text-purple-900  shadow-lg overflow-hidden transition-all duration-700 transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
