@@ -1,11 +1,11 @@
-import React, { useEffect, useState ,useContext} from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { message,Alert, Modal } from 'antd';
+import { message, Alert, Modal } from 'antd';
 // import Header from './Header3';
 import Footer from '../components/Footer';
 // import Sidebar from './Sidebarrice';
-import { ArrowLeft, CreditCard, Truck, Tag, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, Tag, ShoppingBag, Clock } from 'lucide-react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import decryptEas from './decryptEas';
 import encryptEas from './encryptEas';
@@ -13,7 +13,7 @@ import { Loader2, X } from "lucide-react";
 import Checkbox from 'antd';
 import { CartContext } from '../until/CartContext';
 import { log } from 'console';
-import  BASE_URL  from "../Config";
+import BASE_URL from "../Config";
 
 interface CartItem {
   itemId: string;
@@ -25,7 +25,6 @@ interface CartItem {
 
 interface CartData {
   deliveryBoyFee: number;
-
 }
 
 interface Address {
@@ -43,36 +42,59 @@ interface ProfileData {
   whatsappNumber: string;
 }
 
+// First, define an interface for the time slot data structure
+interface TimeSlot {
+  id: string;
+  dayOfWeek: string;
+  expectedDeliveryDate: string;
+  timeSlot1: string;
+  timeSlot2: string;
+  timeSlot3: string;
+  timeSlot4: string;
+  date: string;
+  isToday: boolean;
+  isAvailable: boolean;
+}
+
 const CheckoutPage: React.FC = () => {
   const { state } = useLocation();
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [useWallet,setUseWallet] = useState(false);
+  const [useWallet, setUseWallet] = useState(false);
   const [couponCode, setCouponCode] = useState('');
-  const [coupenDetails,setCoupenDetails] = useState<any>(null);
-  const [coupenLoading,setCoupenLoading] = useState(false);
+  const [coupenDetails, setCoupenDetails] = useState<any>(null);
+  const [coupenLoading, setCoupenLoading] = useState(false);
   const [walletAmount, setWalletAmount] = useState<number>(0);
-  const [walletTotal,setWalletTotal] = useState<number>(0);
-  const [coupenApplied,setCoupenApplied] = useState(false);
+  const [walletTotal, setWalletTotal] = useState<number>(0);
+  const [coupenApplied, setCoupenApplied] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<'ONLINE' | 'COD'>('ONLINE');
-  const [selectedAddress,setSelectedAddress] = useState<Address>(state?.selectedAddress || null)
+  const [selectedAddress, setSelectedAddress] = useState<Address>(state?.selectedAddress || null)
   const [grandTotalAmount, setGrandTotalAmount] = useState<number>(0);
   const [deliveryBoyFee, setDeliveryBoyFee] = useState<number>(0);
-  const [subGst,setSubGst] = useState(0);
-  const [totalAmount,setTotalAmount]=useState<number>(0);
-  const [walletMessage,setWalletMessage]=useState();
-  const [grandTotal,setGrandTotal]=useState<number>(0);
-  const [afterWallet,setAfterWallet] = useState<number>(0);
-  const [usedWalletAmount,setUsedWalletAmount] = useState<number>(0);
-   const [orderId,setOrderId] = useState<string>();
-  const [profileData,setProfileData] = useState<ProfileData>({
+  const [subGst, setSubGst] = useState(0);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [walletMessage, setWalletMessage] = useState();
+  const [grandTotal, setGrandTotal] = useState<number>(0);
+  const [afterWallet, setAfterWallet] = useState<number>(0);
+  const [usedWalletAmount, setUsedWalletAmount] = useState<number>(0);
+  const [orderId, setOrderId] = useState<string>();
+  
+  const [profileData, setProfileData] = useState<ProfileData>({
     firstName: '',
     lastName: '',
     email: '',
     whatsappNumber: '',
   })
-  const [merchantTransactionId,setMerchantTransactionId] = useState()
-  const [paymentStatus,setPaymentStatus] = useState(null)
+  const [merchantTransactionId, setMerchantTransactionId] = useState()
+  const [paymentStatus, setPaymentStatus] = useState(null)
+  
+  // Time slot related states
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDay,setSelectedDay] = useState<string>('')
+  
   const navigate = useNavigate();
 
   const customerId = localStorage.getItem('userId');
@@ -85,58 +107,238 @@ const CheckoutPage: React.FC = () => {
     throw new Error("CartDisplay must be used within a CartProvider");
   }
 
-  const { count,setCount } = context;
-
+  const { count, setCount } = context;
 
   useEffect(() => {
     fetchCartData();
     totalCart();
     getWalletAmount();
+    fetchTimeSlots();
     const queryParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(queryParams.entries());
     const order = params.trans;
     setOrderId(order)
-    if(userData){
+    if (userData) {
       setProfileData(JSON.parse(userData))
     }
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     const trans = localStorage.getItem('merchantTransactionId')
     const paymentId = localStorage.getItem('paymentId')
-    console.log(trans===orderId);
-    if(trans===orderId){
+    console.log(trans === orderId);
+    if (trans === orderId) {
       Requery(paymentId)
     }
-  },[orderId])
+  }, [orderId])
 
-    // Handle checkbox toggle
-    const handleCheckboxToggle = () => {
-      const newValue = !useWallet;
-      console.log({ newValue });
-      setUseWallet(newValue);
-      getWalletAmount();
-  
-      if (newValue) {
-        Modal.info({
-          title: "Wallet Amount Used",
-          content: `You are using ₹${walletAmount} from your wallet.`,
-          onOk() {
-            console.log("OK clicked");
-            grandTotalfunc();
-          },
-        });
-      } else {
-        // Show alert when the checkbox is unchecked
-        Modal.info({
-          title : "Wallet Amount Deselected",
-          content:`You have removed the usage of ${walletAmount} from your wallet.`,
-          onOk() {
-            console.log("OK clicked");
-          },
-      });
+  const formatDate = (date: Date, isToday: boolean = false): string => {
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June", "July", 
+      "August", "September", "October", "November", "December"
+    ];
+      
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+      
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Add 1 to get 1-12 instead of 0-11
+    const year = date.getFullYear();
+      
+    // Check if date is today
+    if (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    ) {
+      return "Today";
+    }
+      
+    // Check if date is tomorrow
+    if (
+      date.getDate() === tomorrow.getDate() &&
+      date.getMonth() === tomorrow.getMonth() &&
+      date.getFullYear() === tomorrow.getFullYear()
+    ) {
+      return "Tomorrow";
+    }
+    
+    // Return formatted date for other days
+    return `${day}-${month}-${year}`; // Now using proper month number with padding
+  };
+
+const isOrderPlacedToday = (orderDate?: string | null) => {
+  if (!orderDate) return false;
+
+  const today = new Date();
+  const orderDateObj = new Date(orderDate);
+
+  return orderDateObj.getDate() === today.getDate() &&
+         orderDateObj.getMonth() === today.getMonth() &&
+         orderDateObj.getFullYear() === today.getFullYear();
+};
+const fetchTimeSlots = async () => {
+  try {
+    const response = await axios.get(
+      `${BASE_URL}/order-service/fetchTimeSlotlist`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
       }
+    );
+
+    if (response.data && Array.isArray(response.data)) {
+      const currentDate = new Date();
+      const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      
+      // Determine if order was placed today
+      // You'll need to replace this with your actual order date
+      const orderDate = null; // Replace with your actual order date variable
+      const orderPlacedToday = orderDate ? isOrderPlacedToday(orderDate) : false;
+      
+      // Day names array for mapping day indices to names
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      
+      // Always start from tomorrow (day offset 1)
+      // This ensures we NEVER include today in the 3 days
+      const startDayOffset = 1;
+      
+      // Process data for 3 days, starting from tomorrow
+      const formattedTimeSlots = Array.from({ length: 3 }).map((_, index) => {
+        // Calculate date for this slot (starting from tomorrow)
+        const dayOffset = startDayOffset + index;
+        const slotDate = new Date(currentDate);
+        slotDate.setDate(currentDate.getDate() + dayOffset);
+        
+        // This is never today (always false)
+        const isToday = false;
+        
+        // Calculate the correct day of week
+        const dayIndex = (currentDay + dayOffset) % 7;
+        const dayOfWeek = dayNames[dayIndex].toUpperCase(); // Convert to uppercase to match request format
+        
+        // Format the expected delivery date in DD-MM-YYYY format
+        const formattedDate = `${String(slotDate.getDate()).padStart(2, '0')}-${String(slotDate.getMonth() + 1).padStart(2, '0')}-${slotDate.getFullYear()}`;
+        
+        // Get the time slots from the API response or use defaults
+        const slotData = response.data[index] || {
+          id: `day-${dayOffset}`,
+          timeSlot1: "08:00 AM-12:00 PM",
+          timeSlot2: "12:00 PM-04:00 PM",
+          timeSlot3: "04:00 PM-08:00 PM",
+          timeSlot4: "08:00 PM-10:00 PM",
+          isAvailable: true
+        };
+        
+        // Process time slots - keep all 4 slots
+        let availableTimeSlots = {
+          timeSlot1: slotData.timeSlot1 || "",
+          timeSlot2: slotData.timeSlot2 || "",
+          timeSlot3: slotData.timeSlot3 || "",
+          timeSlot4: slotData.timeSlot4 || ""
+        };
+        
+        // Create the formatted slot object with date display
+        return {
+          ...slotData,
+          dayOfWeek: dayOfWeek,
+          expectedDeliveryDate: formattedDate,
+          timeSlot1: availableTimeSlots.timeSlot1,
+          timeSlot2: availableTimeSlots.timeSlot2,
+          timeSlot3: availableTimeSlots.timeSlot3,
+          timeSlot4: availableTimeSlots.timeSlot4,
+          date: formatDate(slotDate, isToday),
+          isToday: isToday // Always false since we're starting from tomorrow
+        };
+      });
+      
+      setTimeSlots(formattedTimeSlots);
+    }
+  } catch (error) {
+    console.error('Error fetching time slots:', error);
+    message.error('Failed to fetch delivery time slots');
+  }
+};
+
+// Then add the type annotations to your function parameters
+const submitOrder = async (selectedSlot: TimeSlot, selectedTimeSlot: string, selectedAddress: Address, customerId: string, selectedPayment: string, usedWalletAmount: number, couponCode: string | null, coupenDetails: number, deliveryBoyFee: number, grandTotalAmount: number, grandTotal: number, subGst: number, token: string) => {
+  try {
+    // Prepare the request body based on dynamic user input
+    const requestBody = {
+      dayOfWeek: selectedSlot.dayOfWeek,
+      expectedDeliveryDate: selectedSlot.expectedDeliveryDate,
+      timeSlot: selectedTimeSlot, // This should be the selected time slot like "08:00 AM - 12:00 PM"
+      address: selectedAddress.address,
+      customerId: customerId,
+      flatNo: selectedAddress.flatNo,
+      landMark: selectedAddress.landMark,
+      orderStatus: selectedPayment,
+      pincode: selectedAddress.pincode,
+      walletAmount: usedWalletAmount,
+      couponCode: couponCode ? couponCode.toUpperCase() : null,
+      couponValue: couponCode !== null ? coupenDetails : 0,
+      deliveryBoyFee: deliveryBoyFee,
+      amount: grandTotalAmount,
+      subTotal: grandTotal,
+      gstAmount: subGst,
     };
+
+    const response = await axios.post(
+      `${BASE_URL}/order-service/placeOrder`,
+      requestBody,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (response.data?.status) {
+      message.success(response.data.status);
+    }    
+  } catch (error) {
+    console.error('Error placing order:', error);
+    message.error('Failed to place order');
+  }
+};
+const openTimeSlotModal = () => {
+  setShowTimeSlotModal(true);
+};
+
+  // Handle time slot selection
+  const handleSelectTimeSlot = (date: string, timeSlot: string, day:string) => {
+    setSelectedDate(date);
+    setSelectedTimeSlot(timeSlot);
+    setSelectedDay(day)
+    setShowTimeSlotModal(false);
+    message.success(`Delivery time slot selected: ${date}, ${timeSlot}`);
+  };
+
+  // Handle checkbox toggle
+  const handleCheckboxToggle = () => {
+    const newValue = !useWallet;
+    console.log({ newValue });
+    setUseWallet(newValue);
+    getWalletAmount();
+
+    if (newValue) {
+      Modal.info({
+        title: "Wallet Amount Used",
+        content: `You are using ₹${walletAmount} from your wallet.`,
+        onOk() {
+          console.log("OK clicked");
+          grandTotalfunc();
+        },
+      });
+    } else {
+      // Show alert when the checkbox is unchecked
+      Modal.info({
+        title: "Wallet Amount Deselected",
+        content: `You have removed the usage of ${walletAmount} from your wallet.`,
+        onOk() {
+          console.log("OK clicked");
+        },
+      });
+    }
+  };
 
   const fetchCartData = async () => {
     try {
@@ -156,7 +358,7 @@ const CheckoutPage: React.FC = () => {
         );
         // Fix: Use cartItemsMap and correct syntax
         const totalQuantity = Object.values(cartItemsMap as Record<string, number>).reduce(
-          (sum, qty) => sum + qty, 
+          (sum, qty) => sum + qty,
           0
         );
         setCartData(response.data?.customerCartResponseList || []);
@@ -165,373 +367,222 @@ const CheckoutPage: React.FC = () => {
         setCartData([]);
         setCount(0)
       }
-     
+
     } catch (error) {
       console.error('Error fetching cart items:', error);
       message.error('Failed to fetch cart items');
     }
   };
 
-  const totalCart = async() => {
+  const totalCart = async () => {
     console.log("total cart");
-    
+
     try {
       const response = await axios.post(
-        `${BASE_URL}/cart-service/cart/cartItemData`,{
+        `${BASE_URL}/cart-service/cart/cartItemData`, {
         customerId
-        },
+      },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       setGrandTotalAmount(parseFloat(response.data.totalSumWithGstSum));
       setSubGst(response.data.totalGstSum);
-      const totalDeliveryFee = response.data?.cartResponseList.reduce((sum:number, item :CartData) => sum + item.deliveryBoyFee, 0);
-       console.log({totalDeliveryFee});
-       setDeliveryBoyFee(totalDeliveryFee)
-       setTotalAmount(parseFloat(response.data.totalSumWithGstSum))
-       setGrandTotal(parseFloat(response.data.totalSum))
-      
+      const totalDeliveryFee = response.data?.cartResponseList.reduce((sum: number, item: CartData) => sum + item.deliveryBoyFee, 0);
+      console.log({ totalDeliveryFee });
+      setDeliveryBoyFee(totalDeliveryFee)
+      setTotalAmount(parseFloat(response.data.totalSumWithGstSum))
+      setGrandTotal(parseFloat(response.data.totalSum))
+
     } catch (error) {
       console.error('Error fetching cart items:', error);
       message.error('Failed to fetch cart items');
     }
-
-   
   };
 
-  // const calculateSubTotal = () => {
-  //  const totalCartAmount = cartData.reduce(
-  //   (acc, item) => acc + parseFloat(item.itemPrice) * parseInt(item.cartQuantity),
-  //   0
-  // ).toFixed(2);
-    // console.log("totalCartAmount",totalCartAmount);
-     // };
   // function for applying coupon
   const handleApplyCoupon = () => {
-    // if (!couponCode.trim()) {
-    //   message.warning('Please enter a coupon code');
-    //   return;
-    // }
-    // message.info('Coupon functionality to be implemented');
-
-    const data ={
-      couponCode:couponCode,
+    const data = {
+      couponCode: couponCode,
       customerId: customerId,
-      subTotal:grandTotalAmount
+      subTotal: grandTotalAmount
     }
-    console.log("data ",data);
+    console.log("data ", data);
     setCoupenLoading(true);
 
     const response = axios.post(
-      BASE_URL+"/order-service/applycoupontocustomer",data,{
-        headers: { Authorization: `Bearer ${token}` },
-      }
+      BASE_URL + "/order-service/applycoupontocustomer", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    }
     )
       .then((response) => {
-         console.log("coupen applied",response.data);
-         const { discount, grandTotal } = response.data;
-          message.info(response.data.message);
-          setCoupenDetails(discount)
-          setCoupenApplied(response.data.couponApplied)
-          console.log("coupenapplied state", response.data.couponApplied);
-          setCoupenLoading(false);
-
+        console.log("coupen applied", response.data);
+        const { discount, grandTotal } = response.data;
+        message.info(response.data.message);
+        setCoupenDetails(discount)
+        setCoupenApplied(response.data.couponApplied)
+        console.log("coupenapplied state", response.data.couponApplied);
+        setCoupenLoading(false);
+        // Recalculate totals after applying coupon
+        grandTotalfunc();
       }).catch((error) => {
         console.error("Error in applying coupon:", error);
         message.error("Failed to apply coupon");
         setCoupenLoading(false);
       })
   };
+  
   // for removing coupen code
   const deleteCoupen = () => {
     setCouponCode("");
     setCoupenApplied(false);
     console.log("coupen removed");
     message.info("coupen removed successfully");
+    // Recalculate totals after removing coupon
+    grandTotalfunc();
   };
 
   // for getting wallet details
-  const getWalletAmount =()=>{
-    const data ={
+  const getWalletAmount = () => {
+    const data = {
       customerId: customerId
     }
     const response = axios.post(
-      BASE_URL+"/order-service/applyWalletAmountToCustomer",data,{
-        headers: { Authorization: `Bearer ${token}` },
-      }
+      BASE_URL + "/order-service/applyWalletAmountToCustomer", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    }
     )
       .then((response) => {
-         console.log("wallet amount",response.data);
-         setWalletAmount(response.data.usableWalletAmountForOrder);
+        console.log("wallet amount", response.data);
+        setWalletAmount(response.data.usableWalletAmountForOrder);
         // setWalletAmount(500);
         //  message.info(response.data.message);
-         setWalletMessage(response.data.message);
-         setWalletTotal(
+        setWalletMessage(response.data.message);
+        setWalletTotal(
           response.data.totalSum - response.data.usableWalletAmountForOrder
         );
       }).catch((error) => {
-        console.error("Error in getting wallet amount:", error.response?.data||error.message);
+        console.error("Error in getting wallet amount:", error.response?.data || error.message);
         message.error("Failed to get wallet amount");
       })
   }
 
-  
-
-  // const handlePayment = async () => {
-    
-  //   try {
-  //     // Check if there are out-of-stock items or quantity exceeds available stock
-  //   const hasStockIssues = cartData.some(
-  //     (item) => parseInt(item.cartQuantity) > item.quantity || item.quantity === 0
-  //   );
-
-  //   if (hasStockIssues) {
-  //     Modal.error({
-  //       title: "Stock Issues",
-  //       content: "Some items in your cart are out of stock or exceed available stock. Please adjust the quantity or remove them before proceeding.",
-  //       okText: "OK",
-  //       onOk() {
-  //         navigate("/main/mycart");
-  //       }
-  //     });
-  //     return;
-  //   }
-  //     // if (grandTotalAmount === 0) {
-  //     //   message.error("Please add items to cart");
-  //     //   navigate("/main/dashboard/product");
-  //     //   return;
-  //     // }
-  
-  //     setLoading(true); // Prevent multiple clicks
-  
-  //     console.log({ selectedPayment });
-  //     let wallet;
-  //     if (useWallet) {
-  //       wallet = walletAmount;
-  //     } else {
-  //       wallet = null;
-  //     }
-  //     let coupon, coupenAmount;
-  //     if (coupenApplied && coupenDetails > 0) {
-  //       coupon = couponCode;
-  //       coupenAmount = coupenDetails;
-  //     } else {
-  //       coupon = null;
-  //       coupenAmount = 0;
-  //     }
-  //     const response = await axios.post(
-  //       BASE_URL + "/order-service/orderPlacedPaymet",
-  //       {
-  //         address: selectedAddress.address,
-  //         customerId: customerId,
-  //         flatNo: selectedAddress.flatNo,
-  //         landMark: selectedAddress.landMark,
-  //         orderStatus: selectedPayment,
-  //         pincode: selectedAddress.pincode,
-  //         walletAmount: wallet,
-  //         couponCodeUsed: coupon,
-  //         couponCodeValue: coupenDetails,
-  //         deliveryBoyFee: deliveryBoyFee,
-  //         amount: grandTotalAmount,
-  //         subTotal:grandTotal
-  //       },
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-  
-  //     console.log(response.data);
-  
-  //     if (response.status === 200 && response.data) {
-  //       if(response.data.status!=null){
-  //         Modal.error({
-  //           title: "Error",
-  //           content: response.data.status,
-  //           okText: "Ok",
-  //           // cancelText: "No",
-  //           onOk() {
-  //             navigate("/main/mycart");
-  //           },
-  //         })
-  //         return;
-  //       }
-  //       if (selectedPayment === "COD" && response.data.paymentId === null) {
-  //         fetchCartData();
-  //         if(response.data.status === null){
-  //           Modal.success({
-  //                content: "Order placed Successfully",
-  //                onOk: () => {
-  //                  navigate("/main/myorders");
-  //                  fetchCartData();
-  //                },
-  //              })
-  //            }else{
-  //              Modal.error({
-  //                content: response.data.status,
-  //                onOk: () => {
-  //                  navigate("/main/mycart");
-  //                  fetchCartData();
-  //                },
-  //              })
-             
-  //            }
-  //       } else if (
-  //         selectedPayment === "ONLINE" &&
-  //         response.data.paymentId !== null
-  //       ) {
-  //         const number = localStorage.getItem('whatsappNumber')
-  //     const withoutCountryCode = number?.replace("+91", "");
-  //     console.log({withoutCountryCode});
-  //     sessionStorage.setItem('address',JSON.stringify(selectedAddress))
-  //         const data = {
-  //           mid: "1152305",
-  //           // amount: grandTotalAmount,
-  //           amount: 1,
-  //           merchantTransactionId: response.data.paymentId,
-  //           transactionDate: new Date(),
-  //           terminalId: "getepay.merchant128638@icici",
-  //           udf1: withoutCountryCode,
-  //           udf2: `${profileData.firstName}  ${profileData.lastName}`,
-  //           udf3: profileData.email,
-  //           udf4: "",
-  //           udf5: "",
-  //           udf6: "",
-  //           udf7: "",
-  //           udf8: "",
-  //           udf9: "",
-  //           udf10: "",
-  //           ru: "https://sandbox.askoxy.ai/main/checkout?trans=" + response.data.paymentId,
-  //           callbackUrl: `https://sandbox.askoxy.ai/main/checkout?trans=${response.data.paymentId}`,
-  //           currency: "INR",
-  //           paymentMode: "ALL",
-  //           bankId: "",
-  //           txnType: "single",
-  //           productType: "IPG",
-  //           txnNote: "Rice Order In Live",
-  //           vpa: "getepay.merchant128638@icici",
-  //         };
-  //         console.log({ data });
-  
-  //         // You might need to call a payment function here (e.g., initiatePayment(data))
-  //         getepayPortal(data);
-  //       }
-  //     } else {
-  //       message.error("Order failed");
-  //     }
-  //   } catch (error: any) {
-  //     console.error("Payment error:", error);
-  //     message.error("Payment failed. Please try again.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handlePayment = async () => {
     try {
-        // Check for stock issues
-        const hasStockIssues = cartData.some(
-            (item) => parseInt(item.cartQuantity) > item.quantity || item.quantity === 0
-        );
+      // Check for stock issues
+      const hasStockIssues = cartData.some(
+        (item) => parseInt(item.cartQuantity) > item.quantity || item.quantity === 0
+      );
 
-        if (hasStockIssues) {
-            Modal.error({
-                title: "Stock Issues",
-                content: "Some items in your cart are out of stock or exceed available stock. Please adjust before proceeding.",
-                okText: "OK",
-                onOk: () => navigate("/main/mycart"),
-            });
-            return;
+      if (hasStockIssues) {
+        Modal.error({
+          title: "Stock Issues",
+          content: "Some items in your cart are out of stock or exceed available stock. Please adjust before proceeding.",
+          okText: "OK",
+          onOk: () => navigate("/main/mycart"),
+        });
+        return;
+      }
+
+      // Check if delivery time slot is selected
+      if (selectedTimeSlot) {
+  Modal.error({ title: "Error", content: "Please select a time slot." });
+}
+
+
+      if (grandTotalAmount === 0) {
+        setSelectedPayment("COD");
+      }
+
+      setLoading(true); // Prevent multiple clicks
+
+      const response = await axios.post(
+        `${BASE_URL}/order-service/orderPlacedPaymet`,
+        {
+          address: selectedAddress.address,
+          customerId,
+          flatNo: selectedAddress.flatNo,
+          landMark: selectedAddress.landMark,
+          orderStatus: selectedPayment,
+          pincode: selectedAddress.pincode,
+          walletAmount: usedWalletAmount,
+          couponCode: coupenApplied ? couponCode.toUpperCase() : null,
+          couponValue: coupenApplied ? coupenDetails : 0,
+          deliveryBoyFee,
+          amount: grandTotalAmount,
+          subTotal: grandTotal,
+          gstAmount: subGst,
+          dayOfWeek: selectedDay,
+          expectedDeliveryDate: selectedDate,
+          timeSlot: selectedTimeSlot,
+          // deliveryDate: selectedDate,
+          // deliveryTimeSlot: selectedTimeSlot
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log(response.data);
+
+      if (response.status === 200 && response.data) {
+        if (response.data.status) {
+          Modal.success({
+            title: "Success",
+            content: response.data.status,
+            okText: "Ok",
+            onOk: () => navigate("/main/myorders"),
+          });
+          return;
         }
 
-        if (grandTotalAmount === 0) {
-            setSelectedPayment("COD");
+        await fetchCartData(); // Ensure cart updates
+
+        if (selectedPayment === "COD" && !response.data.paymentId) {
+          Modal.success({
+            content: "Order placed Successfully",
+            onOk: () => navigate("/main/myorders"),
+          });
+        } else if (selectedPayment === "ONLINE" && response.data.paymentId) {
+          const number = localStorage.getItem("whatsappNumber");
+          const withoutCountryCode = number?.replace("+91", "");
+          sessionStorage.setItem("address", JSON.stringify(selectedAddress));
+
+          const paymentData = {
+            mid: "1152305",
+            // amount: grandTotalAmount,
+            amount: 1,
+            merchantTransactionId: response.data.paymentId,
+            transactionDate: new Date(),
+            terminalId: "getepay.merchant128638@icici",
+            udf1: withoutCountryCode,
+            udf2: `${profileData.firstName} ${profileData.lastName}`,
+            udf3: profileData.email,
+            ru: `https://sandbox.askoxy.ai/main/checkout?trans=${response.data.paymentId}`,
+            callbackUrl: `https://sandbox.askoxy.ai/main/checkout?trans=${response.data.paymentId}`,
+            currency: "INR",
+            paymentMode: "ALL",
+            txnType: "single",
+            productType: "IPG",
+            txnNote: "Rice Order In Live",
+            vpa: "getepay.merchant128638@icici",
+          };
+
+          console.log({ paymentData });
+          getepayPortal(paymentData);
+        } else {
+          message.error("Order failed");
         }
-
-        setLoading(true); // Prevent multiple clicks
-
-        const response = await axios.post(
-            `${BASE_URL}/order-service/orderPlacedPaymet`,
-            {
-                address: selectedAddress.address,
-                customerId,
-                flatNo: selectedAddress.flatNo,
-                landMark: selectedAddress.landMark,
-                orderStatus: selectedPayment,
-                pincode: selectedAddress.pincode,
-                walletAmount: usedWalletAmount,  // ✅ Send only the used wallet amount
-                couponCode: coupenApplied ? couponCode.toUpperCase() : null,
-                couponValue: coupenApplied ? coupenDetails : 0,
-                deliveryBoyFee,
-                amount: grandTotalAmount,
-                subTotal: grandTotal,
-                gstAmount:subGst,
-            },
-            {
-                headers: { Authorization: `Bearer ${token}` },
-            }
-        );
-
-        console.log(response.data);
-
-        if (response.status === 200 && response.data) {
-            if (response.data.status) {
-                Modal.success({
-                    title: "Success",
-                    content: response.data.status,
-                    okText: "Ok",
-                    onOk: () => navigate("/main/myorders"),
-                });
-                return;
-            }
-
-            await fetchCartData(); // Ensure cart updates
-
-            if (selectedPayment === "COD" && !response.data.paymentId) {
-                Modal.success({
-                    content: "Order placed Successfully",
-                    onOk: () => navigate("/main/myorders"),
-                });
-            } else if (selectedPayment === "ONLINE" && response.data.paymentId) {
-                const number = localStorage.getItem("whatsappNumber");
-                const withoutCountryCode = number?.replace("+91", "");
-                sessionStorage.setItem("address", JSON.stringify(selectedAddress));
-
-                const paymentData = {
-                    mid: "1152305",
-                    // amount: grandTotalAmount,
-                    amount: 1,
-                    merchantTransactionId: response.data.paymentId,
-                    transactionDate: new Date(),
-                    terminalId: "getepay.merchant128638@icici",
-                    udf1: withoutCountryCode,
-                    udf2: `${profileData.firstName} ${profileData.lastName}`,
-                    udf3: profileData.email,
-                    ru: `https://sandbox.askoxy.ai/main/checkout?trans=${response.data.paymentId}`,
-                    callbackUrl: `https://sandbox.askoxy.ai/main/checkout?trans=${response.data.paymentId}`,
-                    currency: "INR",
-                    paymentMode: "ALL",
-                    txnType: "single",
-                    productType: "IPG",
-                    txnNote: "Rice Order In Live",
-                    vpa: "getepay.merchant128638@icici",
-                };
-
-                console.log({ paymentData });
-                getepayPortal(paymentData);
-            } else {
-                message.error("Order failed");
-            }
-        }
+      }
     } catch (error) {
-        console.error("Payment error:", error);
-        message.error("Payment failed. Please try again.");
+      console.error("Payment error:", error);
+      message.error("Payment failed. Please try again.");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
-  const getepayPortal = async (data:any) => {
+  const getepayPortal = async (data: any) => {
     console.log("getepayPortal", data);
     const JsonData = JSON.stringify(data);
     const mer = data.merchantTransactionId
@@ -560,7 +611,7 @@ const CheckoutPage: React.FC = () => {
       .then((result) => {
         var resultobj = JSON.parse(result);
         var responseurl = resultobj.response;
-        console.log("===getepayPortal responseurl======",responseurl);
+        console.log("===getepayPortal responseurl======", responseurl);
         var data = decryptEas(responseurl);
         console.log("===getepayPortal data======");
         console.log(data);
@@ -583,7 +634,7 @@ const CheckoutPage: React.FC = () => {
     setLoading(false);
   };
 
-  function Requery(paymentId:any) {
+  function Requery(paymentId: any) {
     setLoading(false);
     console.log("requery");
     if (
@@ -591,7 +642,7 @@ const CheckoutPage: React.FC = () => {
       paymentStatus === "" ||
       paymentStatus === null
     ) {
-      console.log("Before.....",paymentId)
+      console.log("Before.....", paymentId)
 
       const Config = {
         "Getepay Mid": 1152305,
@@ -633,10 +684,10 @@ const CheckoutPage: React.FC = () => {
       fetch(
         "https://portal.getepay.in:8443/getepayPortal/pg/invoiceStatus",
         {
-        method: "POST",
-        headers: myHeaders,
-        body: raw,
-        redirect: "follow",
+          method: "POST",
+          headers: myHeaders,
+          body: raw,
+          redirect: "follow",
         }
       )
         .then((response) => response.text())
@@ -658,13 +709,13 @@ const CheckoutPage: React.FC = () => {
               // clearInterval(intervalId); 294182409
               if (data.paymentStatus === "FAILED") {
                 const add = sessionStorage.getItem("address");
-                
+
                 if (add) {
                   setSelectedAddress(JSON.parse(add) as Address); // Ensure it's parsed as Address
                 }
               }
 
-              if(data.paymentStatus === "SUCCESS"){
+              if (data.paymentStatus === "SUCCESS") {
                 axios({
                   method: "get",
                   url: BASE_URL + `/order-service/api/download/invoice?paymentId=${localStorage.getItem('merchantTransactionId')}&&userId=${customerId}`,
@@ -673,14 +724,14 @@ const CheckoutPage: React.FC = () => {
                     Authorization: `Bearer ${token}`,
                   },
                 })
-                .then((response) => {
-                  console.log(response.data);
-                })
-                .catch((error) => {
-                  console.error("Error in payment confirmation:", error);
-                });
+                  .then((response) => {
+                    console.log(response.data);
+                  })
+                  .catch((error) => {
+                    console.error("Error in payment confirmation:", error);
+                  });
               }
-              
+
               axios({
                 method: "POST",
                 url: BASE_URL + "/order-service/orderPlacedPaymet",
@@ -694,33 +745,33 @@ const CheckoutPage: React.FC = () => {
                 },
               })
                 .then((secondResponse) => {
-                                  console.log(
-                                    "Order Placed with Payment API:",
-                                    secondResponse.data
-                                  );
-                                  localStorage.removeItem('paymentId')
-                                  localStorage.removeItem('merchantTransactionId')
-                                  fetchCartData();
-                                  if(secondResponse.data.status === null){
-                                   Modal.success({
-                                        content: "Order placed Successfully",
-                                        onOk: () => {
-                                          navigate("/main/myorders");
-                                          fetchCartData();
-                                        },
-                                      })
-                                    }else{
-                                      Modal.success({
-                                        content: secondResponse.data.status,
-                                        onOk: () => {
-                                          navigate("/main/myorders");
-                                          fetchCartData();
-                                        },
-                                      })
-                                    
-                                    }
-                                  // setLoading(false);
-                                })
+                  console.log(
+                    "Order Placed with Payment API:",
+                    secondResponse.data
+                  );
+                  localStorage.removeItem('paymentId')
+                  localStorage.removeItem('merchantTransactionId')
+                  fetchCartData();
+                  if (secondResponse.data.status === null) {
+                    Modal.success({
+                      content: "Order placed Successfully",
+                      onOk: () => {
+                        navigate("/main/myorders");
+                        fetchCartData();
+                      },
+                    })
+                  } else {
+                    Modal.success({
+                      content: secondResponse.data.status,
+                      onOk: () => {
+                        navigate("/main/myorders");
+                        fetchCartData();
+                      },
+                    })
+
+                  }
+                  // setLoading(false);
+                })
                 .catch((error) => {
                   console.error("Error in payment confirmation:", error);
                 });
@@ -730,54 +781,170 @@ const CheckoutPage: React.FC = () => {
         })
         .catch((error) => console.log("Payment Status", error));
     }
-    // else{
-    //   clearInterval(intervalId)
-    // }
   }
 
-
+  // Improved calculation of total amount with proper handling of GST, coupon, and wallet
   function grandTotalfunc() {
-    let total = totalAmount + deliveryBoyFee; // Start with total including delivery fee
-    let usedWallet = 0; // Track how much wallet is actually used
-
-    if (coupenApplied) {
-        total -= coupenDetails;
+    // Start with base amount (before GST)
+    let baseAmount = grandTotal;
+    
+    // Add GST
+    let totalWithGst = baseAmount + subGst;
+    
+    // Add delivery fee
+    let totalWithDelivery = totalWithGst + deliveryBoyFee;
+    
+    // Apply coupon discount (if applicable)
+    let afterCoupon = totalWithDelivery;
+    if (coupenApplied && coupenDetails) {
+      afterCoupon = Math.max(0, totalWithDelivery - coupenDetails);
     }
-
-    if (useWallet && walletAmount > 0) {  // Process only if user has wallet balance
-        if (walletAmount >= total) {
-            usedWallet = total;  // Use only what's needed
-            total = 0;  
-        } else {
-            usedWallet = walletAmount; // Use full wallet balance
-            total -= walletAmount;
-        }
+    
+    // Apply wallet (if applicable)
+    let usedWallet = 0;
+    let finalTotal = afterCoupon;
+    
+    if (useWallet && walletAmount > 0) {
+      if (walletAmount >= afterCoupon) {
+        usedWallet = afterCoupon;
+        finalTotal = 0;
+      } else {
+        usedWallet = walletAmount;
+        finalTotal = afterCoupon - walletAmount;
+      }
     }
-
-    // Ensure total is never negative
-    total = Math.max(0, total);
-
-    setAfterWallet(walletAmount ? walletAmount - usedWallet : 0); // Update remaining wallet balance
-    setUsedWalletAmount(usedWallet);  // Store how much wallet is used
-    setGrandTotalAmount(total);
-
-    if(total === 0){
-      console.log("Get all Values",{total});
-      
+    
+    // Update state variables
+    setUsedWalletAmount(usedWallet);
+    setAfterWallet(walletAmount - usedWallet);
+    setGrandTotalAmount(finalTotal);
+    
+    // If total is zero, automatically set payment method to COD
+    if (finalTotal === 0) {
       setSelectedPayment('COD');
     }
-
+    
+    console.log("Calculation Summary:");
+    console.log("Base Amount:", baseAmount);
+    console.log("GST:", subGst);
+    console.log("With Delivery:", totalWithDelivery);
+    console.log("After Coupon:", afterCoupon);
     console.log("Used Wallet:", usedWallet);
-    console.log("Final Grand Total:", total);
-}
-
-  
+    console.log("Final Total:", finalTotal);
+  }
 
   useEffect(() => {
     grandTotalfunc();
-  }, [coupenApplied, useWallet, grandTotalAmount,deliveryBoyFee]);
+  }, [coupenApplied, useWallet, totalAmount, deliveryBoyFee, coupenDetails, walletAmount]);
 
-
+  const renderTimeSlotModal = () => {
+    // For debugging - check what the data contains
+    // console.log("Time slots before rendering:", timeSlots);
+    return (
+      <Modal
+        title="Select Delivery Time Slot"
+        open={showTimeSlotModal}
+        onCancel={() => setShowTimeSlotModal(false)}
+        footer={null}
+        centered
+        width={500}
+        closeIcon={<X className="w-5 h-5" />}
+      >
+        <div className="max-h-[70vh] overflow-y-auto">
+          {/* Remove the filter for today completely, since fetchTimeSlots already handles this */}
+          {timeSlots
+            .slice(0, 3)
+            .map((slot, index) => (
+              <div key={slot.id || index} className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="text-lg font-medium">
+                    {slot.dayOfWeek || `Day ${index + 1}`}
+                  </div>
+                  <div className="text-right text-gray-700">
+                    {slot.date}
+                    {slot.date === "Tomorrow" && (
+                      <span className="ml-2 py-1 px-2 bg-blue-100 text-blue-800 text-xs rounded-full">Tomorrow</span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Time slots grid - display all 4 slots in a responsive grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Time Slot 1 */}
+                  {slot.timeSlot1 && (
+                    <div 
+                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
+                        selectedTimeSlot === slot.timeSlot1 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                      }`}
+                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot1 || "",slot.dayOfWeek || "")}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{slot.timeSlot1}</span>
+                        <span className="text-xs text-green-600">Available</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Time Slot 2 */}
+                  {slot.timeSlot2 && (
+                    <div 
+                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
+                        selectedTimeSlot === slot.timeSlot2 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                      }`}
+                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot2|| "",slot.dayOfWeek || "")}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{slot.timeSlot2}</span>
+                        <span className="text-xs text-green-600">Available</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Time Slot 3 */}
+                  {slot.timeSlot3 && (
+                    <div 
+                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
+                        selectedTimeSlot === slot.timeSlot3 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                      }`}
+                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot3|| "",slot.dayOfWeek || "")}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{slot.timeSlot3}</span>
+                        <span className="text-xs text-green-600">Available</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Time Slot 4 */}
+                  {slot.timeSlot4 && (
+                    <div 
+                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
+                        selectedTimeSlot === slot.timeSlot4 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                      }`}
+                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot4|| "",slot.dayOfWeek || "")}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{slot.timeSlot4}</span>
+                        <span className="text-xs text-green-600">Available</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* No available slots message */}
+                  {!slot.timeSlot1 && !slot.timeSlot2 && !slot.timeSlot3 && !slot.timeSlot4 && (
+                    <div className="py-3 px-4 border rounded-md border-gray-200 bg-gray-50 text-gray-500 col-span-full">
+                      No available time slots for this day
+                    </div>
+                  )}
+                </div>
+                
+                {index < 2 && <div className="border-b border-gray-100 mt-4"></div>}
+              </div>
+            ))}
+        </div>
+      </Modal>
+    );
+  };
   return (
     <div className="flex flex-col min-h-screen">
 
@@ -801,154 +968,225 @@ const CheckoutPage: React.FC = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <div className="lg:col-span-7 space-y-4">
-                  <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-gray-100">
-                      <div className="flex items-center">
-                        <Tag className="w-5 h-5 text-orange-500 mr-2" />
-                        <h2 className="text-lg font-semibold">Apply Coupon</h2>
-                      </div>
+                
+                  {/* Delivery Time Slot Selection */}
+                  <div className="bg-white border rounded-lg p-4 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-medium flex items-center">
+                        <Clock className="w-5 h-5 mr-2 text-purple-500" />
+                        Delivery Time
+                      </h3>
+                      <button 
+                        onClick={openTimeSlotModal}
+                        className="text-sm text-purple-600 hover:text-purple-800"
+                      >
+                        {selectedTimeSlot ? 'Change Time' : 'Select Time'}
+                      </button>
                     </div>
-                    <div className="p-4">
-                      <div className="flex gap-3">
-                        <input
-                          type="text"
-                          value={couponCode.toUpperCase()}
-                          onChange={(e) => setCouponCode(e.target.value)}
-                          placeholder="Enter coupon code"
-                          className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                        {coupenApplied!==true &&(
-                          <>
-                        <button
-                          onClick={handleApplyCoupon}
-                          disabled={coupenLoading}
-                          className="bg-orange-500 text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-orange-600 transition"
-                        >
-                          {coupenLoading ? "Applying..." : "Apply"}
-                        </button>
-                        </>)}
-                        {coupenApplied==true &&(
-                            <button
-                            onClick={deleteCoupen}
-                            className="bg-orange-500 text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-orange-600 transition"
-                          >
-                            Remove
-                          </button>
-                        )}
+                    
+                    {selectedTimeSlot ? (
+                      <div className="p-3 bg-green-50 rounded-md border border-green-200">
+                        <p className="text-green-800 font-medium">{selectedDate}</p>
+                        <p className="text-green-700">{selectedTimeSlot}</p>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl shadow-sm p-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                    {walletAmount > 0 ? (
-                      <div className="walletContainer">
-                       <div className="walletHeader">
-                        <input
-                           type="checkbox"
-                          checked={useWallet}
-                         onChange={handleCheckboxToggle}
-                         className="checkbox"
-                         />
-                       <span className="checkboxLabel">Use Wallet Balance</span>
-                     </div>
-                 <p className="walletMessage">
-                     You can use up to <span className="highlight">₹{walletAmount}</span> from your wallet for this order.
-                   </p>
-                 </div>
-                ) : (
-                   <div>
-                    <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
-                      Note: {walletMessage}
-                   </div>
+                    ) : (
+                      <div className="p-3 bg-yellow-50 rounded-md border border-yellow-200">
+                        <p className="text-yellow-700">Please select a delivery time slot</p>
+                      </div>
                     )}
+                  </div>
+
+                
+
+                  {/* Cart Items */}
+                  <div className="bg-white border rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <ShoppingBag className="w-5 h-5 mr-2 text-purple-500" />
+                      <h3 className="font-medium">Order Items ({cartData.length})</h3>
+                    </div>
+                    
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {cartData.map((item) => (
+                        <div key={item.itemId} className="flex justify-between items-center p-2 border-b">
+                          <div>
+                            <p className="font-medium">{item.itemName}</p>
+                            <p className="text-gray-600 text-sm">Qty: {item.cartQuantity}</p>
+                          </div>
+                          <p className="font-medium">₹{item.itemPrice}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-gray-100">
-                      <h2 className="text-lg font-semibold">Payment Method</h2>
+                  {/* Payment Method */}
+                  <div className="bg-white border rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <CreditCard className="w-5 h-5 mr-2 text-purple-500" />
+                      <h3 className="font-medium">Payment Method</h3>
                     </div>
-                    <div className="p-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <button
-                          className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm transition ${selectedPayment === 'ONLINE'
-                            ? 'border-green-500 bg-green-50 text-green-700'
-                            : 'border-gray-200 hover:border-green-500'
-                            }`}
-                            disabled={grandTotalAmount === 0}
-                          onClick={() => setSelectedPayment('ONLINE')}
-                        >
-                          <CreditCard className="w-4 h-4" />
-                          <span className="font-medium">Online Payment</span>
-                        </button>
-                        <button
-                          className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm transition ${selectedPayment === 'COD'
-                            ? 'border-green-500 bg-green-50 text-green-700'
-                            : 'border-gray-200 hover:border-green-500'
-                            }`}
-                          onClick={() => setSelectedPayment('COD')}
-                        >
-                          <Truck className="w-4 h-4" />
-                          <span className="font-medium">Cash on Delivery</span>
-                        </button>
+                    
+                    <div className="space-y-3">
+                      <div 
+                        className={`p-3 border rounded-md cursor-pointer flex items-center ${
+                          selectedPayment === 'ONLINE' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+                        }`}
+                        onClick={() => setSelectedPayment('ONLINE')}
+                      >
+                        <div className={`w-4 h-4 rounded-full border ${
+                          selectedPayment === 'ONLINE' 
+                            ? 'border-purple-500 bg-white' 
+                            : 'border-gray-400'
+                        }`}>
+                          {selectedPayment === 'ONLINE' && (
+                            <div className="w-2 h-2 rounded-full bg-purple-500 m-0.5"></div>
+                          )}
+                        </div>
+                        <span className="ml-2">Online Payment</span>
+                      </div>
+                      
+                      <div 
+                        className={`p-3 border rounded-md cursor-pointer flex items-center ${
+                          selectedPayment === 'COD' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+                        }`}
+                        onClick={() => setSelectedPayment('COD')}
+                      >
+                        <div className={`w-4 h-4 rounded-full border ${
+                          selectedPayment === 'COD' 
+                            ? 'border-purple-500 bg-white' 
+                            : 'border-gray-400'
+                        }`}>
+                          {selectedPayment === 'COD' && (
+                            <div className="w-2 h-2 rounded-full bg-purple-500 m-0.5"></div>
+                          )}
+                        </div>
+                        <span className="ml-2">Cash on Delivery</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="lg:col-span-5">
-                  <div className="bg-white rounded-xl shadow-sm overflow-hidden sticky top-4">
-                    <div className="p-4 border-b border-gray-100">
-                      <h2 className="text-lg font-semibold">Order Summary</h2>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Items Total</span>
-                        <span className="font-medium">₹{grandTotal}</span>
+                  {/* Order Summary */}
+                  <div className="bg-white border rounded-lg p-4 sticky top-4">
+                    <h3 className="font-medium mb-4">Order Summary</h3>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600">Subtotal</span>
+                        <span>₹{grandTotal.toFixed(2)}</span>
                       </div>
-                      {coupenApplied==true &&(
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Coupon Applied</span>
-                        <span className="font-medium text-green-600">- ₹{coupenDetails}</span>
-                      </div>)}
-                      {useWallet && (
-                       <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">from Wallet</span>
-                      <span className="font-medium text-green-600">- ₹{usedWalletAmount}</span>
-                        </div>
-                       )}
-                     <div className="flex justify-between text-sm">
+                      
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600">GST</span>
+                        <span>₹{subGst.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between py-2">
                         <span className="text-gray-600">Delivery Fee</span>
-                        <span className="font-medium text-green-600">{deliveryBoyFee===0?"Free":"+ ₹"+deliveryBoyFee}</span>
+                        <span>₹{deliveryBoyFee.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Total GST </span>
-                        <span className="font-medium text-green-600">+ ₹{subGst}</span>
-                      </div>
-                      <div className="border-t border-gray-100 pt-3 mt-3">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold">Grand Total</span>
-                          <span className="text-lg font-bold text-green-600">₹{grandTotalAmount}</span>
+                      
+                      {coupenApplied && coupenDetails > 0 && (
+                        <div className="flex justify-between py-2 text-green-600">
+                          <span>Coupon Discount</span>
+                          <span>-₹{coupenDetails.toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      {useWallet && usedWalletAmount > 0 && (
+                        <div className="flex justify-between py-2 text-green-600">
+                          <span>Wallet Amount</span>
+                          <span>-₹{usedWalletAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="border-t pt-2 mt-2">
+                        <div className="flex justify-between font-medium text-lg">
+                          <span>Total</span>
+                          <span>₹{grandTotalAmount.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="p-4 bg-gray-50">
-                      <button
-                        onClick={()=>handlePayment()}
-                        disabled={loading}
-                        className="w-full bg-green-500 text-white py-3 rounded-lg text-sm font-medium shadow-sm hover:bg-green-600 transition transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {loading ? (
-                          'Processing...'
-                        ) : (
-                          <span className="flex items-center justify-center gap-2">
-                            <span>Proceed to Pay</span>
-                            <span className="font-bold">₹{grandTotalAmount}</span>
-                          </span>
+                    
+                    {/* Coupon Code */}
+                    <div className="w-full mt-4 px-2 sm:px-0">
+      <h4 className="font-medium text-sm mb-2 flex items-center">
+        <Tag className="w-4 h-4 mr-1 text-purple-500" />
+        Apply Coupon
+      </h4>
+      
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+        <input
+          type="text"
+          value={couponCode}
+          onChange={(e) => setCouponCode(e.target.value)}
+          placeholder="Enter coupon code"
+          className="w-full p-2 border rounded-md sm:rounded-r-none focus:outline-none focus:ring-1 focus:ring-purple-500"
+          disabled={coupenApplied}
+        />
+        
+        {coupenApplied ? (
+          <button
+            onClick={deleteCoupen}
+            className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-md sm:rounded-l-none hover:bg-red-600 transition-colors"
+          >
+            Remove
+          </button>
+        ) : (
+          <button
+            onClick={handleApplyCoupon}
+            disabled={!couponCode || coupenLoading}
+            className="w-full sm:w-auto px-4 py-2 bg-purple-500 text-white rounded-md sm:rounded-l-none hover:bg-purple-600 disabled:bg-purple-300 transition-colors"
+          >
+            {coupenLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+            ) : (
+              'Apply'
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+                    {/* Wallet */}
+                    {walletAmount > 0 && (
+                      <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="useWallet"
+                            checked={useWallet}
+                            onChange={handleCheckboxToggle}
+                            className="w-4 h-4 text-purple-600 rounded"
+                          />
+                          <label htmlFor="useWallet" className="ml-2 text-sm font-medium">
+                            Use wallet balance (₹{walletAmount.toFixed(2)})
+                          </label>
+                        </div>
+                        
+                        {useWallet && (
+                          <div className="mt-2 text-sm text-gray-600">
+                            <p>Amount used: ₹{usedWalletAmount.toFixed(2)}</p>
+                            <p>Remaining: ₹{afterWallet.toFixed(2)}</p>
+                          </div>
                         )}
-                      </button>
-                    </div>
+                      </div>
+                    )}
+                    
+                    {/* Place Order Button */}
+                    <button
+                      onClick={handlePayment}
+                      disabled={loading || !selectedAddress || !selectedTimeSlot}
+                      className="w-full mt-6 py-3 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      {loading ? (
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      ) : (
+                        <>
+                          {selectedPayment === 'ONLINE' ? 'Proceed to Payment' : 'Place Order'}
+                          <span className="ml-2">₹{grandTotalAmount.toFixed(2)}</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -958,6 +1196,7 @@ const CheckoutPage: React.FC = () => {
       </div>
 
       <Footer />
+      {renderTimeSlotModal()}
     </div>
   );
 };

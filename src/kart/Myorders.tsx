@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Filter, Search, Package2, ChevronDown, MessageSquare, ExternalLink, Eye, SmilePlus } from 'lucide-react';
+import { Menu, X, AlertCircle, Filter, Search, Package2, ChevronDown, MessageSquare, ExternalLink, Eye, SmilePlus, Clock, Calendar, ArrowRight, Edit } from 'lucide-react';
 import Footer from '../components/Footer';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
-import  BASE_URL  from "../Config";
+import BASE_URL from "../Config";
 
 
 interface OrderAddress {
@@ -20,6 +20,15 @@ interface OrderHistory {
   deliveredDate: string | null;
   canceledDate: string | null;
   rejectedDate: string | null;
+}
+interface TimeSlot {
+  dayOfWeek: string;
+  id: number;
+  isAvailable: boolean;
+  timeSlot1: string;
+  timeSlot2: string;
+  timeSlot3: string;
+  timeSlot4: string;
 }
 
 interface Item {
@@ -57,6 +66,10 @@ interface OrderDetailsResponse {
   orderAddress: OrderAddress;
   orderItems: Item[];
   feedback?: FeedbackData;
+   // New fields for delivery time information
+   timeSlot?: string;
+   dayOfWeek?: string;
+   expectedDeliveryDate?: string;
 }
 
 const MyOrders: React.FC = () => {
@@ -69,6 +82,9 @@ const MyOrders: React.FC = () => {
   const [sortOption, setSortOption] = useState<string>('newest');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [customerId, setCustomerId] = useState<string>('');
+  const slot: TimeSlot = typeof selectedOrder?.timeSlot === "object" ? selectedOrder.timeSlot : {} as TimeSlot;
+  const slotKeys = Object.keys(slot) as (keyof TimeSlot)[]; // Extract valid keys
+  const slotKey = slotKeys.length > 0 ? slotKeys[0] : undefined; // Pick first available slot
   const [userStage, setUserStage] = useState<string>('');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState<boolean>(false);
   const [selectedLabel, setSelectedLabel] = useState<string>('');
@@ -76,6 +92,12 @@ const MyOrders: React.FC = () => {
   const [feedbackSubmitting, setFeedbackSubmitting] = useState<boolean>(false);
   const [feedbackSuccess, setFeedbackSuccess] = useState<boolean>(false);
   const [orderToRate, setOrderToRate] = useState<OrderDetailsResponse | null>(null);
+  const [isEditingDeliveryTime, setIsEditingDeliveryTime] = useState<boolean>(false);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<any>([]);
+  const [selectedDay, setSelectedDay] = useState<string>("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
+  const [timeSlotUpdating, setTimeSlotUpdating] = useState<boolean>(false);
+  const [timeSlotUpdateSuccess, setTimeSlotUpdateSuccess] = useState<boolean>(false);
 
   
   useEffect(() => {
@@ -174,35 +196,64 @@ const MyOrders: React.FC = () => {
     }
   };
 
-  const fetchOrderDetails = async (orderId: string): Promise<void> => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${BASE_URL}/order-service/getOrdersByOrderId/${orderId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+// Function to update delivery time slot// Function to update delivery time slot
 
-      if (response.data && response.data[0]) {
-        const orderData = response.data[0];
-        
-        // If order is delivered, ensure we have feedback data
-        if (orderData.orderStatus === "4" && !orderData.feedback) {
-          const feedbackData = await fetchOrderFeedbackData(orderId);
-          orderData.feedback = feedbackData;
-        }
-        
-        setSelectedOrder(orderData);
-        setIsDetailsOpen(true);
+// Enhanced version of fetchOrderDetails to also fetch time slots
+const fetchOrderDetails = async (orderId: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(
+      `${BASE_URL}/order-service/getOrdersByOrderId/${orderId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
-    } catch (error) {
-      console.error("Error fetching order details:", error);
+    );
+
+    if (response.data && response.data[0]) {
+      const orderData = response.data[0];
+      
+      // If order is delivered, ensure we have feedback data
+      if (orderData.orderStatus === "4" && !orderData.feedback) {
+        const feedbackData = await fetchOrderFeedbackData(orderId);
+        orderData.feedback = feedbackData;
+      }
+      
+      setSelectedOrder(orderData);
+      
+      // Pre-select current values if they exist
+      if (orderData.dayOfWeek) setSelectedDay(orderData.dayOfWeek);
+      if (orderData.timeSlot) setSelectedTimeSlot(orderData.timeSlot);
+      
+      setIsDetailsOpen(true);
     }
+  } catch (error) {
+    console.error("Error fetching order details:", error);
+  }
+};
+
+// Function to handle opening edit delivery time modal
+const openEditDeliveryTime = async () => {
+  setIsEditingDeliveryTime(true); // Update UI immediately
+  await fetchAvailableTimeSlots(); // Fetch slots
+};
+
+
+// Render days of week in a user-friendly format
+const formatDayOfWeek = (day: string): string => {
+  const dayMap: Record<string, string> = {
+    "MONDAY": "Monday",
+    "TUESDAY": "Tuesday",
+    "WEDNESDAY": "Wednesday",
+    "THURSDAY": "Thursday",
+    "FRIDAY": "Friday",
+    "SATURDAY": "Saturday",
+    "SUNDAY": "Sunday"
   };
+  return dayMap[day] || day;
+};
 
   const submitFeedback = async (): Promise<void> => {
     if (!orderToRate) return;
@@ -305,17 +356,120 @@ const MyOrders: React.FC = () => {
     };
     return statusMap[status] || "Unknown";
   };
-
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const updateDeliveryTimeSlot = async () => {
+    if (!selectedOrder || !selectedDay || !selectedTimeSlot) {
+      alert("Please select both a day and a time slot");
+      return;
+    }
+  
+    setTimeSlotUpdating(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("User is not authenticated");
+  
+      // Find the selected day's time slot object inside the function
+      const dayTimeSlot = availableTimeSlots.find(
+        (slot: { dayOfWeek: string; id: number; timeSlot1?: string; timeSlot2?: string; timeSlot3?: string; timeSlot4?: string }) =>
+          slot.dayOfWeek === selectedDay
+      );
+  
+      if (!dayTimeSlot) {
+        throw new Error("Selected day not found in available time slots");
+      }
+  
+      const timeSlotData = {
+        dayOfWeek: selectedDay,
+        id: dayTimeSlot.id,
+        isAvailable: true,
+        timeSlot1: dayTimeSlot.timeSlot1,
+        timeSlot2: dayTimeSlot.timeSlot2,
+        timeSlot3: dayTimeSlot.timeSlot3,
+        timeSlot4: dayTimeSlot.timeSlot4,
+      };
+  
+      const requestUrl = `${BASE_URL}/api/order-service/timeSlotStatusChange?orderId=${selectedOrder.orderId}&selectedTimeSlot=${selectedTimeSlot}`;
+  
+      const response = await axios.patch(requestUrl, timeSlotData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      const updatedExpectedDate = response.data?.expectedDeliveryDate || selectedDay;
+  
+      setSelectedOrder((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          dayOfWeek: selectedDay,
+          timeSlot: selectedTimeSlot,
+          expectedDeliveryDate: updatedExpectedDate,
+        };
+      });
+  
+      setTimeSlotUpdateSuccess(true);
+      setTimeout(() => {
+        setTimeSlotUpdateSuccess(false);
+        setIsEditingDeliveryTime(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Error updating time slot:", error);
+  
+      if (axios.isAxiosError(error)) {
+        console.error("Request details:", error.config);
+        console.error("Response:", error.response?.data);
+      }
+      alert("Failed to update delivery time. Please try again.");
+    } finally {
+      setTimeSlotUpdating(false);
+    }
   };
+  
+  
+  const fetchAvailableTimeSlots = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("User is not authenticated");
+  
+      const response = await axios.get(`${BASE_URL}/api/order-service/getTimeSlots`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (response.data) {
+        setAvailableTimeSlots(response.data);
+        if (selectedOrder) {
+          setSelectedDay(selectedOrder.dayOfWeek || "");
+          setSelectedTimeSlot(selectedOrder.timeSlot || "");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching time slots:", error);
+      alert("Failed to fetch available time slots.");
+    }
+  };
+
+  
+  const dayTimeSlot = availableTimeSlots.find(
+    (slot: { dayOfWeek: string; id: number; timeSlot1?: string; timeSlot2?: string; timeSlot3?: string; timeSlot4?: string }) =>
+      slot.dayOfWeek === selectedDay
+  );
+  
+  
+
+// Fix for 'dateString' parameter
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 
   const handleWriteToUs = () => {
     if (selectedOrder) {
@@ -360,6 +514,31 @@ const MyOrders: React.FC = () => {
     setOrderToRate(null);
     setSelectedLabel('');
     setComments('');
+  };
+
+  // Format delivery date in a user-friendly way
+  const formatDeliveryDate = (dateString: string): string => {
+    if (!dateString) return 'N/A';
+    
+    // Check if the date is in DD-MM-YYYY format and convert it
+    if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
+      const [day, month, year] = dateString.split('-').map(Number);
+      // Month is 0-indexed in JavaScript Date
+      const date = new Date(year, month - 1, day);
+      
+      return date.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    }
+    
+    // If not in the expected format, try direct parsing
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   const filteredOrders = allOrders.filter((order) => {
@@ -464,125 +643,160 @@ const MyOrders: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-            {filteredOrders.map((order) => (
-              <div
-                key={order.orderId}
-                className="bg-white rounded-xl shadow-sm border border-purple-100 overflow-hidden hover:shadow transition-all duration-300"
-              >
-                <div className="p-3 sm:p-5">
-                  <div className="flex justify-between items-start mb-3 sm:mb-4">
-                    <div>
-                      <h3 className="text-base sm:text-lg font-semibold text-purple-900">#{order.newOrderId}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">{formatDate(order.orderDate)}</p>
-                    </div>
-                    <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(order.orderStatus)}`}>
-                      {getStatusText(order.orderStatus)}
-                    </span>
-                  </div>
+  {filteredOrders.map((order) => (
+    <div
+      key={order.orderId}
+      className="bg-white rounded-xl shadow-sm border border-purple-100 overflow-hidden hover:shadow transition-all duration-300"
+    >
+      <div className="p-3 sm:p-5">
+        <div className="flex justify-between items-start mb-3 sm:mb-4">
+          <div>
+            <h3 className="text-base sm:text-lg font-semibold text-purple-900">#{order.newOrderId}</h3>
+            <p className="text-xs sm:text-sm text-gray-600">{formatDate(order.orderDate)}</p>
+          </div>
+          <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(order.orderStatus)}`}>
+            {getStatusText(order.orderStatus)}
+          </span>
+        </div>
 
-                  <div className="space-y-2 sm:space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Total Amount</span>
-                      <span className="text-xs sm:text-sm font-medium">₹{order.grandTotal}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs sm:text-sm text-gray-600">Payment</span>
-                      <span className="text-xs sm:text-sm font-medium">{order.paymentType === 2 ? "Online" : "COD"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Order Action Buttons - View Details and Rate Experience */}
-                <div className="grid grid-cols-1">
-                  {/* View Details button */}
-                  <div
-                    className="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 cursor-pointer transition-all duration-300"
-                    onClick={() => fetchOrderDetails(order.orderId)}
-                  >
-                    <div className="px-3 sm:px-5 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 text-white">
-                      <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-                      <span className="text-sm sm:text-base font-medium">View Order Details</span>
-                    </div>
-                  </div>
-                  
-                  {/* Display Feedback or Rate Experience button for delivered orders */}
-                  {order.orderStatus === "4" && (
-                    <div
-                      className={`${order.feedback 
-                          ? "bg-purple-100 cursor-default" 
-                          : "bg-white hover:bg-purple-50 cursor-pointer"
-                      } transition-all duration-300`}
-                      onClick={order.feedback ? undefined : () => openFeedbackModal(order)}
-                    >
-                      <div className="px-3 sm:px-5 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 text-purple-800">
-                        {order.feedback ? (
-                          <>
-                            <span className="text-lg sm:text-xl">
-                              {getFeedbackDisplay(order.feedback.feedbackStatus).emoji}
-                            </span>
-                            <span className="text-sm sm:text-base font-medium">
-                              {getFeedbackDisplay(order.feedback.feedbackStatus).text}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <SmilePlus className="h-4 w-4 sm:h-5 sm:w-5" />
-                            <span className="text-sm sm:text-base font-medium">Rate Your Experience</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
+        <div className="space-y-2 sm:space-y-2">
+          <div className="flex justify-between">
+            <span className="text-xs sm:text-sm text-gray-600">Total Amount</span>
+            <span className="text-xs sm:text-sm font-medium">₹{order.grandTotal}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-xs sm:text-sm text-gray-600">Payment</span>
+            <span className="text-xs sm:text-sm font-medium">{order.paymentType === 2 ? "Online" : "COD"}</span>
+          </div>
+          
+          {/* NEW: Delivery Date Section */}
+          <div className="pt-2 border-t border-gray-100">
+            <div className="flex justify-between items-center">
+              <span className="text-xs sm:text-sm text-gray-600">Delivery</span>
+              {/* {['0', '1', '2', '3'].includes(order.orderStatus) && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedOrder(order);
+                    setIsEditingDeliveryTime(true);
+                  }}
+                  className="text-xs sm:text-sm text-purple-600 hover:text-purple-800 flex items-center"
+                >
+                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span>Change</span>
+                </button>
+              )} */}
+            </div>
+            {order.expectedDeliveryDate || order.dayOfWeek || order.timeSlot ? (
+              <div className="mt-1 bg-purple-50 rounded-md p-1.5 text-xs sm:text-sm">
+                <div className="flex items-center">
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-purple-700 mr-1.5" />
+                  <span className="font-medium">
+                    {order.expectedDeliveryDate && formatDeliveryDate(order.expectedDeliveryDate)}
+                    {order.dayOfWeek && !order.expectedDeliveryDate && formatDayOfWeek(order.dayOfWeek)}
+                    {order.timeSlot && (
+                      <> • <span className="font-normal">{order.timeSlot}</span></>
+                    )}
+                  </span>
                 </div>
               </div>
-            ))}
+            ) : (
+              <div className="mt-1 text-xs sm:text-sm text-gray-500 italic">Not scheduled</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Order Action Buttons - View Details and Rate Experience */}
+      <div className="grid grid-cols-1">
+        {/* View Details button */}
+        <div
+          className="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 cursor-pointer transition-all duration-300"
+          onClick={() => fetchOrderDetails(order.orderId)}
+        >
+          <div className="px-3 sm:px-5 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 text-white">
+            <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-sm sm:text-base font-medium">View Order Details</span>
+          </div>
+        </div>
+        
+        {/* Display Feedback or Rate Experience button for delivered orders */}
+        {order.orderStatus === "4" && (
+          <div
+            className={`${order.feedback 
+                ? "bg-purple-100 cursor-default" 
+                : "bg-white hover:bg-purple-50 cursor-pointer"
+            } transition-all duration-300`}
+            onClick={order.feedback ? undefined : () => openFeedbackModal(order)}
+          >
+            <div className="px-3 sm:px-5 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 text-purple-800">
+              {order.feedback ? (
+                <>
+                  <span className="text-lg sm:text-xl">
+                    {getFeedbackDisplay(order.feedback.feedbackStatus).emoji}
+                  </span>
+                  <span className="text-sm sm:text-base font-medium">
+                    {getFeedbackDisplay(order.feedback.feedbackStatus).text}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <SmilePlus className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-sm sm:text-base font-medium">Rate Your Experience</span>
+                </>
+              )}
+            </div>
           </div>
         )}
+      </div>
+    </div>
+  ))}
+</div>
+        )}
 
-        {/* Order Details Modal */}
-        {isDetailsOpen && selectedOrder && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 overflow-auto">
-            <div className="bg-white rounded-lg w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-3 sm:p-4 sticky top-0 flex justify-between items-center">
-                <h2 className="text-lg sm:text-xl font-semibold">Order Details</h2>
-                <button
-                  onClick={() => setIsDetailsOpen(false)}
-                  className="p-1 hover:bg-purple-700 rounded-full transition-colors"
-                >
-                  <X className="h-5 w-5 sm:h-6 sm:w-6" />
-                </button>
+       {/* Order Details Modal */}
+      {isDetailsOpen && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 overflow-auto">
+          <div className="bg-white rounded-lg w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-3 sm:p-4 sticky top-0 flex justify-between items-center">
+              <h2 className="text-lg sm:text-xl font-semibold">Order Details</h2>
+              <button
+                onClick={() => setIsDetailsOpen(false)}
+                className="p-1 hover:bg-purple-700 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <div className="text-center">
+                <Package2 className="h-10 w-10 sm:h-12 sm:w-12 text-purple-600 mx-auto mb-2" />
+                <h3 className="text-lg sm:text-xl font-semibold text-purple-900">
+                  Order #{selectedOrder?.newOrderId || selectedOrder?.orderId?.slice(-4)}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600">{formatDate(selectedOrder.orderDate)}</p>
               </div>
 
-              <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                <div className="text-center">
-                  <Package2 className="h-10 w-10 sm:h-12 sm:w-12 text-purple-600 mx-auto mb-2" />
-                  <h3 className="text-lg sm:text-xl font-semibold text-purple-900">
-                    Order #{selectedOrder?.newOrderId || selectedOrder?.orderId?.slice(-4)}
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-600">{formatDate(selectedOrder.orderDate)}</p>
+              <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
+                <h4 className="font-semibold text-purple-900 mb-2 sm:mb-3 text-sm sm:text-base">Order Status</h4>
+                <div className="flex items-center justify-center">
+                  <span className={`px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(selectedOrder.orderStatus)}`}>
+                    {getStatusText(selectedOrder.orderStatus)}
+                  </span>
                 </div>
-
-                <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
-                  <h4 className="font-semibold text-purple-900 mb-2 sm:mb-3 text-sm sm:text-base">Order Status</h4>
-                  <div className="flex items-center justify-center">
-                    <span className={`px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(selectedOrder.orderStatus)}`}>
-                      {getStatusText(selectedOrder.orderStatus)}
-                    </span>
-                  </div>
+              </div>
+              
+              {/* Keep all other existing sections */}
+              <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
+                <h4 className="font-semibold text-purple-900 mb-2 sm:mb-3 text-sm sm:text-base">Delivery Address</h4>
+                <div className="space-y-1 sm:space-y-2 text-gray-700 text-xs sm:text-sm">
+                  <p className="font-medium">{selectedOrder.customerName}</p>
+                  <p>{selectedOrder.orderAddress.flatNo}, {selectedOrder.orderAddress.address}</p>
+                  <p>Landmark: {selectedOrder.orderAddress.landMark}</p>
+                  <p>Pincode: {selectedOrder.orderAddress.pincode}</p>
+                  <p>Mobile: {selectedOrder.customerMobile}</p>
                 </div>
-
-                
-
-                <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
-                  <h4 className="font-semibold text-purple-900 mb-2 sm:mb-3 text-sm sm:text-base">Delivery Address</h4>
-                  <div className="space-y-1 sm:space-y-2 text-gray-700 text-xs sm:text-sm">
-                    <p className="font-medium">{selectedOrder.customerName}</p>
-                    <p>{selectedOrder.orderAddress.flatNo}, {selectedOrder.orderAddress.address}</p>
-                    <p>Landmark: {selectedOrder.orderAddress.landMark}</p>
-                    <p>Pincode: {selectedOrder.orderAddress.pincode}</p>
-                    <p>Mobile: {selectedOrder.customerMobile}</p>
-                  </div>
-                </div>
+              </div>
 
                 <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
                   {selectedOrder.orderItems.map((item, index) => (
@@ -743,19 +957,132 @@ const MyOrders: React.FC = () => {
                   </div>
                 )}
 
-                <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={handleWriteToUs}
-                    className="bg-white border border-purple-600 text-purple-600 hover:bg-purple-50 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                    <span>Write to Us</span>
-                  </button>
-                </div>
+<div className="mt-6 flex justify-center">
+                <button
+                  onClick={handleWriteToUs}
+                  className="bg-white border border-purple-600 text-purple-600 hover:bg-purple-50 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span>Write to Us</span>
+                </button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* NEW: Edit Delivery Time Modal */}
+      {isEditingDeliveryTime && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Update Delivery Time</h2>
+              <button
+                onClick={() => setIsEditingDeliveryTime(false)}
+                className="p-1 hover:bg-purple-700 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {timeSlotUpdateSuccess ? (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Delivery Time Updated</h3>
+                  <p className="text-gray-600">Your delivery time has been successfully updated.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <div className="text-center mb-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-1">
+                        Select New Delivery Time
+                      </h3>
+                      <p className="text-gray-600 text-sm">Choose your preferred day and time slot</p>
+                    </div>
+
+                    {/* Day Selection */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Delivery Day
+                      </label>
+                      <div className="relative">
+                        <select
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          value={selectedDay}
+                          onChange={(e) => {
+                            setSelectedDay(e.target.value);
+                            setSelectedTimeSlot(""); // Reset time slot when day changes
+                          }}
+                        >
+                          <option value="">Select a day</option>
+                          {availableTimeSlots.map((slot: any) => (
+                            <option key={slot.id} value={slot.dayOfWeek}>
+                              {formatDayOfWeek(slot.dayOfWeek)}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {/* Time Slot Selection */}
+                    {selectedDay && (
+  <div className="mb-6">
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Delivery Time Slot
+    </label>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      {["timeSlot1", "timeSlot2", "timeSlot3", "timeSlot4"].map((slotKey) => {
+        const slot = availableTimeSlots.find((slot: any) => slot.dayOfWeek === selectedDay);
+        if (!slot || !slot[slotKey]) return null;
+        return (
+          <div
+            key={slotKey}
+            className={`p-3 border rounded-lg cursor-pointer transition-all ${
+              selectedTimeSlot === slot[slotKey] ? "border-purple-500 bg-purple-50" : "border-gray-300 hover:border-purple-300"
+            }`}
+            onClick={() => setSelectedTimeSlot(slot[slotKey])}
+          >
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-2 text-purple-600" />
+              <span>{slot[slotKey]}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
+
+
+                    {/* Submit button */}
+                    <button
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:bg-purple-300"
+                      onClick={updateDeliveryTimeSlot}
+                      disabled={timeSlotUpdating || !selectedDay || !selectedTimeSlot}
+                    >
+                      {timeSlotUpdating ? (
+                        <span className="flex items-center justify-center">
+                          <span className="animate-spin h-5 w-5 border-b-2 border-white rounded-full mr-2"></span>
+                          Updating...
+                        </span>
+                      ) : (
+                        "Update Delivery Time"
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
         {/* Feedback Modal */}
         {isFeedbackOpen && orderToRate && (
@@ -786,6 +1113,7 @@ const MyOrders: React.FC = () => {
                   </div>
                 )}
 
+
                 {/* Emoji rating options */}
                 <div className="grid grid-cols-5 gap-2 mb-6">
                   {feedbackOptions.map((option) => (
@@ -803,6 +1131,7 @@ const MyOrders: React.FC = () => {
                     </div>
                   ))}
                 </div>
+
 
                 {/* Comments textarea */}
                 <div className="mb-6">
