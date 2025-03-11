@@ -400,7 +400,7 @@ const Header: React.FC<HeaderProps> = ({
                 onMouseDown={() => setActiveButton("cart")}
                 onMouseUp={() => setActiveButton(null)}
                 onMouseLeave={() => setActiveButton(null)}
-                className={`relative flex items-center space-x-1 text-gray-700 hover:bg-gray-50 rounded-full p-1 sm:px-2 sm:py-1 
+                className={`relative flex items-center space-x-1 text-gray-700 hover:bg-purple-50 rounded-full p-1 sm:px-2 sm:py-1 
               hover:text-purple-600 transition-all duration-300 hover:scale-105 active:scale-95 
               ${
                 location.pathname === "/mycart"
@@ -409,7 +409,7 @@ const Header: React.FC<HeaderProps> = ({
               }`}
               >
                 <ShoppingCart
-                  size={16}
+                  size={20}
                   className={`sm:w-6 sm:h-6 transition-colors duration-300 
                 ${
                   location.pathname === "/main/mycart"

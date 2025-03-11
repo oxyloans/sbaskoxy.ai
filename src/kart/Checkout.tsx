@@ -78,7 +78,7 @@ const CheckoutPage: React.FC = () => {
   const [afterWallet, setAfterWallet] = useState<number>(0);
   const [usedWalletAmount, setUsedWalletAmount] = useState<number>(0);
   const [orderId, setOrderId] = useState<string>();
-  
+
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: '',
     lastName: '',
@@ -87,14 +87,14 @@ const CheckoutPage: React.FC = () => {
   })
   const [merchantTransactionId, setMerchantTransactionId] = useState()
   const [paymentStatus, setPaymentStatus] = useState(null)
-  
+
   // Time slot related states
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedDay,setSelectedDay] = useState<string>('')
-  
+  const [selectedDay, setSelectedDay] = useState<string>('')
+
   const navigate = useNavigate();
 
   const customerId = localStorage.getItem('userId');
@@ -134,18 +134,18 @@ const CheckoutPage: React.FC = () => {
 
   const formatDate = (date: Date, isToday: boolean = false): string => {
     const monthNames = [
-      "January", "February", "March", "April", "May", "June", "July", 
+      "January", "February", "March", "April", "May", "June", "July",
       "August", "September", "October", "November", "December"
     ];
-      
+
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
-      
+
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Add 1 to get 1-12 instead of 0-11
     const year = date.getFullYear();
-      
+
     // Check if date is today
     if (
       date.getDate() === today.getDate() &&
@@ -154,7 +154,7 @@ const CheckoutPage: React.FC = () => {
     ) {
       return "Today";
     }
-      
+
     // Check if date is tomorrow
     if (
       date.getDate() === tomorrow.getDate() &&
@@ -163,148 +163,148 @@ const CheckoutPage: React.FC = () => {
     ) {
       return "Tomorrow";
     }
-    
+
     // Return formatted date for other days
     return `${day}-${month}-${year}`; // Now using proper month number with padding
   };
 
-const isOrderPlacedToday = (orderDate?: string | null) => {
-  if (!orderDate) return false;
+  const isOrderPlacedToday = (orderDate?: string | null) => {
+    if (!orderDate) return false;
 
-  const today = new Date();
-  const orderDateObj = new Date(orderDate);
+    const today = new Date();
+    const orderDateObj = new Date(orderDate);
 
-  return orderDateObj.getDate() === today.getDate() &&
-         orderDateObj.getMonth() === today.getMonth() &&
-         orderDateObj.getFullYear() === today.getFullYear();
-};
-const fetchTimeSlots = async () => {
-  try {
-    const response = await axios.get(
-      `${BASE_URL}/order-service/fetchTimeSlotlist`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
+    return orderDateObj.getDate() === today.getDate() &&
+      orderDateObj.getMonth() === today.getMonth() &&
+      orderDateObj.getFullYear() === today.getFullYear();
+  };
+  const fetchTimeSlots = async () => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/order-service/fetchTimeSlotlist`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data && Array.isArray(response.data)) {
+        const currentDate = new Date();
+        const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+        // Determine if order was placed today
+        // You'll need to replace this with your actual order date
+        const orderDate = null; // Replace with your actual order date variable
+        const orderPlacedToday = orderDate ? isOrderPlacedToday(orderDate) : false;
+
+        // Day names array for mapping day indices to names
+        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+        // Always start from tomorrow (day offset 1)
+        // This ensures we NEVER include today in the 3 days
+        const startDayOffset = 1;
+
+        // Process data for 3 days, starting from tomorrow
+        const formattedTimeSlots = Array.from({ length: 3 }).map((_, index) => {
+          // Calculate date for this slot (starting from tomorrow)
+          const dayOffset = startDayOffset + index;
+          const slotDate = new Date(currentDate);
+          slotDate.setDate(currentDate.getDate() + dayOffset);
+
+          // This is never today (always false)
+          const isToday = false;
+
+          // Calculate the correct day of week
+          const dayIndex = (currentDay + dayOffset) % 7;
+          const dayOfWeek = dayNames[dayIndex].toUpperCase(); // Convert to uppercase to match request format
+
+          // Format the expected delivery date in DD-MM-YYYY format
+          const formattedDate = `${String(slotDate.getDate()).padStart(2, '0')}-${String(slotDate.getMonth() + 1).padStart(2, '0')}-${slotDate.getFullYear()}`;
+
+          // Get the time slots from the API response or use defaults
+          const slotData = response.data[index] || {
+            id: `day-${dayOffset}`,
+            timeSlot1: "08:00 AM-12:00 PM",
+            timeSlot2: "12:00 PM-04:00 PM",
+            timeSlot3: "04:00 PM-08:00 PM",
+            timeSlot4: "08:00 PM-10:00 PM",
+            isAvailable: true
+          };
+
+          // Process time slots - keep all 4 slots
+          let availableTimeSlots = {
+            timeSlot1: slotData.timeSlot1 || "",
+            timeSlot2: slotData.timeSlot2 || "",
+            timeSlot3: slotData.timeSlot3 || "",
+            timeSlot4: slotData.timeSlot4 || ""
+          };
+
+          // Create the formatted slot object with date display
+          return {
+            ...slotData,
+            dayOfWeek: dayOfWeek,
+            expectedDeliveryDate: formattedDate,
+            timeSlot1: availableTimeSlots.timeSlot1,
+            timeSlot2: availableTimeSlots.timeSlot2,
+            timeSlot3: availableTimeSlots.timeSlot3,
+            timeSlot4: availableTimeSlots.timeSlot4,
+            date: formatDate(slotDate, isToday),
+            isToday: isToday // Always false since we're starting from tomorrow
+          };
+        });
+
+        setTimeSlots(formattedTimeSlots);
       }
-    );
-
-    if (response.data && Array.isArray(response.data)) {
-      const currentDate = new Date();
-      const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      
-      // Determine if order was placed today
-      // You'll need to replace this with your actual order date
-      const orderDate = null; // Replace with your actual order date variable
-      const orderPlacedToday = orderDate ? isOrderPlacedToday(orderDate) : false;
-      
-      // Day names array for mapping day indices to names
-      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      
-      // Always start from tomorrow (day offset 1)
-      // This ensures we NEVER include today in the 3 days
-      const startDayOffset = 1;
-      
-      // Process data for 3 days, starting from tomorrow
-      const formattedTimeSlots = Array.from({ length: 3 }).map((_, index) => {
-        // Calculate date for this slot (starting from tomorrow)
-        const dayOffset = startDayOffset + index;
-        const slotDate = new Date(currentDate);
-        slotDate.setDate(currentDate.getDate() + dayOffset);
-        
-        // This is never today (always false)
-        const isToday = false;
-        
-        // Calculate the correct day of week
-        const dayIndex = (currentDay + dayOffset) % 7;
-        const dayOfWeek = dayNames[dayIndex].toUpperCase(); // Convert to uppercase to match request format
-        
-        // Format the expected delivery date in DD-MM-YYYY format
-        const formattedDate = `${String(slotDate.getDate()).padStart(2, '0')}-${String(slotDate.getMonth() + 1).padStart(2, '0')}-${slotDate.getFullYear()}`;
-        
-        // Get the time slots from the API response or use defaults
-        const slotData = response.data[index] || {
-          id: `day-${dayOffset}`,
-          timeSlot1: "08:00 AM-12:00 PM",
-          timeSlot2: "12:00 PM-04:00 PM",
-          timeSlot3: "04:00 PM-08:00 PM",
-          timeSlot4: "08:00 PM-10:00 PM",
-          isAvailable: true
-        };
-        
-        // Process time slots - keep all 4 slots
-        let availableTimeSlots = {
-          timeSlot1: slotData.timeSlot1 || "",
-          timeSlot2: slotData.timeSlot2 || "",
-          timeSlot3: slotData.timeSlot3 || "",
-          timeSlot4: slotData.timeSlot4 || ""
-        };
-        
-        // Create the formatted slot object with date display
-        return {
-          ...slotData,
-          dayOfWeek: dayOfWeek,
-          expectedDeliveryDate: formattedDate,
-          timeSlot1: availableTimeSlots.timeSlot1,
-          timeSlot2: availableTimeSlots.timeSlot2,
-          timeSlot3: availableTimeSlots.timeSlot3,
-          timeSlot4: availableTimeSlots.timeSlot4,
-          date: formatDate(slotDate, isToday),
-          isToday: isToday // Always false since we're starting from tomorrow
-        };
-      });
-      
-      setTimeSlots(formattedTimeSlots);
+    } catch (error) {
+      console.error('Error fetching time slots:', error);
+      message.error('Failed to fetch delivery time slots');
     }
-  } catch (error) {
-    console.error('Error fetching time slots:', error);
-    message.error('Failed to fetch delivery time slots');
-  }
-};
+  };
 
-// Then add the type annotations to your function parameters
-const submitOrder = async (selectedSlot: TimeSlot, selectedTimeSlot: string, selectedAddress: Address, customerId: string, selectedPayment: string, usedWalletAmount: number, couponCode: string | null, coupenDetails: number, deliveryBoyFee: number, grandTotalAmount: number, grandTotal: number, subGst: number, token: string) => {
-  try {
-    // Prepare the request body based on dynamic user input
-    const requestBody = {
-      dayOfWeek: selectedSlot.dayOfWeek,
-      expectedDeliveryDate: selectedSlot.expectedDeliveryDate,
-      timeSlot: selectedTimeSlot, // This should be the selected time slot like "08:00 AM - 12:00 PM"
-      address: selectedAddress.address,
-      customerId: customerId,
-      flatNo: selectedAddress.flatNo,
-      landMark: selectedAddress.landMark,
-      orderStatus: selectedPayment,
-      pincode: selectedAddress.pincode,
-      walletAmount: usedWalletAmount,
-      couponCode: couponCode ? couponCode.toUpperCase() : null,
-      couponValue: couponCode !== null ? coupenDetails : 0,
-      deliveryBoyFee: deliveryBoyFee,
-      amount: grandTotalAmount,
-      subTotal: grandTotal,
-      gstAmount: subGst,
-    };
+  // Then add the type annotations to your function parameters
+  const submitOrder = async (selectedSlot: TimeSlot, selectedTimeSlot: string, selectedAddress: Address, customerId: string, selectedPayment: string, usedWalletAmount: number, couponCode: string | null, coupenDetails: number, deliveryBoyFee: number, grandTotalAmount: number, grandTotal: number, subGst: number, token: string) => {
+    try {
+      // Prepare the request body based on dynamic user input
+      const requestBody = {
+        dayOfWeek: selectedSlot.dayOfWeek,
+        expectedDeliveryDate: selectedSlot.expectedDeliveryDate,
+        timeSlot: selectedTimeSlot, // This should be the selected time slot like "08:00 AM - 12:00 PM"
+        address: selectedAddress.address,
+        customerId: customerId,
+        flatNo: selectedAddress.flatNo,
+        landMark: selectedAddress.landMark,
+        orderStatus: selectedPayment,
+        pincode: selectedAddress.pincode,
+        walletAmount: usedWalletAmount,
+        couponCode: couponCode ? couponCode.toUpperCase() : null,
+        couponValue: couponCode !== null ? coupenDetails : 0,
+        deliveryBoyFee: deliveryBoyFee,
+        amount: grandTotalAmount,
+        subTotal: grandTotal,
+        gstAmount: subGst,
+      };
 
-    const response = await axios.post(
-      `${BASE_URL}/order-service/placeOrder`,
-      requestBody,
-      {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await axios.post(
+        `${BASE_URL}/order-service/placeOrder`,
+        requestBody,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data?.status) {
+        message.success(response.data.status);
       }
-    );
-
-    if (response.data?.status) {
-      message.success(response.data.status);
-    }    
-  } catch (error) {
-    console.error('Error placing order:', error);
-    message.error('Failed to place order');
-  }
-};
-const openTimeSlotModal = () => {
-  setShowTimeSlotModal(true);
-};
+    } catch (error) {
+      console.error('Error placing order:', error);
+      message.error('Failed to place order');
+    }
+  };
+  const openTimeSlotModal = () => {
+    setShowTimeSlotModal(true);
+  };
 
   // Handle time slot selection
-  const handleSelectTimeSlot = (date: string, timeSlot: string, day:string) => {
+  const handleSelectTimeSlot = (date: string, timeSlot: string, day: string) => {
     setSelectedDate(date);
     setSelectedTimeSlot(timeSlot);
     setSelectedDay(day)
@@ -431,7 +431,7 @@ const openTimeSlotModal = () => {
         setCoupenLoading(false);
       })
   };
-  
+
   // for removing coupen code
   const deleteCoupen = () => {
     setCouponCode("");
@@ -486,8 +486,8 @@ const openTimeSlotModal = () => {
 
       // Check if delivery time slot is selected
       if (selectedTimeSlot) {
-  Modal.error({ title: "Error", content: "Please select a time slot." });
-}
+        Modal.error({ title: "Error", content: "Please select a time slot." });
+      }
 
 
       if (grandTotalAmount === 0) {
@@ -787,23 +787,23 @@ const openTimeSlotModal = () => {
   function grandTotalfunc() {
     // Start with base amount (before GST)
     let baseAmount = grandTotal;
-    
+
     // Add GST
     let totalWithGst = baseAmount + subGst;
-    
+
     // Add delivery fee
     let totalWithDelivery = totalWithGst + deliveryBoyFee;
-    
+
     // Apply coupon discount (if applicable)
     let afterCoupon = totalWithDelivery;
     if (coupenApplied && coupenDetails) {
       afterCoupon = Math.max(0, totalWithDelivery - coupenDetails);
     }
-    
+
     // Apply wallet (if applicable)
     let usedWallet = 0;
     let finalTotal = afterCoupon;
-    
+
     if (useWallet && walletAmount > 0) {
       if (walletAmount >= afterCoupon) {
         usedWallet = afterCoupon;
@@ -813,17 +813,17 @@ const openTimeSlotModal = () => {
         finalTotal = afterCoupon - walletAmount;
       }
     }
-    
+
     // Update state variables
     setUsedWalletAmount(usedWallet);
     setAfterWallet(walletAmount - usedWallet);
     setGrandTotalAmount(finalTotal);
-    
+
     // If total is zero, automatically set payment method to COD
     if (finalTotal === 0) {
       setSelectedPayment('COD');
     }
-    
+
     console.log("Calculation Summary:");
     console.log("Base Amount:", baseAmount);
     console.log("GST:", subGst);
@@ -867,16 +867,15 @@ const openTimeSlotModal = () => {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Time slots grid - display all 4 slots in a responsive grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Time Slot 1 */}
                   {slot.timeSlot1 && (
-                    <div 
-                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
-                        selectedTimeSlot === slot.timeSlot1 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                      }`}
-                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot1 || "",slot.dayOfWeek || "")}
+                    <div
+                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${selectedTimeSlot === slot.timeSlot1 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                        }`}
+                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot1 || "", slot.dayOfWeek || "")}
                     >
                       <div className="flex items-center justify-between">
                         <span>{slot.timeSlot1}</span>
@@ -884,14 +883,13 @@ const openTimeSlotModal = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Time Slot 2 */}
                   {slot.timeSlot2 && (
-                    <div 
-                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
-                        selectedTimeSlot === slot.timeSlot2 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                      }`}
-                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot2|| "",slot.dayOfWeek || "")}
+                    <div
+                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${selectedTimeSlot === slot.timeSlot2 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                        }`}
+                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot2 || "", slot.dayOfWeek || "")}
                     >
                       <div className="flex items-center justify-between">
                         <span>{slot.timeSlot2}</span>
@@ -899,14 +897,13 @@ const openTimeSlotModal = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Time Slot 3 */}
                   {slot.timeSlot3 && (
-                    <div 
-                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
-                        selectedTimeSlot === slot.timeSlot3 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                      }`}
-                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot3|| "",slot.dayOfWeek || "")}
+                    <div
+                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${selectedTimeSlot === slot.timeSlot3 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                        }`}
+                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot3 || "", slot.dayOfWeek || "")}
                     >
                       <div className="flex items-center justify-between">
                         <span>{slot.timeSlot3}</span>
@@ -914,14 +911,13 @@ const openTimeSlotModal = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Time Slot 4 */}
                   {slot.timeSlot4 && (
-                    <div 
-                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
-                        selectedTimeSlot === slot.timeSlot4 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                      }`}
-                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot4|| "",slot.dayOfWeek || "")}
+                    <div
+                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${selectedTimeSlot === slot.timeSlot4 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                        }`}
+                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot4 || "", slot.dayOfWeek || "")}
                     >
                       <div className="flex items-center justify-between">
                         <span>{slot.timeSlot4}</span>
@@ -929,7 +925,7 @@ const openTimeSlotModal = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* No available slots message */}
                   {!slot.timeSlot1 && !slot.timeSlot2 && !slot.timeSlot3 && !slot.timeSlot4 && (
                     <div className="py-3 px-4 border rounded-md border-gray-200 bg-gray-50 text-gray-500 col-span-full">
@@ -937,7 +933,7 @@ const openTimeSlotModal = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {index < 2 && <div className="border-b border-gray-100 mt-4"></div>}
               </div>
             ))}
@@ -968,7 +964,7 @@ const openTimeSlotModal = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <div className="lg:col-span-7 space-y-4">
-                
+
                   {/* Delivery Time Slot Selection */}
                   <div className="bg-white border rounded-lg p-4 mb-4">
                     <div className="flex justify-between items-center mb-3">
@@ -976,14 +972,14 @@ const openTimeSlotModal = () => {
                         <Clock className="w-5 h-5 mr-2 text-purple-500" />
                         Delivery Time
                       </h3>
-                      <button 
+                      <button
                         onClick={openTimeSlotModal}
                         className="text-sm text-purple-600 hover:text-purple-800"
                       >
                         {selectedTimeSlot ? 'Change Time' : 'Select Time'}
                       </button>
                     </div>
-                    
+
                     {selectedTimeSlot ? (
                       <div className="p-3 bg-green-50 rounded-md border border-green-200">
                         <p className="text-green-800 font-medium">{selectedDate}</p>
@@ -996,7 +992,7 @@ const openTimeSlotModal = () => {
                     )}
                   </div>
 
-                
+
 
                   {/* Cart Items */}
                   <div className="bg-white border rounded-lg p-4">
@@ -1004,7 +1000,7 @@ const openTimeSlotModal = () => {
                       <ShoppingBag className="w-5 h-5 mr-2 text-purple-500" />
                       <h3 className="font-medium">Order Items ({cartData.length})</h3>
                     </div>
-                    
+
                     <div className="space-y-3 max-h-60 overflow-y-auto">
                       {cartData.map((item) => (
                         <div key={item.itemId} className="flex justify-between items-center p-2 border-b">
@@ -1024,37 +1020,33 @@ const openTimeSlotModal = () => {
                       <CreditCard className="w-5 h-5 mr-2 text-purple-500" />
                       <h3 className="font-medium">Payment Method</h3>
                     </div>
-                    
+
                     <div className="space-y-3">
-                      <div 
-                        className={`p-3 border rounded-md cursor-pointer flex items-center ${
-                          selectedPayment === 'ONLINE' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
-                        }`}
+                      <div
+                        className={`p-3 border rounded-md cursor-pointer flex items-center ${selectedPayment === 'ONLINE' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+                          }`}
                         onClick={() => setSelectedPayment('ONLINE')}
                       >
-                        <div className={`w-4 h-4 rounded-full border ${
-                          selectedPayment === 'ONLINE' 
-                            ? 'border-purple-500 bg-white' 
+                        <div className={`w-4 h-4 rounded-full border ${selectedPayment === 'ONLINE'
+                            ? 'border-purple-500 bg-white'
                             : 'border-gray-400'
-                        }`}>
+                          }`}>
                           {selectedPayment === 'ONLINE' && (
                             <div className="w-2 h-2 rounded-full bg-purple-500 m-0.5"></div>
                           )}
                         </div>
                         <span className="ml-2">Online Payment</span>
                       </div>
-                      
-                      <div 
-                        className={`p-3 border rounded-md cursor-pointer flex items-center ${
-                          selectedPayment === 'COD' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
-                        }`}
+
+                      <div
+                        className={`p-3 border rounded-md cursor-pointer flex items-center ${selectedPayment === 'COD' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+                          }`}
                         onClick={() => setSelectedPayment('COD')}
                       >
-                        <div className={`w-4 h-4 rounded-full border ${
-                          selectedPayment === 'COD' 
-                            ? 'border-purple-500 bg-white' 
+                        <div className={`w-4 h-4 rounded-full border ${selectedPayment === 'COD'
+                            ? 'border-purple-500 bg-white'
                             : 'border-gray-400'
-                        }`}>
+                          }`}>
                           {selectedPayment === 'COD' && (
                             <div className="w-2 h-2 rounded-full bg-purple-500 m-0.5"></div>
                           )}
@@ -1069,37 +1061,37 @@ const openTimeSlotModal = () => {
                   {/* Order Summary */}
                   <div className="bg-white border rounded-lg p-4 sticky top-4">
                     <h3 className="font-medium mb-4">Order Summary</h3>
-                    
+
                     <div className="space-y-3">
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Subtotal</span>
                         <span>₹{grandTotal.toFixed(2)}</span>
                       </div>
-                      
+
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">GST</span>
                         <span>₹{subGst.toFixed(2)}</span>
                       </div>
-                      
+
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Delivery Fee</span>
                         <span>₹{deliveryBoyFee.toFixed(2)}</span>
                       </div>
-                      
+
                       {coupenApplied && coupenDetails > 0 && (
                         <div className="flex justify-between py-2 text-green-600">
                           <span>Coupon Discount</span>
                           <span>-₹{coupenDetails.toFixed(2)}</span>
                         </div>
                       )}
-                      
+
                       {useWallet && usedWalletAmount > 0 && (
                         <div className="flex justify-between py-2 text-green-600">
                           <span>Wallet Amount</span>
                           <span>-₹{usedWalletAmount.toFixed(2)}</span>
                         </div>
                       )}
-                      
+
                       <div className="border-t pt-2 mt-2">
                         <div className="flex justify-between font-medium text-lg">
                           <span>Total</span>
@@ -1107,46 +1099,46 @@ const openTimeSlotModal = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Coupon Code */}
                     <div className="w-full mt-4 px-2 sm:px-0">
-      <h4 className="font-medium text-sm mb-2 flex items-center">
-        <Tag className="w-4 h-4 mr-1 text-purple-500" />
-        Apply Coupon
-      </h4>
-      
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-        <input
-          type="text"
-          value={couponCode}
-          onChange={(e) => setCouponCode(e.target.value)}
-          placeholder="Enter coupon code"
-          className="w-full p-2 border rounded-md sm:rounded-r-none focus:outline-none focus:ring-1 focus:ring-purple-500"
-          disabled={coupenApplied}
-        />
-        
-        {coupenApplied ? (
-          <button
-            onClick={deleteCoupen}
-            className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-md sm:rounded-l-none hover:bg-red-600 transition-colors"
-          >
-            Remove
-          </button>
-        ) : (
-          <button
-            onClick={handleApplyCoupon}
-            disabled={!couponCode || coupenLoading}
-            className="w-full sm:w-auto px-4 py-2 bg-purple-500 text-white rounded-md sm:rounded-l-none hover:bg-purple-600 disabled:bg-purple-300 transition-colors"
-          >
-            {coupenLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-            ) : (
-              'Apply'
-            )}
-          </button>
-        )}
-      </div>
-    </div>
+                      <h4 className="font-medium text-sm mb-2 flex items-center">
+                        <Tag className="w-4 h-4 mr-1 text-purple-500" />
+                        Apply Coupon
+                      </h4>
+
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="Enter coupon code"
+                          className="w-full p-2 border rounded-md sm:rounded-r-none focus:outline-none focus:ring-1 focus:ring-purple-500"
+                          disabled={coupenApplied}
+                        />
+
+                        {coupenApplied ? (
+                          <button
+                            onClick={deleteCoupen}
+                            className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-md sm:rounded-l-none hover:bg-red-600 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleApplyCoupon}
+                            disabled={!couponCode || coupenLoading}
+                            className="w-full sm:w-auto px-4 py-2 bg-purple-500 text-white rounded-md sm:rounded-l-none hover:bg-purple-600 disabled:bg-purple-300 transition-colors"
+                          >
+                            {coupenLoading ? (
+                              <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                            ) : (
+                              'Apply'
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
                     {/* Wallet */}
                     {walletAmount > 0 && (
                       <div className="mt-4 p-3 bg-gray-50 rounded-md">
@@ -1162,7 +1154,7 @@ const openTimeSlotModal = () => {
                             Use wallet balance (₹{walletAmount.toFixed(2)})
                           </label>
                         </div>
-                        
+
                         {useWallet && (
                           <div className="mt-2 text-sm text-gray-600">
                             <p>Amount used: ₹{usedWalletAmount.toFixed(2)}</p>
@@ -1171,7 +1163,7 @@ const openTimeSlotModal = () => {
                         )}
                       </div>
                     )}
-                    
+
                     {/* Place Order Button */}
                     <button
                       onClick={handlePayment}

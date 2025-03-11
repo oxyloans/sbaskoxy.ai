@@ -326,7 +326,7 @@ const HiddenLogin = () => {
                   international={otpMethod === "whatsapp"}
                   countrySelectProps={{ disabled: otpMethod === "mobile" }}
                   className="w-full p-3 bg-white shadow-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-gray-800 placeholder-gray-400 [&>*]:outline-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputInput]:border-none PhoneInput"
-                  maxLength={15}
+                  maxLength={20}
                   placeholder="Enter your number"
                   style={
                     {
