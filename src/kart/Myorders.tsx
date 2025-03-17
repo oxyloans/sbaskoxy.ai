@@ -189,7 +189,7 @@ const handleDownloadInvoice = (order: any) => {
     Items:
     -----------------------------
     ${order.orderItems.map((item: any) => 
-      `${item.itemName} (${item.weight} ${item.itemUnit || 'KGS'}) x ${item.quantity} = ₹${(item.quantity * item.singleItemPrice).toFixed(2)}`
+      `${item.itemName} (${item.weight} ${item.itemUnit || 'KGS'}) x ${item.quantity} = ₹${(item.quantity * item.singleItemPrice).toFixed(0)}`
     ).join('\n')}
     
     -----------------------------
@@ -1006,7 +1006,7 @@ const formatDate = (dateString: string | null | undefined): string => {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                        <p className="text-green-700 font-bold text-sm">₹{(item.quantity * item.singleItemPrice).toFixed(2)}</p>
+                        <p className="text-green-700 font-bold text-sm">₹{(item.quantity * item.singleItemPrice).toFixed(0)}</p>
                       </div>
                     </div>
                   </div>

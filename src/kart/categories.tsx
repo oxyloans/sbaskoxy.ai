@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { message, Modal } from "antd";
+import { message, Modal, Popconfirm } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Package, AlertCircle, Loader2 } from "lucide-react";
-import  checkProfileCompletion  from "../until/ProfileCheck";
-import  BASE_URL  from "../Config";
+import { ShoppingCart, Package, AlertCircle, Loader2, Trash2 } from "lucide-react";
+import checkProfileCompletion from "../until/ProfileCheck";
+import BASE_URL from "../Config";
 
 interface Item {
   itemName: string;
@@ -15,7 +15,7 @@ interface Item {
   itemPrice: number;
   quantity: number;
   itemMrp: number;
-  units:string;
+  units: string;
 }
 
 interface SubCategory {
@@ -35,6 +35,7 @@ interface CategoriesProps {
   categories: Category[];
   activeCategory: string | null;
   onCategoryClick: (categoryName: string) => void;
+  setActiveCategory: React.Dispatch<React.SetStateAction<string>>;
   loading: boolean;
   cart: { [key: string]: number };
   onItemClick: (item: Item) => void;
@@ -73,6 +74,7 @@ const Categories: React.FC<CategoriesProps> = ({
     items: {}, // Stores boolean values for each item
     status: {}, // Stores status strings for each item
   });
+  const [deleteLoading, setDeleteLoading] = useState<{ [key: string]: boolean }>({});
 
   const fetchCartData = async (itemId: string) => {
     const Id = localStorage.getItem("userId");
@@ -154,15 +156,14 @@ const Categories: React.FC<CategoriesProps> = ({
       }, 2000);
       return;
     }
-    
-    if(!checkProfileCompletion()){
+
+    if (!checkProfileCompletion()) {
       console.log(checkProfileCompletion());
       Modal.error({
         title: "Profile Incomplete",
         content: "Please complete your profile to add items to the cart.",
         onOk: () => navigate("/main/profile"),
-      }); 
-      // message.warning("Please complete your profile to add items to the cart.");
+      });
       setTimeout(() => {
         navigate("/main/profile");
       }, 4000);
@@ -206,24 +207,23 @@ const Categories: React.FC<CategoriesProps> = ({
     increment: boolean,
     status: string
   ) => {
-      if (cartItems[item.itemId] === item.quantity && increment) {
-        message.warning("Sorry, Maximum quantity reached.");
-        return;
-      }
+    if (cartItems[item.itemId] === item.quantity && increment) {
+      message.warning("Sorry, Maximum quantity reached.");
+      return;
+    }
 
-      if(!checkProfileCompletion()){
-        console.log(checkProfileCompletion());
-        Modal.error({
-          title: "Profile Incomplete",
-          content: "Please complete your profile to add items to the cart.",
-          onOk: () => navigate("/main/profile"),
-        }); 
-        // message.warning("Please complete your profile to add items to the cart.");
-        setTimeout(() => {
-          navigate("/main/profile");
-        }, 4000);
-        return;
-      }
+    if (!checkProfileCompletion()) {
+      console.log(checkProfileCompletion());
+      Modal.error({
+        title: "Profile Incomplete",
+        content: "Please complete your profile to add items to the cart.",
+        onOk: () => navigate("/main/profile"),
+      });
+      setTimeout(() => {
+        navigate("/main/profile");
+      }, 4000);
+      return;
+    }
     try {
       const endpoint = increment
         ? `${BASE_URL}/cart-service/cart/incrementCartData`
@@ -296,6 +296,42 @@ const Categories: React.FC<CategoriesProps> = ({
     }
   };
 
+  const handleDeleteFromCart = async (item: Item) => {
+    try {
+      setDeleteLoading((prev) => ({ ...prev, [item.itemId]: true }));
+
+      const targetCartId = cartData.find(
+        (cart) => cart.itemId === item.itemId
+      )?.cartId;
+
+      if (!targetCartId) {
+        message.error("Cannot find cart item");
+        setDeleteLoading((prev) => ({ ...prev, [item.itemId]: false }));
+        return;
+      }
+
+      const response = await axios.delete(
+        `${BASE_URL}/cart-service/cart/remove`,
+        {
+          data: { id: targetCartId },
+        }
+      );
+
+      if (response) {
+        message.success("Item removed from cart successfully.");
+        fetchCartData("");
+      } else {
+        message.error("Sorry, please try again");
+      }
+
+      setDeleteLoading((prev) => ({ ...prev, [item.itemId]: false }));
+    } catch (error) {
+      console.error("Error removing from cart:", error);
+      message.error("Error removing item from cart");
+      setDeleteLoading((prev) => ({ ...prev, [item.itemId]: false }));
+    }
+  };
+
   const getCurrentCategoryItems = () => {
     const currentCategory =
       categories.find((cat) => cat.categoryName === activeCategory) ||
@@ -327,19 +363,18 @@ const Categories: React.FC<CategoriesProps> = ({
               key={index}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeCategory === category.categoryName
+              className={`flex-shrink-0 px-4 sm:px-6 py-2 sm:py-3 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${activeCategory === category.categoryName
                   ? "bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-lg"
                   : "bg-white text-gray-700 hover:bg-purple-50 border border-purple-100"
-              }`}
+                }`}
               onClick={() => onCategoryClick(category.categoryName)}
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 {category.categoryImage && (
                   <img
                     src={category.categoryImage}
                     alt=""
-                    className="w-5 h-5 rounded-full"
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
                   />
                 )}
                 <span>{category.categoryName}</span>
@@ -356,11 +391,10 @@ const Categories: React.FC<CategoriesProps> = ({
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                !activeSubCategory
+              className={`flex-shrink-0 px-3 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-300 ${!activeSubCategory
                   ? "bg-purple-100 text-purple-700"
                   : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-              }`}
+                }`}
               onClick={() => setActiveSubCategory(null)}
             >
               All
@@ -370,19 +404,18 @@ const Categories: React.FC<CategoriesProps> = ({
                 key={subCategory.id}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  activeSubCategory === subCategory.id
+                className={`flex-shrink-0 px-3 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-300 ${activeSubCategory === subCategory.id
                     ? "bg-purple-100 text-purple-700"
                     : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
                 onClick={() => setActiveSubCategory(subCategory.id)}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   {subCategory.image && (
                     <img
                       src={subCategory.image}
                       alt=""
-                      className="w-4 h-4 rounded-full"
+                      className="w-3 h-3 sm:w-4 sm:h-4 rounded-full"
                     />
                   )}
                   <span>{subCategory.name}</span>
@@ -399,7 +432,7 @@ const Categories: React.FC<CategoriesProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+          className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4"
         >
           {getCurrentCategoryItems().map((item, index) => (
             <motion.div
@@ -407,16 +440,16 @@ const Categories: React.FC<CategoriesProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+              className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden flex flex-col"
             >
-              {/* Discount Label - Updated to match reference design */}
+              {/* Discount Label - Updated to be more responsive */}
               {item.itemMrp &&
                 item.itemPrice &&
                 item.itemMrp > item.itemPrice && (
                   <div className="absolute left-0 top-0 z-10 w-auto">
                     <div
                       className="bg-purple-600 text-white text-[10px] xs:text-xs sm:text-sm font-bold 
-                      px-1.5 xs:px-2 sm:px-3 lg:px-4 
+                      px-1.5 xs:px-2 sm:px-3 
                       py-0.5 xs:py-0.5 sm:py-1 
                       flex items-center"
                     >
@@ -429,8 +462,8 @@ const Categories: React.FC<CategoriesProps> = ({
                     <div
                       className="absolute bottom-0 right-0 transform translate-y 
                       border-t-4 border-r-4 
-                      xs:border-t-6 xs:border-r-6 
-                      sm:border-t-8 sm:border-r-8 
+                      xs:border-t-5 xs:border-r-5 
+                      sm:border-t-6 sm:border-r-6 
                       border-t-purple-600 border-r-transparent"
                     ></div>
                   </div>
@@ -451,8 +484,8 @@ const Categories: React.FC<CategoriesProps> = ({
                     className="bg-yellow-500 text-white 
                     text-[8px] xs:text-[10px] sm:text-xs 
                     font-medium 
-                    px-1.5 xs:px-2 sm:px-3 
-                    py-0.5 xs:py-0.5 sm:py-1 
+                    px-1.5 xs:px-2 sm:px-2 
+                    py-0.5 
                     rounded-full whitespace-nowrap"
                   >
                     Only {item.quantity} left
@@ -461,11 +494,11 @@ const Categories: React.FC<CategoriesProps> = ({
               ) : null}
 
               <div
-                className="p-4 cursor-pointer"
+                className="p-2 xs:p-3 sm:p-4 cursor-pointer flex-grow flex flex-col"
                 onClick={() => onItemClick(item)}
               >
                 {/* Image Container */}
-                <div className="aspect-square mb-3 overflow-hidden rounded-lg bg-gray-50 relative group">
+                <div className="aspect-square mb-2 sm:mb-3 overflow-hidden rounded-lg bg-gray-50 relative group">
                   <img
                     src={item.itemImage ?? "https://via.placeholder.com/150"}
                     alt={item.itemName}
@@ -481,61 +514,63 @@ const Categories: React.FC<CategoriesProps> = ({
                 </div>
 
                 {/* Product Details */}
-                <div className="space-y-2">
-                  <h3 className="font-medium text-gray-800 line-clamp-2 min-h-[2.5rem] text-sm">
+                <div className="space-y-1 sm:space-y-2 flex-grow flex flex-col">
+                  <h3 className="font-medium text-gray-800 line-clamp-2 text-xs sm:text-sm">
                     {item.itemName}
                   </h3>
-                  <p className="text-sm text-gray-500">
-                  Weight : {item.weight}{item.units}
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    Weight: {item.weight}{item.units}
                   </p>
 
                   {/* Price Section - Updated layout */}
-                  <div className="flex items-baseline space-x-2">
-                    <span className="text-lg font-semibold text-gray-900">
+                  <div className="flex items-baseline space-x-2 mt-auto">
+                    <span className="text-base sm:text-lg font-semibold text-gray-900">
                       ₹{item.itemPrice}
                     </span>
                     {item.itemMrp && item.itemMrp > item.itemPrice && (
-                      <span className="text-sm text-gray-500 line-through">
+                      <span className="text-xs sm:text-sm text-gray-500 line-through">
                         ₹{item.itemMrp}
                       </span>
                     )}
                   </div>
+                </div>
+              </div>
 
-                  {/* Add to Cart Button Section */}
-                  {item.quantity !== 0 ? (
-                    cartItems[item.itemId] > 0 ? (
-                      <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1 mt-2">
+              {/* Add to Cart Button Section - MOVED OUTSIDE OF CONTENT DIV FOR CONSISTENT HEIGHT */}
+              <div className="px-2 xs:px-3 sm:px-4 pb-2 xs:pb-3 sm:pb-4">
+                {item.quantity !== 0 ? (
+                  cartItems[item.itemId] > 0 ? (
+                    <div className="w-full">
+                      {/* Cart Control with Delete Button - Improved Mobile Layout */}
+                      <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1">
                         <motion.button
                           whileTap={{ scale: 0.9 }}
-                          className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600"
+                          className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 text-xs sm:text-base"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleQuantityChange(item, false, "sub");
                           }}
                           disabled={loadingItems.items[item.itemId]}
                         >
-                          {/* {loadingItems.items[item.itemId] &&
-                          loadingItems.status[item.itemId] == "sub" ? (
-                            <Loader2 className="mr-1 animate-spin inline-block" />
-                          ) : (
-                            "-"
-                          )} */}
                           -
                         </motion.button>
-                        {loadingItems.items[item.itemId] ? (
-                          <Loader2 className="animate-spin text-purple-600" />
-                        ) : (
-                          <span className="font-medium text-purple-700">
-                            {cartItems[item.itemId]}
-                          </span>
-                        )}
+
+                        <div className="w-6 flex justify-center">
+                          {loadingItems.items[item.itemId] ? (
+                            <Loader2 size={16} className="animate-spin text-purple-600" />
+                          ) : (
+                            <span className="font-medium text-purple-700 text-xs sm:text-sm">
+                              {cartItems[item.itemId]}
+                            </span>
+                          )}
+                        </div>
+
                         <motion.button
                           whileTap={{ scale: 0.9 }}
-                          className={`w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 ${
-                            cartItems[item.itemId] >= item.quantity
+                          className={`w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 text-xs sm:text-base ${cartItems[item.itemId] >= item.quantity
                               ? "opacity-50 cursor-not-allowed"
                               : ""
-                          }`}
+                            }`}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (cartItems[item.itemId] < item.quantity) {
@@ -547,44 +582,75 @@ const Categories: React.FC<CategoriesProps> = ({
                             loadingItems.items[item.itemId]
                           }
                         >
-                          {/* {loadingItems.items[item.itemId] &&
-                          loadingItems.status[item.itemId] == "Add" ? (
-                            <Loader2 className="mr-1 animate-spin inline-block" />
-                          ) : (
-                            "+"
-                          )} */}
                           +
                         </motion.button>
-                      </div>
-                    ) : (
-                      <>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full py-2 mt-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg transition-all duration-300 hover:shadow-md"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(item);
+
+                        {/* Delete Button - Fixed positioning and display */}
+                        <Popconfirm
+                          title="Remove item"
+                          description="Remove this item from cart?"
+                          onConfirm={(e) => {
+                            if (e) e.stopPropagation();
+                            handleDeleteFromCart(item);
                           }}
-                          disabled={loadingItems.items[item.itemId]}
+                          okText="Yes"
+                          cancelText="No"
+                          placement="topRight"
+                          okButtonProps={{
+                            className: "bg-red-500 hover:bg-red-600"
+                          }}
+                          onCancel={(e) => {
+                            if (e) e.stopPropagation();
+                          }}
                         >
-                          {loadingItems.items[item.itemId] ? (
-                            <Loader2 className="mr-2 animate-spin inline-block" />
-                          ) : (
-                            "Add to Cart"
-                          )}
-                        </motion.button>
-                      </>
-                    )
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 ml-1 flex items-center justify-center bg-red-50 rounded-md shadow-sm text-red-500 hover:bg-red-100 transition-colors duration-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            disabled={deleteLoading[item.itemId]}
+                          >
+                            {deleteLoading[item.itemId] ? (
+                              <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                              <Trash2 size={14} className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
+                            )}
+                          </motion.button>
+                        </Popconfirm>
+                      </div>
+                    </div>
                   ) : (
-                    <button
-                      className="w-full py-2 mt-2 bg-gray-200 text-gray-600 rounded-lg cursor-not-allowed"
-                      disabled
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full py-1.5 sm:py-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg transition-all duration-300 hover:shadow-md text-xs sm:text-sm flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(item);
+                      }}
+                      disabled={loadingItems.items[item.itemId]}
                     >
-                      Out of Stock
-                    </button>
-                  )}
-                </div>
+                      {loadingItems.items[item.itemId] ? (
+                        <Loader2 size={16} className="mr-1 animate-spin" />
+                      ) : (
+                        <>
+                          <ShoppingCart size={14} className="mr-1 w-3 h-3 xs:w-4 xs:h-4" />
+                          Add to Cart
+                        </>
+                      )}
+                    </motion.button>
+                  )
+                ) : (
+                  <button
+                    className="w-full py-1.5 sm:py-2 bg-gray-200 text-gray-600 rounded-lg cursor-not-allowed text-xs sm:text-sm flex items-center justify-center"
+                    disabled
+                  >
+                    <AlertCircle size={14} className="mr-1 w-3 h-3 xs:w-4 xs:h-4" />
+                    Out of Stock
+                  </button>
+                )}
               </div>
             </motion.div>
           ))}

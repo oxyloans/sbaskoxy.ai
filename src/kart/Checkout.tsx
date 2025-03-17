@@ -1,18 +1,23 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { message, Alert, Modal } from 'antd';
-// import Header from './Header3';
-import Footer from '../components/Footer';
-// import Sidebar from './Sidebarrice';
-import { ArrowLeft, CreditCard, Truck, Tag, ShoppingBag, Clock } from 'lucide-react';
-import { FaBars, FaTimes } from 'react-icons/fa';
-import decryptEas from './decryptEas';
-import encryptEas from './encryptEas';
+import React, { useEffect, useState, useContext } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { message, Alert, Modal } from "antd";
+import Footer from "../components/Footer";
+import {
+  ArrowLeft,
+  CreditCard,
+  Truck,
+  Tag,
+  ShoppingBag,
+  Clock,
+} from "lucide-react";
+import { FaBars, FaTimes } from "react-icons/fa";
+import decryptEas from "./decryptEas";
+import encryptEas from "./encryptEas";
 import { Loader2, X } from "lucide-react";
-import Checkbox from 'antd';
-import { CartContext } from '../until/CartContext';
-import { log } from 'console';
+import Checkbox from "antd";
+import { CartContext } from "../until/CartContext";
+import { log } from "console";
 import BASE_URL from "../Config";
 
 interface CartItem {
@@ -32,7 +37,7 @@ interface Address {
   landMark: string;
   address: string;
   pincode: string;
-  addressType: 'Home' | 'Work' | 'Others';
+  addressType: "Home" | "Work" | "Others";
 }
 
 interface ProfileData {
@@ -61,14 +66,18 @@ const CheckoutPage: React.FC = () => {
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [useWallet, setUseWallet] = useState(false);
-  const [couponCode, setCouponCode] = useState('');
+  const [couponCode, setCouponCode] = useState("");
   const [coupenDetails, setCoupenDetails] = useState<any>(null);
   const [coupenLoading, setCoupenLoading] = useState(false);
   const [walletAmount, setWalletAmount] = useState<number>(0);
   const [walletTotal, setWalletTotal] = useState<number>(0);
   const [coupenApplied, setCoupenApplied] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<'ONLINE' | 'COD'>('ONLINE');
-  const [selectedAddress, setSelectedAddress] = useState<Address>(state?.selectedAddress || null)
+  const [selectedPayment, setSelectedPayment] = useState<"ONLINE" | "COD">(
+    "ONLINE"
+  );
+  const [selectedAddress, setSelectedAddress] = useState<Address>(
+    state?.selectedAddress || null
+  );
   const [grandTotalAmount, setGrandTotalAmount] = useState<number>(0);
   const [deliveryBoyFee, setDeliveryBoyFee] = useState<number>(0);
   const [subGst, setSubGst] = useState(0);
@@ -80,26 +89,28 @@ const CheckoutPage: React.FC = () => {
   const [orderId, setOrderId] = useState<string>();
 
   const [profileData, setProfileData] = useState<ProfileData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    whatsappNumber: '',
-  })
-  const [merchantTransactionId, setMerchantTransactionId] = useState()
-  const [paymentStatus, setPaymentStatus] = useState(null)
+    firstName: "",
+    lastName: "",
+    email: "",
+    whatsappNumber: "",
+  });
+  const [merchantTransactionId, setMerchantTransactionId] = useState();
+  const [paymentStatus, setPaymentStatus] = useState(null);
 
   // Time slot related states
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedDay, setSelectedDay] = useState<string>('')
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDay, setSelectedDay] = useState<string>("");
 
   const navigate = useNavigate();
 
-  const customerId = localStorage.getItem('userId');
-  const token = localStorage.getItem('accessToken');
-  const userData = localStorage.getItem('profileData')
+  const customerId = localStorage.getItem("userId");
+  const token = localStorage.getItem("accessToken");
+  const userData = localStorage.getItem("profileData");
+  const [isButtonDisabled, setisButtonDisabled] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const context = useContext(CartContext);
 
@@ -117,33 +128,43 @@ const CheckoutPage: React.FC = () => {
     const queryParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(queryParams.entries());
     const order = params.trans;
-    setOrderId(order)
+    setOrderId(order);
     if (userData) {
-      setProfileData(JSON.parse(userData))
+      setProfileData(JSON.parse(userData));
     }
   }, []);
 
   useEffect(() => {
-    const trans = localStorage.getItem('merchantTransactionId')
-    const paymentId = localStorage.getItem('paymentId')
+    const trans = localStorage.getItem("merchantTransactionId");
+    const paymentId = localStorage.getItem("paymentId");
     console.log(trans === orderId);
     if (trans === orderId) {
-      Requery(paymentId)
+      Requery(paymentId);
     }
-  }, [orderId])
+  }, [orderId]);
 
   const formatDate = (date: Date, isToday: boolean = false): string => {
     const monthNames = [
-      "January", "February", "March", "April", "May", "June", "July",
-      "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Add 1 to get 1-12 instead of 0-11
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Add 1 to get 1-12 instead of 0-11
     const year = date.getFullYear();
 
     // Check if date is today
@@ -174,9 +195,11 @@ const CheckoutPage: React.FC = () => {
     const today = new Date();
     const orderDateObj = new Date(orderDate);
 
-    return orderDateObj.getDate() === today.getDate() &&
+    return (
+      orderDateObj.getDate() === today.getDate() &&
       orderDateObj.getMonth() === today.getMonth() &&
-      orderDateObj.getFullYear() === today.getFullYear();
+      orderDateObj.getFullYear() === today.getFullYear()
+    );
   };
   const fetchTimeSlots = async () => {
     try {
@@ -194,10 +217,20 @@ const CheckoutPage: React.FC = () => {
         // Determine if order was placed today
         // You'll need to replace this with your actual order date
         const orderDate = null; // Replace with your actual order date variable
-        const orderPlacedToday = orderDate ? isOrderPlacedToday(orderDate) : false;
+        const orderPlacedToday = orderDate
+          ? isOrderPlacedToday(orderDate)
+          : false;
 
         // Day names array for mapping day indices to names
-        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const dayNames = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
 
         // Always start from tomorrow (day offset 1)
         // This ensures we NEVER include today in the 3 days
@@ -218,7 +251,13 @@ const CheckoutPage: React.FC = () => {
           const dayOfWeek = dayNames[dayIndex].toUpperCase(); // Convert to uppercase to match request format
 
           // Format the expected delivery date in DD-MM-YYYY format
-          const formattedDate = `${String(slotDate.getDate()).padStart(2, '0')}-${String(slotDate.getMonth() + 1).padStart(2, '0')}-${slotDate.getFullYear()}`;
+          const formattedDate = `${String(slotDate.getDate()).padStart(
+            2,
+            "0"
+          )}-${String(slotDate.getMonth() + 1).padStart(
+            2,
+            "0"
+          )}-${slotDate.getFullYear()}`;
 
           // Get the time slots from the API response or use defaults
           const slotData = response.data[index] || {
@@ -227,7 +266,7 @@ const CheckoutPage: React.FC = () => {
             timeSlot2: "12:00 PM-04:00 PM",
             timeSlot3: "04:00 PM-08:00 PM",
             timeSlot4: "08:00 PM-10:00 PM",
-            isAvailable: true
+            isAvailable: true,
           };
 
           // Process time slots - keep all 4 slots
@@ -235,7 +274,7 @@ const CheckoutPage: React.FC = () => {
             timeSlot1: slotData.timeSlot1 || "",
             timeSlot2: slotData.timeSlot2 || "",
             timeSlot3: slotData.timeSlot3 || "",
-            timeSlot4: slotData.timeSlot4 || ""
+            timeSlot4: slotData.timeSlot4 || "",
           };
 
           // Create the formatted slot object with date display
@@ -248,20 +287,34 @@ const CheckoutPage: React.FC = () => {
             timeSlot3: availableTimeSlots.timeSlot3,
             timeSlot4: availableTimeSlots.timeSlot4,
             date: formatDate(slotDate, isToday),
-            isToday: isToday // Always false since we're starting from tomorrow
+            isToday: isToday, // Always false since we're starting from tomorrow
           };
         });
 
         setTimeSlots(formattedTimeSlots);
       }
     } catch (error) {
-      console.error('Error fetching time slots:', error);
-      message.error('Failed to fetch delivery time slots');
+      console.error("Error fetching time slots:", error);
+      message.error("Failed to fetch delivery time slots");
     }
   };
 
   // Then add the type annotations to your function parameters
-  const submitOrder = async (selectedSlot: TimeSlot, selectedTimeSlot: string, selectedAddress: Address, customerId: string, selectedPayment: string, usedWalletAmount: number, couponCode: string | null, coupenDetails: number, deliveryBoyFee: number, grandTotalAmount: number, grandTotal: number, subGst: number, token: string) => {
+  const submitOrder = async (
+    selectedSlot: TimeSlot,
+    selectedTimeSlot: string,
+    selectedAddress: Address,
+    customerId: string,
+    selectedPayment: string,
+    usedWalletAmount: number,
+    couponCode: string | null,
+    coupenDetails: number,
+    deliveryBoyFee: number,
+    grandTotalAmount: number,
+    grandTotal: number,
+    subGst: number,
+    token: string
+  ) => {
     try {
       // Prepare the request body based on dynamic user input
       const requestBody = {
@@ -295,8 +348,8 @@ const CheckoutPage: React.FC = () => {
         message.success(response.data.status);
       }
     } catch (error) {
-      console.error('Error placing order:', error);
-      message.error('Failed to place order');
+      console.error("Error placing order:", error);
+      message.error("Failed to place order");
     }
   };
   const openTimeSlotModal = () => {
@@ -304,10 +357,14 @@ const CheckoutPage: React.FC = () => {
   };
 
   // Handle time slot selection
-  const handleSelectTimeSlot = (date: string, timeSlot: string, day: string) => {
+  const handleSelectTimeSlot = (
+    date: string,
+    timeSlot: string,
+    day: string
+  ) => {
     setSelectedDate(date);
     setSelectedTimeSlot(timeSlot);
-    setSelectedDay(day)
+    setSelectedDay(day);
     setShowTimeSlotModal(false);
     message.success(`Delivery time slot selected: ${date}, ${timeSlot}`);
   };
@@ -357,20 +414,18 @@ const CheckoutPage: React.FC = () => {
           {}
         );
         // Fix: Use cartItemsMap and correct syntax
-        const totalQuantity = Object.values(cartItemsMap as Record<string, number>).reduce(
-          (sum, qty) => sum + qty,
-          0
-        );
+        const totalQuantity = Object.values(
+          cartItemsMap as Record<string, number>
+        ).reduce((sum, qty) => sum + qty, 0);
         setCartData(response.data?.customerCartResponseList || []);
-        setCount(totalQuantity)
+        setCount(totalQuantity);
       } else {
         setCartData([]);
-        setCount(0)
+        setCount(0);
       }
-
     } catch (error) {
-      console.error('Error fetching cart items:', error);
-      message.error('Failed to fetch cart items');
+      console.error("Error fetching cart items:", error);
+      message.error("Failed to fetch cart items");
     }
   };
 
@@ -379,25 +434,112 @@ const CheckoutPage: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `${BASE_URL}/cart-service/cart/cartItemData`, {
-        customerId
-      },
+        `${BASE_URL}/cart-service/cart/cartItemData`,
+        {
+          customerId,
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       setGrandTotalAmount(parseFloat(response.data.totalSumWithGstSum));
       setSubGst(response.data.totalGstSum);
-      const totalDeliveryFee = response.data?.cartResponseList.reduce((sum: number, item: CartData) => sum + item.deliveryBoyFee, 0);
+      const totalDeliveryFee = response.data?.cartResponseList.reduce(
+        (sum: number, item: CartData) => sum + item.deliveryBoyFee,
+        0
+      );
       console.log({ totalDeliveryFee });
-      setDeliveryBoyFee(totalDeliveryFee)
-      setTotalAmount(parseFloat(response.data.totalSumWithGstSum))
-      setGrandTotal(parseFloat(response.data.totalSum))
-
+      setDeliveryBoyFee(totalDeliveryFee);
+      setTotalAmount(parseFloat(response.data.totalSumWithGstSum));
+      setGrandTotal(parseFloat(response.data.totalSum));
     } catch (error) {
-      console.error('Error fetching cart items:', error);
-      message.error('Failed to fetch cart items');
+      console.error("Error fetching cart items:", error);
+      message.error("Failed to fetch cart items");
     }
+  };
+
+  const handleInterested = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const userId = localStorage.getItem("userId");
+      const mobileNumber = localStorage.getItem("whatsappNumber");
+
+      const formData = {
+        askOxyOfers: "FREESAMPLE",
+        userId: userId,
+        mobileNumber: mobileNumber,
+        projectType: "ASKOXY",
+      };
+
+      const response = await axios.post(
+        `${BASE_URL}/marketing-service/campgin/askOxyOfferes`,
+        formData
+      );
+
+      console.log("API Response:", response.data);
+      localStorage.setItem("askOxyOfers", response.data.askOxyOfers);
+
+      Modal.success({
+        title: "Thank You!",
+        content: "Your interest has been successfully registered.",
+        okText: "OK",
+        onOk: () => navigate("/main/myorders"),
+      });
+    } catch (error) {
+      const axiosError = error as any;
+
+      if (
+        axiosError.response?.status === 500 ||
+        axiosError.response?.status === 400
+      ) {
+        message.warning("You have already participated. Thank you!");
+      } else {
+        console.error("API Error:", axiosError);
+        message.error("Failed to submit your interest. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false); // Ensure the state is reset even in case of errors
+    }
+  };
+
+  const showSampleModal = () => {
+    Modal.confirm({
+      title: "Special Offer!",
+      content: (
+        <div className="text-center">
+          <p className="text-lg font-bold text-green-600">
+            Free Rice Container with Your Order!
+          </p>
+          <p className="mt-2">
+            Buy 9 bags of 26 kg’s / 10 kg’s in 3 years or refer 9 friends and when they buy their
+            first bag the container is yours forever.
+          </p>
+          <p className="mt-2 text-sm text-black-600">
+            <b>
+              * No purchase in 45 days or gap of 45 days between purchases =
+              Container will be taken back
+            </b>
+          </p>
+        </div>
+      ),
+      okText: isSubmitting ? "Submitting..." : "I’m Interested",
+      cancelText: "Not Interested",
+      okButtonProps: {
+        disabled: isSubmitting,
+      },
+      onOk: async () => {
+        if (isSubmitting) return; // Prevent duplicate submissions
+        setIsSubmitting(true); // Enable loading state
+
+        try {
+          await handleInterested(); // Calls "I'm Interested" logic
+        } finally {
+          setIsSubmitting(false); // Reset loading state
+        }
+      },
+      onCancel: () => navigate("/main/myorders"), // Direct redirection
+    });
   };
 
   // function for applying coupon
@@ -405,31 +547,31 @@ const CheckoutPage: React.FC = () => {
     const data = {
       couponCode: couponCode,
       customerId: customerId,
-      subTotal: grandTotalAmount
-    }
+      subTotal: grandTotalAmount,
+    };
     console.log("data ", data);
     setCoupenLoading(true);
 
-    const response = axios.post(
-      BASE_URL + "/order-service/applycoupontocustomer", data, {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-    )
+    const response = axios
+      .post(BASE_URL + "/order-service/applycoupontocustomer", data, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => {
         console.log("coupen applied", response.data);
         const { discount, grandTotal } = response.data;
         message.info(response.data.message);
-        setCoupenDetails(discount)
-        setCoupenApplied(response.data.couponApplied)
+        setCoupenDetails(discount);
+        setCoupenApplied(response.data.couponApplied);
         console.log("coupenapplied state", response.data.couponApplied);
         setCoupenLoading(false);
         // Recalculate totals after applying coupon
         grandTotalfunc();
-      }).catch((error) => {
+      })
+      .catch((error) => {
         console.error("Error in applying coupon:", error);
         message.error("Failed to apply coupon");
         setCoupenLoading(false);
-      })
+      });
   };
 
   // for removing coupen code
@@ -445,13 +587,12 @@ const CheckoutPage: React.FC = () => {
   // for getting wallet details
   const getWalletAmount = () => {
     const data = {
-      customerId: customerId
-    }
-    const response = axios.post(
-      BASE_URL + "/order-service/applyWalletAmountToCustomer", data, {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-    )
+      customerId: customerId,
+    };
+    const response = axios
+      .post(BASE_URL + "/order-service/applyWalletAmountToCustomer", data, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => {
         console.log("wallet amount", response.data);
         setWalletAmount(response.data.usableWalletAmountForOrder);
@@ -461,23 +602,29 @@ const CheckoutPage: React.FC = () => {
         setWalletTotal(
           response.data.totalSum - response.data.usableWalletAmountForOrder
         );
-      }).catch((error) => {
-        console.error("Error in getting wallet amount:", error.response?.data || error.message);
-        message.error("Failed to get wallet amount");
       })
-  }
+      .catch((error) => {
+        console.error(
+          "Error in getting wallet amount:",
+          error.response?.data || error.message
+        );
+        message.error("Failed to get wallet amount");
+      });
+  };
 
   const handlePayment = async () => {
     try {
       // Check for stock issues
       const hasStockIssues = cartData.some(
-        (item) => parseInt(item.cartQuantity) > item.quantity || item.quantity === 0
+        (item) =>
+          parseInt(item.cartQuantity) > item.quantity || item.quantity === 0
       );
 
       if (hasStockIssues) {
         Modal.error({
           title: "Stock Issues",
-          content: "Some items in your cart are out of stock or exceed available stock. Please adjust before proceeding.",
+          content:
+            "Some items in your cart are out of stock or exceed available stock. Please adjust before proceeding.",
           okText: "OK",
           onOk: () => navigate("/main/mycart"),
         });
@@ -485,10 +632,9 @@ const CheckoutPage: React.FC = () => {
       }
 
       // Check if delivery time slot is selected
-      if (selectedTimeSlot) {
+      if (!selectedTimeSlot) {
         Modal.error({ title: "Error", content: "Please select a time slot." });
       }
-
 
       if (grandTotalAmount === 0) {
         setSelectedPayment("COD");
@@ -526,19 +672,13 @@ const CheckoutPage: React.FC = () => {
       console.log(response.data);
 
       if (response.status === 200 && response.data) {
-        if (response.data.status) {
-          Modal.success({
-            title: "Success",
-            content: response.data.status,
-            okText: "Ok",
-            onOk: () => navigate("/main/myorders"),
-          });
-          return;
-        }
-
         await fetchCartData(); // Ensure cart updates
 
         if (selectedPayment === "COD" && !response.data.paymentId) {
+          if (response.data) {
+            showSampleModal(); // Ensure modal appears before any navigation logic
+            return;
+          }
           Modal.success({
             content: "Order placed Successfully",
             onOk: () => navigate("/main/myorders"),
@@ -585,7 +725,7 @@ const CheckoutPage: React.FC = () => {
   const getepayPortal = async (data: any) => {
     console.log("getepayPortal", data);
     const JsonData = JSON.stringify(data);
-    const mer = data.merchantTransactionId
+    const mer = data.merchantTransactionId;
 
     var ciphertext = encryptEas(JsonData);
     var newCipher = ciphertext.toUpperCase();
@@ -616,8 +756,8 @@ const CheckoutPage: React.FC = () => {
         console.log("===getepayPortal data======");
         console.log(data);
         data = JSON.parse(data);
-        localStorage.setItem("paymentId", data.paymentId)
-        localStorage.setItem("merchantTransactionId", mer)
+        localStorage.setItem("paymentId", data.paymentId);
+        localStorage.setItem("merchantTransactionId", mer);
         const paymentUrl = data.paymentUrl; // Assuming API returns a payment link
 
         Modal.confirm({
@@ -642,7 +782,7 @@ const CheckoutPage: React.FC = () => {
       paymentStatus === "" ||
       paymentStatus === null
     ) {
-      console.log("Before.....", paymentId)
+      console.log("Before.....", paymentId);
 
       const Config = {
         "Getepay Mid": 1152305,
@@ -681,15 +821,12 @@ const CheckoutPage: React.FC = () => {
         req: newCipher,
       });
 
-      fetch(
-        "https://portal.getepay.in:8443/getepayPortal/pg/invoiceStatus",
-        {
-          method: "POST",
-          headers: myHeaders,
-          body: raw,
-          redirect: "follow",
-        }
-      )
+      fetch("https://portal.getepay.in:8443/getepayPortal/pg/invoiceStatus", {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow",
+      })
         .then((response) => response.text())
         .then((result) => {
           var resultobj = JSON.parse(result);
@@ -718,7 +855,11 @@ const CheckoutPage: React.FC = () => {
               if (data.paymentStatus === "SUCCESS") {
                 axios({
                   method: "get",
-                  url: BASE_URL + `/order-service/api/download/invoice?paymentId=${localStorage.getItem('merchantTransactionId')}&&userId=${customerId}`,
+                  url:
+                    BASE_URL +
+                    `/order-service/api/download/invoice?paymentId=${localStorage.getItem(
+                      "merchantTransactionId"
+                    )}&&userId=${customerId}`,
                   headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
@@ -736,7 +877,7 @@ const CheckoutPage: React.FC = () => {
                 method: "POST",
                 url: BASE_URL + "/order-service/orderPlacedPaymet",
                 data: {
-                  paymentId: localStorage.getItem('merchantTransactionId'),
+                  paymentId: localStorage.getItem("merchantTransactionId"),
                   paymentStatus: data.paymentStatus,
                 },
                 headers: {
@@ -749,26 +890,33 @@ const CheckoutPage: React.FC = () => {
                     "Order Placed with Payment API:",
                     secondResponse.data
                   );
-                  localStorage.removeItem('paymentId')
-                  localStorage.removeItem('merchantTransactionId')
+                  localStorage.removeItem("paymentId");
+                  localStorage.removeItem("merchantTransactionId");
                   fetchCartData();
                   if (secondResponse.data.status === null) {
+                    if (secondResponse.data.status) {
+                      showSampleModal(); // Ensure modal appears before any navigation logic
+                      return;
+                    }
                     Modal.success({
                       content: "Order placed Successfully",
                       onOk: () => {
                         navigate("/main/myorders");
                         fetchCartData();
                       },
-                    })
+                    });
                   } else {
+                    if (secondResponse.data.status) {
+                      showSampleModal(); // Ensure modal appears before any navigation logic
+                      return;
+                    }
                     Modal.success({
                       content: secondResponse.data.status,
                       onOk: () => {
                         navigate("/main/myorders");
                         fetchCartData();
                       },
-                    })
-
+                    });
                   }
                   // setLoading(false);
                 })
@@ -821,7 +969,7 @@ const CheckoutPage: React.FC = () => {
 
     // If total is zero, automatically set payment method to COD
     if (finalTotal === 0) {
-      setSelectedPayment('COD');
+      setSelectedPayment("COD");
     }
 
     console.log("Calculation Summary:");
@@ -835,7 +983,14 @@ const CheckoutPage: React.FC = () => {
 
   useEffect(() => {
     grandTotalfunc();
-  }, [coupenApplied, useWallet, totalAmount, deliveryBoyFee, coupenDetails, walletAmount]);
+  }, [
+    coupenApplied,
+    useWallet,
+    totalAmount,
+    deliveryBoyFee,
+    coupenDetails,
+    walletAmount,
+  ]);
 
   const renderTimeSlotModal = () => {
     // For debugging - check what the data contains
@@ -852,101 +1007,144 @@ const CheckoutPage: React.FC = () => {
       >
         <div className="max-h-[70vh] overflow-y-auto">
           {/* Remove the filter for today completely, since fetchTimeSlots already handles this */}
-          {timeSlots
-            .slice(0, 3)
-            .map((slot, index) => (
-              <div key={slot.id || index} className="mb-6">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-lg font-medium">
-                    {slot.dayOfWeek || `Day ${index + 1}`}
-                  </div>
-                  <div className="text-right text-gray-700">
-                    {slot.date}
-                    {slot.date === "Tomorrow" && (
-                      <span className="ml-2 py-1 px-2 bg-blue-100 text-blue-800 text-xs rounded-full">Tomorrow</span>
-                    )}
-                  </div>
+          {timeSlots.slice(0, 3).map((slot, index) => (
+            <div key={slot.id || index} className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <div className="text-lg font-medium">
+                  {slot.dayOfWeek || `Day ${index + 1}`}
                 </div>
-
-                {/* Time slots grid - display all 4 slots in a responsive grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Time Slot 1 */}
-                  {slot.timeSlot1 && (
-                    <div
-                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${selectedTimeSlot === slot.timeSlot1 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                        }`}
-                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot1 || "", slot.dayOfWeek || "")}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{slot.timeSlot1}</span>
-                        <span className="text-xs text-green-600">Available</span>
-                      </div>
-                    </div>
+                <div className="text-right text-gray-700">
+                  {slot.date}
+                  {slot.date === "Tomorrow" && (
+                    <span className="ml-2 py-1 px-2 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      Tomorrow
+                    </span>
                   )}
+                </div>
+              </div>
 
-                  {/* Time Slot 2 */}
-                  {slot.timeSlot2 && (
-                    <div
-                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${selectedTimeSlot === slot.timeSlot2 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                        }`}
-                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot2 || "", slot.dayOfWeek || "")}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{slot.timeSlot2}</span>
-                        <span className="text-xs text-green-600">Available</span>
-                      </div>
+              {/* Time slots grid - display all 4 slots in a responsive grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Time Slot 1 */}
+                {slot.timeSlot1 && (
+                  <div
+                    className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
+                      selectedTimeSlot === slot.timeSlot1 &&
+                      selectedDate === slot.date
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() =>
+                      handleSelectTimeSlot(
+                        slot.date || "",
+                        slot.timeSlot1 || "",
+                        slot.dayOfWeek || ""
+                      )
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{slot.timeSlot1}</span>
+                      <span className="text-xs text-green-600">Available</span>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Time Slot 3 */}
-                  {slot.timeSlot3 && (
-                    <div
-                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${selectedTimeSlot === slot.timeSlot3 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                        }`}
-                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot3 || "", slot.dayOfWeek || "")}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{slot.timeSlot3}</span>
-                        <span className="text-xs text-green-600">Available</span>
-                      </div>
+                {/* Time Slot 2 */}
+                {slot.timeSlot2 && (
+                  <div
+                    className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
+                      selectedTimeSlot === slot.timeSlot2 &&
+                      selectedDate === slot.date
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() =>
+                      handleSelectTimeSlot(
+                        slot.date || "",
+                        slot.timeSlot2 || "",
+                        slot.dayOfWeek || ""
+                      )
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{slot.timeSlot2}</span>
+                      <span className="text-xs text-green-600">Available</span>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Time Slot 4 */}
-                  {slot.timeSlot4 && (
-                    <div
-                      className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${selectedTimeSlot === slot.timeSlot4 && selectedDate === slot.date ? 'border-green-500 bg-green-50' : 'border-gray-200'
-                        }`}
-                      onClick={() => handleSelectTimeSlot(slot.date || '', slot.timeSlot4 || "", slot.dayOfWeek || "")}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{slot.timeSlot4}</span>
-                        <span className="text-xs text-green-600">Available</span>
-                      </div>
+                {/* Time Slot 3 */}
+                {slot.timeSlot3 && (
+                  <div
+                    className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
+                      selectedTimeSlot === slot.timeSlot3 &&
+                      selectedDate === slot.date
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() =>
+                      handleSelectTimeSlot(
+                        slot.date || "",
+                        slot.timeSlot3 || "",
+                        slot.dayOfWeek || ""
+                      )
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{slot.timeSlot3}</span>
+                      <span className="text-xs text-green-600">Available</span>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* No available slots message */}
-                  {!slot.timeSlot1 && !slot.timeSlot2 && !slot.timeSlot3 && !slot.timeSlot4 && (
+                {/* Time Slot 4 */}
+                {slot.timeSlot4 && (
+                  <div
+                    className={`py-3 px-4 border rounded-md cursor-pointer hover:bg-green-50 hover:border-green-500 transition ${
+                      selectedTimeSlot === slot.timeSlot4 &&
+                      selectedDate === slot.date
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() =>
+                      handleSelectTimeSlot(
+                        slot.date || "",
+                        slot.timeSlot4 || "",
+                        slot.dayOfWeek || ""
+                      )
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{slot.timeSlot4}</span>
+                      <span className="text-xs text-green-600">Available</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* No available slots message */}
+                {!slot.timeSlot1 &&
+                  !slot.timeSlot2 &&
+                  !slot.timeSlot3 &&
+                  !slot.timeSlot4 && (
                     <div className="py-3 px-4 border rounded-md border-gray-200 bg-gray-50 text-gray-500 col-span-full">
                       No available time slots for this day
                     </div>
                   )}
-                </div>
-
-                {index < 2 && <div className="border-b border-gray-100 mt-4"></div>}
               </div>
-            ))}
+
+              {index < 2 && (
+                <div className="border-b border-gray-100 mt-4"></div>
+              )}
+            </div>
+          ))}
         </div>
       </Modal>
     );
   };
   return (
     <div className="flex flex-col min-h-screen">
-
       <div className="flex-1 p-4 lg:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-
           <main className="flex-1">
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center mb-6">
@@ -958,13 +1156,14 @@ const CheckoutPage: React.FC = () => {
                 </button>
                 <div className="flex items-center">
                   <ShoppingBag className="w-6 h-6 text-green-500 mr-2" />
-                  <h2 className="text-xl font-bold text-purple-600">Checkout Details</h2>
+                  <h2 className="text-xl font-bold text-purple-600">
+                    Checkout Details
+                  </h2>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <div className="lg:col-span-7 space-y-4">
-
                   {/* Delivery Time Slot Selection */}
                   <div className="bg-white border rounded-lg p-4 mb-4">
                     <div className="flex justify-between items-center mb-3">
@@ -976,37 +1175,46 @@ const CheckoutPage: React.FC = () => {
                         onClick={openTimeSlotModal}
                         className="text-sm text-purple-600 hover:text-purple-800"
                       >
-                        {selectedTimeSlot ? 'Change Time' : 'Select Time'}
+                        {selectedTimeSlot ? "Change Time" : "Select Time"}
                       </button>
                     </div>
 
                     {selectedTimeSlot ? (
                       <div className="p-3 bg-green-50 rounded-md border border-green-200">
-                        <p className="text-green-800 font-medium">{selectedDate}</p>
+                        <p className="text-green-800 font-medium">
+                          {selectedDate}
+                        </p>
                         <p className="text-green-700">{selectedTimeSlot}</p>
                       </div>
                     ) : (
                       <div className="p-3 bg-yellow-50 rounded-md border border-yellow-200">
-                        <p className="text-yellow-700">Please select a delivery time slot</p>
+                        <p className="text-yellow-700">
+                          Please select a delivery time slot
+                        </p>
                       </div>
                     )}
                   </div>
-
-
 
                   {/* Cart Items */}
                   <div className="bg-white border rounded-lg p-4">
                     <div className="flex items-center mb-3">
                       <ShoppingBag className="w-5 h-5 mr-2 text-purple-500" />
-                      <h3 className="font-medium">Order Items ({cartData.length})</h3>
+                      <h3 className="font-medium">
+                        Order Items ({cartData.length})
+                      </h3>
                     </div>
 
                     <div className="space-y-3 max-h-60 overflow-y-auto">
                       {cartData.map((item) => (
-                        <div key={item.itemId} className="flex justify-between items-center p-2 border-b">
+                        <div
+                          key={item.itemId}
+                          className="flex justify-between items-center p-2 border-b"
+                        >
                           <div>
                             <p className="font-medium">{item.itemName}</p>
-                            <p className="text-gray-600 text-sm">Qty: {item.cartQuantity}</p>
+                            <p className="text-gray-600 text-sm">
+                              Qty: {item.cartQuantity}
+                            </p>
                           </div>
                           <p className="font-medium">₹{item.itemPrice}</p>
                         </div>
@@ -1023,15 +1231,21 @@ const CheckoutPage: React.FC = () => {
 
                     <div className="space-y-3">
                       <div
-                        className={`p-3 border rounded-md cursor-pointer flex items-center ${selectedPayment === 'ONLINE' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
-                          }`}
-                        onClick={() => setSelectedPayment('ONLINE')}
+                        className={`p-3 border rounded-md cursor-pointer flex items-center ${
+                          selectedPayment === "ONLINE"
+                            ? "border-purple-500 bg-purple-50"
+                            : "border-gray-200"
+                        }`}
+                        onClick={() => setSelectedPayment("ONLINE")}
                       >
-                        <div className={`w-4 h-4 rounded-full border ${selectedPayment === 'ONLINE'
-                            ? 'border-purple-500 bg-white'
-                            : 'border-gray-400'
-                          }`}>
-                          {selectedPayment === 'ONLINE' && (
+                        <div
+                          className={`w-4 h-4 rounded-full border ${
+                            selectedPayment === "ONLINE"
+                              ? "border-purple-500 bg-white"
+                              : "border-gray-400"
+                          }`}
+                        >
+                          {selectedPayment === "ONLINE" && (
                             <div className="w-2 h-2 rounded-full bg-purple-500 m-0.5"></div>
                           )}
                         </div>
@@ -1039,15 +1253,21 @@ const CheckoutPage: React.FC = () => {
                       </div>
 
                       <div
-                        className={`p-3 border rounded-md cursor-pointer flex items-center ${selectedPayment === 'COD' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
-                          }`}
-                        onClick={() => setSelectedPayment('COD')}
+                        className={`p-3 border rounded-md cursor-pointer flex items-center ${
+                          selectedPayment === "COD"
+                            ? "border-purple-500 bg-purple-50"
+                            : "border-gray-200"
+                        }`}
+                        onClick={() => setSelectedPayment("COD")}
                       >
-                        <div className={`w-4 h-4 rounded-full border ${selectedPayment === 'COD'
-                            ? 'border-purple-500 bg-white'
-                            : 'border-gray-400'
-                          }`}>
-                          {selectedPayment === 'COD' && (
+                        <div
+                          className={`w-4 h-4 rounded-full border ${
+                            selectedPayment === "COD"
+                              ? "border-purple-500 bg-white"
+                              : "border-gray-400"
+                          }`}
+                        >
+                          {selectedPayment === "COD" && (
                             <div className="w-2 h-2 rounded-full bg-purple-500 m-0.5"></div>
                           )}
                         </div>
@@ -1065,37 +1285,37 @@ const CheckoutPage: React.FC = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Subtotal</span>
-                        <span>₹{grandTotal.toFixed(2)}</span>
+                        <span>₹{grandTotal.toFixed(0)}</span>
                       </div>
 
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">GST</span>
-                        <span>₹{subGst.toFixed(2)}</span>
+                        <span>₹{subGst.toFixed(0)}</span>
                       </div>
 
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Delivery Fee</span>
-                        <span>₹{deliveryBoyFee.toFixed(2)}</span>
+                        <span>₹{deliveryBoyFee.toFixed(0)}</span>
                       </div>
 
                       {coupenApplied && coupenDetails > 0 && (
                         <div className="flex justify-between py-2 text-green-600">
                           <span>Coupon Discount</span>
-                          <span>-₹{coupenDetails.toFixed(2)}</span>
+                          <span>-₹{coupenDetails.toFixed(0)}</span>
                         </div>
                       )}
 
                       {useWallet && usedWalletAmount > 0 && (
                         <div className="flex justify-between py-2 text-green-600">
                           <span>Wallet Amount</span>
-                          <span>-₹{usedWalletAmount.toFixed(2)}</span>
+                          <span>-₹{usedWalletAmount.toFixed(0)}</span>
                         </div>
                       )}
 
                       <div className="border-t pt-2 mt-2">
                         <div className="flex justify-between font-medium text-lg">
                           <span>Total</span>
-                          <span>₹{grandTotalAmount.toFixed(2)}</span>
+                          <span>₹{grandTotalAmount.toFixed(0)}</span>
                         </div>
                       </div>
                     </div>
@@ -1133,7 +1353,7 @@ const CheckoutPage: React.FC = () => {
                             {coupenLoading ? (
                               <Loader2 className="w-5 h-5 animate-spin mx-auto" />
                             ) : (
-                              'Apply'
+                              "Apply"
                             )}
                           </button>
                         )}
@@ -1150,15 +1370,18 @@ const CheckoutPage: React.FC = () => {
                             onChange={handleCheckboxToggle}
                             className="w-4 h-4 text-purple-600 rounded"
                           />
-                          <label htmlFor="useWallet" className="ml-2 text-sm font-medium">
-                            Use wallet balance (₹{walletAmount.toFixed(2)})
+                          <label
+                            htmlFor="useWallet"
+                            className="ml-2 text-sm font-medium"
+                          >
+                            Use wallet balance (₹{walletAmount.toFixed(0)})
                           </label>
                         </div>
 
                         {useWallet && (
                           <div className="mt-2 text-sm text-gray-600">
-                            <p>Amount used: ₹{usedWalletAmount.toFixed(2)}</p>
-                            <p>Remaining: ₹{afterWallet.toFixed(2)}</p>
+                            <p>Amount used: ₹{usedWalletAmount.toFixed(0)}</p>
+                            <p>Remaining: ₹{afterWallet.toFixed(0)}</p>
                           </div>
                         )}
                       </div>
@@ -1167,15 +1390,21 @@ const CheckoutPage: React.FC = () => {
                     {/* Place Order Button */}
                     <button
                       onClick={handlePayment}
-                      disabled={loading || !selectedAddress || !selectedTimeSlot}
+                      disabled={
+                        loading || !selectedAddress || !selectedTimeSlot
+                      }
                       className="w-full mt-6 py-3 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                       {loading ? (
                         <Loader2 className="w-5 h-5 animate-spin mr-2" />
                       ) : (
                         <>
-                          {selectedPayment === 'ONLINE' ? 'Proceed to Payment' : 'Place Order'}
-                          <span className="ml-2">₹{grandTotalAmount.toFixed(2)}</span>
+                          {selectedPayment === "ONLINE"
+                            ? "Proceed to Payment"
+                            : "Place Order"}
+                          <span className="ml-2">
+                            ₹{grandTotalAmount.toFixed(0)}
+                          </span>
                         </>
                       )}
                     </button>

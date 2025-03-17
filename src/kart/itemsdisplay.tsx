@@ -15,13 +15,13 @@ import {
   X,
   MessageCircle,
   AlertCircle,
-  Loader2,
+  Loader2,Trash2
 } from "lucide-react";
 import ValidationPopup from "./ValidationPopup";
 import Footer from "../components/Footer";
 import { CartContext } from "../until/CartContext";
 
-import  BASE_URL  from "../Config";
+import BASE_URL from "../Config";
 
 interface Item {
   itemId: string;
@@ -593,7 +593,6 @@ const ItemDisplayPage = () => {
                                 !isMaxStockReached(itemDetails) &&
                                 handleQuantityChange(itemDetails, true)
                               }
-                              // disabled={isMaxStockReached(itemDetails)}
                               disabled={
                                 cartItems[itemDetails.itemId] >=
                                 itemDetails.quantity ||
@@ -601,6 +600,35 @@ const ItemDisplayPage = () => {
                               }
                             >
                               <Plus className="w-5 h-5" />
+                            </button>
+                            {/* New Delete Button */}
+                            <button
+                              className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all ml-2"
+                              onClick={() => {
+                                if (itemDetails) {
+                                  // Force remove item by setting quantity to 0
+                                  const targetCartId = cartData.find(
+                                    (cart) => cart.itemId === itemDetails.itemId
+                                  )?.cartId;
+                                  if (targetCartId) {
+                                    axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
+                                      data: { id: targetCartId },
+                                      headers: { Authorization: `Bearer ${token}` },
+                                    })
+                                      .then(() => {
+                                        message.success("Item removed from cart successfully.");
+                                        fetchCartData("");
+                                      })
+                                      .catch((error) => {
+                                        console.error("Error removing item:", error);
+                                        message.error("Error removing item from cart");
+                                      });
+                                  }
+                                }
+                              }}
+                              disabled={loadingItems.items[itemDetails.itemId]}
+                            >
+                              <Trash2 className="w-5 h-5" />
                             </button>
                           </div>
                           {isMaxStockReached(itemDetails) && (
@@ -618,7 +646,7 @@ const ItemDisplayPage = () => {
                             handleAddToCart(itemDetails)
                           }
                           className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
-                            transform transition-all hover:scale-105 flex items-center justify-center gap-2"
+          transform transition-all hover:scale-105 flex items-center justify-center gap-2"
                         >
                           {itemDetails &&
                             loadingItems.items[itemDetails.itemId] ? (
@@ -635,7 +663,7 @@ const ItemDisplayPage = () => {
                       <button
                         disabled
                         className="w-full py-3 bg-gray-200 text-gray-600 rounded-lg 
-                          flex items-center justify-center gap-2 cursor-not-allowed"
+        flex items-center justify-center gap-2 cursor-not-allowed"
                       >
                         <ShoppingCart className="w-5 h-5" />
                         Out of Stock
@@ -694,14 +722,14 @@ const ItemDisplayPage = () => {
                         <div
                           key={idx}
                           className={`flex ${msg.type === "sent"
-                              ? "justify-end"
-                              : "justify-start"
+                            ? "justify-end"
+                            : "justify-start"
                             }`}
                         >
                           <div
                             className={`max-w-[75%] p-3 rounded-lg ${msg.type === "sent"
-                                ? "bg-purple-600 text-white"
-                                : "bg-purple-50 border border-purple-100"
+                              ? "bg-purple-600 text-white"
+                              : "bg-purple-50 border border-purple-100"
                               }`}
                           >
                             {msg.type === "system" && (
@@ -759,7 +787,7 @@ const ItemDisplayPage = () => {
                           <span className="text-gray-500 text-sm line-through">₹{item.itemMrp}</span>
                         </div>
 
-                        {/* Add to cart functionality with stock check */}
+                        {/* Related item cart controls */}
                         <div className="mt-3">
                           {item.quantity !== 0 ? (
                             cartItems[item.itemId] ? (
@@ -804,6 +832,35 @@ const ItemDisplayPage = () => {
                                 >
                                   <Plus className="w-4 h-4" />
                                 </button>
+
+                                {/* New Delete Button for related items */}
+                                <button
+                                  className="p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all ml-1"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Find the cart ID for this item
+                                    const targetCartId = cartData.find(
+                                      (cart) => cart.itemId === item.itemId
+                                    )?.cartId;
+                                    if (targetCartId) {
+                                      axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
+                                        data: { id: targetCartId },
+                                        headers: { Authorization: `Bearer ${token}` },
+                                      })
+                                        .then(() => {
+                                          message.success("Item removed from cart successfully.");
+                                          fetchCartData("");
+                                        })
+                                        .catch((error) => {
+                                          console.error("Error removing item:", error);
+                                          message.error("Error removing item from cart");
+                                        });
+                                    }
+                                  }}
+                                  disabled={loadingItems.items[item.itemId]}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             ) : (
                               <button
@@ -814,7 +871,7 @@ const ItemDisplayPage = () => {
                                   }
                                 }}
                                 className="w-full py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 
-                transform transition-all flex items-center justify-center gap-1.5"
+transform transition-all flex items-center justify-center gap-1.5"
                               >
                                 {loadingItems.items[item.itemId] ? (
                                   <Loader2 className="animate-spin w-4 h-4" />
@@ -830,13 +887,14 @@ const ItemDisplayPage = () => {
                             <button
                               disabled
                               className="w-full py-2 bg-gray-200 text-gray-600 text-sm rounded-lg 
-              flex items-center justify-center gap-1.5 cursor-not-allowed"
+flex items-center justify-center gap-1.5 cursor-not-allowed"
                             >
                               <ShoppingCart className="w-4 h-4" />
                               Out of Stock
                             </button>
                           )}
                         </div>
+
                       </div>
                     </div>
                   ))}
