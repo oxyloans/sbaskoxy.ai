@@ -7,9 +7,19 @@ import { useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import { HiOutlineDocument } from "react-icons/hi";
 import BASE_URL from "../Config";
-
+import {
+  ArrowLeft,
+  ShoppingBag,
+  Coins,
+  Bot,
+  Settings,
+  X,
+  Mail,
+  Heart,
+  Scan,
+} from "lucide-react";
 import Container from "./ContainerPolicy";
-import FR from "../assets/img/WhatsApp Image 2025-01-23 at 15.50.44.png";
+// import FR from "../assets/img/123.png";
 
 import Footer from "./Footer";
 import { message, Modal } from "antd";
@@ -56,11 +66,17 @@ const FreeSample: React.FC = () => {
   const [isprofileOpen, setIsprofileOpen] = useState<boolean>(false);
   const [query, setQuery] = useState("");
   const [queryError, setQueryError] = useState<string | undefined>(undefined);
-  const mobileNumber = localStorage.getItem("whatsappNumber");
+  const whatsappNumber = localStorage.getItem("whatsappNumber");
+  const mobileNumber = localStorage.getItem("mobileNumber");
+  const profileData = JSON.parse(localStorage.getItem("profileData") || "{}");
+
+  const email = profileData.customerEmail || null;
+  const finalMobileNumber = whatsappNumber || mobileNumber || null;
+  const [interested, setInterested] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     askOxyOfers: "FREESAMPLE",
     userId: userId,
-    mobileNumber: mobileNumber,
+    mobileNumber: finalMobileNumber,
     projectType: "ASKOXY",
   });
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -75,6 +91,10 @@ const FreeSample: React.FC = () => {
 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const handleSubmit = async () => {
+    if (interested) {
+      message.warning("You have already participated. Thank you!");
+      return;
+    }
     try {
       setIsButtonDisabled(true);
       // API request to submit the form data
@@ -99,7 +119,7 @@ const FreeSample: React.FC = () => {
     }
   };
 
-  const email = localStorage.getItem("email");
+  // const email = localStorage.getItem("email");
 
   const navigate = useNavigate();
 
@@ -112,12 +132,37 @@ const FreeSample: React.FC = () => {
     if (
       !email ||
       email === "null" ||
-      !mobileNumber ||
-      mobileNumber === "null"
+      !finalMobileNumber ||
+      finalMobileNumber === "null"
     ) {
       setIsprofileOpen(true);
     } else {
       setIsOpen(true);
+    }
+  };
+  
+  const handleScanBarcode = () => {
+    navigate("/main/dashboard/barscancode-sample");
+  };
+
+  useEffect(() => {
+    handleGetOffer();
+  }, []);
+
+  const handleGetOffer = () => {
+    const data = localStorage.getItem("userInterest");
+    if (data) {
+      const parsedData = JSON.parse(data); // Convert the string back to an array
+      const hasFreeRudrakshaOffer = parsedData.some(
+        (offer: any) => offer.askOxyOfers === "FREESAMPLE"
+      );
+      if (hasFreeRudrakshaOffer) {
+        setInterested(true);
+      } else {
+        setInterested(false);
+      }
+    } else {
+      setInterested(false);
     }
   };
 
@@ -137,7 +182,7 @@ const FreeSample: React.FC = () => {
     // Payload with the data to send to the API
     const payload = {
       email: email, // You might want to replace this with dynamic values
-      mobileNumber: mobileNumber, // You might want to replace this with dynamic values
+      mobileNumber: finalMobileNumber, // You might want to replace this with dynamic values
       queryStatus: "PENDING",
       projectType: "ASKOXY",
       askOxyOfers: "FREESAMPLE",
@@ -156,7 +201,7 @@ const FreeSample: React.FC = () => {
     console.log("Query:", query);
     const accessToken = localStorage.getItem("accessToken");
 
-    const apiUrl = `${BASE_URL}/writetous-service/saveData`;
+    const apiUrl = `${BASE_URL}/user-service/write/saveData`;
     const headers = {
       Authorization: `Bearer ${accessToken}`, // Ensure `accessToken` is available in your scope
     };
@@ -188,37 +233,38 @@ const FreeSample: React.FC = () => {
 
   return (
     <div>
-      <div>
+      <div className="bg-gray-50">
         <header>
           {/* Buttons on the right */}
-          <div className="flex flex-col md:flex-row items-center md:items-start pt-5 justify-center">
-            {/* Title */}
-            <h1 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-3xl lg:text45xl leading-tight mb-6 md:mb-0">
+          <div className="relative flex flex-col items-center pt-5">
+            {/* Back Button (Left Aligned) */}
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-100 rounded-full"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+
+            {/* Title (Centered) */}
+            <h1 className="text-[rgba(91,5,200,0.85)] font-bold text-2xl sm:text-3xl md:text-3xl lg:text-4xl text-center leading-tight">
               Free Rice Samples & Steel Container
             </h1>
           </div>
 
-          <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 items-center px-4 md:px-6    lg:px-8">
-            {/* Button: I'm Interested */}
-
-            {/* <div>
-             
-              <button
-                className="bottom-8 right-8 px-4 py-2 bg-[#D32F2F] text-white rounded-lg shadow-lg hover:bg-[#B71C1C] transition-all text-sm md:text-base lg:text-lg flex items-center justify-center z-50"
-                aria-label="Open Container Policy PDF"
-                onClick={handleButtonClick} // Attach click handler to the button
-              >
-                <HiOutlineDocument className="w-5 h-5 text-white mr-2" />
-                Container Policy Preview
-              </button>
-
-             
-              {showContainer && <Container />}
-            </div> */}
+          <div className="flex flex-col md:flex-row justify-center md:justify-end gap-4 items-center px-4 md:px-6 lg:px-8">
+            {/* Button: Scan Bar Code - NEW BUTTON */}
+            <button
+              className="bg-[#FF9800] w-full md:w-auto px-4 py-2 text-white rounded-lg shadow-md hover:bg-[#F57C00] text-sm md:text-base lg:text-lg transition duration-300 flex items-center justify-center gap-2"
+              aria-label="Scan Bar Code"
+              onClick={handleScanBarcode}
+            >
+              <Scan className="h-5 w-5" />
+              Scan Bar Code
+            </button>
 
             {/* Button: Write To Us */}
             <button
-              className=" bg-[#008CBA] w-full md:w-auto px-4 py-2  text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300 "
+              className="bg-[#008CBA] w-full md:w-auto px-4 py-2 text-white rounded-lg shadow-md hover:bg-[#04AA6D] text-sm md:text-base lg:text-lg transition duration-300"
               aria-label="Write To Us"
               onClick={handleWriteToUs}
             >
@@ -252,7 +298,7 @@ const FreeSample: React.FC = () => {
                       type="tel"
                       id="phone"
                       disabled={true}
-                      value={mobileNumber || ""}
+                      value={finalMobileNumber || ""}
                       // value={"9908636995"}
                       className="block w-full text-black px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#3d2a71] focus:border-[#3d2a71] transition-all duration-200"
                       placeholder="Enter your mobile number"
@@ -365,59 +411,57 @@ const FreeSample: React.FC = () => {
               </div>
             )}
           </div>
-          {/* <div className="flex flex-col items-center justify-center md:flex-row  pt-4 md:px-6 lg:px-8">
-
-            <h3 className="text-center text-[rgba(91,5,200,0.85)] font-bold text-sm sm:text-base md:text-lg lg:text-xl">
-            
-            </h3>
-          </div> */}
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2 px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2 px-3 items-center">
           {/* Image Section */}
-          <div className="flex justify-center p-4">
+          <div className="flex justify-center p-2 mb-4 lg:mb-0">
             <img
-              src={FR}
+              // src={FR}
               alt="Free Sample"
-              className="w-auto h-auto max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg rounded-lg shadow-lg pointer-events-none select-none object-contain"
+              className="w-full max-w-[300px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[450px] rounded-lg shadow-lg pointer-events-none select-none object-contain"
             />
           </div>
 
           {/* Text and Button Section */}
-          <div className="text-center lg:text-left p-4 ">
-            <p className="text-black mb-4 text-sm sm:text-base lg:text-lg">
-              <strong>Special Offer:</strong> Free Rice Container! - Buy a 26kg
-              rice bag & get a FREE rice container! (Container remains Oxy Group
-              asset until ownership is earned.)
-              <br />
-              <strong>How to Earn Ownership:</strong>
-              <div className="mt-2">
-                <p>
-                  <strong>Plan A:</strong> Buy 9 bags during the next 1 year,
-                  and the container is yours forever.
-                </p>
-                <p className="my-2 text-center font-bold">OR</p>
-                <p>
-                  <strong>Plan B:</strong> Refer 9 people, and when they buy
-                  their first bag, the container is yours forever.
-                </p>
-              </div>
-              <br />
-              <strong>Important Info:</strong>
-              <ul className="list-disc list-inside ">
-                <li>
-                  No purchase in 45 days or gap of 45 days between purchases =
-                  Container will be taken back.
-                </li>
-              </ul>
-              <br />
-              If you are interested in buying a rice bag, please click the{" "}
-              <strong> I am Interested </strong>button
+          <div className="text-center lg:text-left p-1 bg-white">
+            <p className="text-black mb-3 text-sm sm:text-base">
+              <strong>Special Offer:</strong> Free Rice Container! - Buy a 26kgs
+              / 10kgs rice bag & get a FREE rice container! (Container remains
+              Oxy Group asset until ownership is earned.)
             </p>
-
-            <div className="space-x-4">
+            <p className="text-black mb-2 text-sm sm:text-base">
+              <strong>How to Earn Ownership:</strong>
+            </p>
+            <div className="">
+              <p className="text-sm sm:text-base">
+                <strong>Plan A:</strong> Buy 9 bags during the next 3 years, and
+                the container is yours forever.
+              </p>
+              <p className="my-2 text-center font-bold text-sm sm:text-base">
+                OR
+              </p>
+              <p className="text-sm sm:text-base">
+                <strong>Plan B:</strong> Refer 9 people, and when they buy their
+                first bag, the container is yours forever.
+              </p>
+            </div>
+            <p className="text-black mb-2 text-sm sm:text-base">
+              <strong>Important Info:</strong>
+            </p>
+            <ul className="list-disc list-inside mb-3 text-sm sm:text-base">
+              <li>
+                No purchase within 90 days or a gap of 90 days between
+                purchases, will result in the container being taken back.
+              </li>
+            </ul>
+            <p className="mb-3 text-sm sm:text-base">
+              If you are interested in buying a rice bag, please click the{" "}
+              <strong>I am Interested</strong> button.
+            </p>
+            <div className="space-x-2">
               <button
-                className="px-6 py-3 font-bold bg-[#04AA6D] text-white rounded-lg shadow-lg  transition-all text-sm md:text-base lg:text-lg"
+                className="px-4 py-2 font-bold bg-[#04AA6D] text-white rounded-lg shadow-md transition-all text-sm sm:text-base"
                 onClick={handleSubmit}
                 disabled={isButtonDisabled}
                 aria-label="I'm Interested"

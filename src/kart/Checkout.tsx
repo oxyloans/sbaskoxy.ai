@@ -160,8 +160,7 @@ const CheckoutPage: React.FC = () => {
     ];
 
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+    
 
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0"); // Add 1 to get 1-12 instead of 0-11
@@ -176,14 +175,7 @@ const CheckoutPage: React.FC = () => {
       return "Today";
     }
 
-    // Check if date is tomorrow
-    if (
-      date.getDate() === tomorrow.getDate() &&
-      date.getMonth() === tomorrow.getMonth() &&
-      date.getFullYear() === tomorrow.getFullYear()
-    ) {
-      return "Tomorrow";
-    }
+    
 
     // Return formatted date for other days
     return `${day}-${month}-${year}`; // Now using proper month number with padding
@@ -287,7 +279,7 @@ const CheckoutPage: React.FC = () => {
             timeSlot3: availableTimeSlots.timeSlot3,
             timeSlot4: availableTimeSlots.timeSlot4,
             date: formatDate(slotDate, isToday),
-            isToday: isToday, // Always false since we're starting from tomorrow
+            
           };
         });
 
@@ -632,7 +624,7 @@ const CheckoutPage: React.FC = () => {
       }
 
       // Check if delivery time slot is selected
-      if (!selectedTimeSlot) {
+      if (selectedTimeSlot) {
         Modal.error({ title: "Error", content: "Please select a time slot." });
       }
 
@@ -1015,11 +1007,7 @@ const CheckoutPage: React.FC = () => {
                 </div>
                 <div className="text-right text-gray-700">
                   {slot.date}
-                  {slot.date === "Tomorrow" && (
-                    <span className="ml-2 py-1 px-2 bg-blue-100 text-blue-800 text-xs rounded-full">
-                      Tomorrow
-                    </span>
-                  )}
+                  
                 </div>
               </div>
 
@@ -1285,37 +1273,37 @@ const CheckoutPage: React.FC = () => {
                     <div className="space-y-3">
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Subtotal</span>
-                        <span>₹{grandTotal.toFixed(0)}</span>
+                        <span>₹{grandTotal.toFixed(2)}</span>
                       </div>
 
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">GST</span>
-                        <span>₹{subGst.toFixed(0)}</span>
+                        <span>₹{subGst.toFixed(2)}</span>
                       </div>
 
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Delivery Fee</span>
-                        <span>₹{deliveryBoyFee.toFixed(0)}</span>
+                        <span>₹{deliveryBoyFee.toFixed(2)}</span>
                       </div>
 
                       {coupenApplied && coupenDetails > 0 && (
                         <div className="flex justify-between py-2 text-green-600">
                           <span>Coupon Discount</span>
-                          <span>-₹{coupenDetails.toFixed(0)}</span>
+                          <span>-₹{coupenDetails.toFixed(2)}</span>
                         </div>
                       )}
 
                       {useWallet && usedWalletAmount > 0 && (
                         <div className="flex justify-between py-2 text-green-600">
                           <span>Wallet Amount</span>
-                          <span>-₹{usedWalletAmount.toFixed(0)}</span>
+                          <span>-₹{usedWalletAmount.toFixed(2)}</span>
                         </div>
                       )}
 
                       <div className="border-t pt-2 mt-2">
                         <div className="flex justify-between font-medium text-lg">
                           <span>Total</span>
-                          <span>₹{grandTotalAmount.toFixed(0)}</span>
+                          <span>₹{grandTotalAmount.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -1374,14 +1362,14 @@ const CheckoutPage: React.FC = () => {
                             htmlFor="useWallet"
                             className="ml-2 text-sm font-medium"
                           >
-                            Use wallet balance (₹{walletAmount.toFixed(0)})
+                            Use wallet balance (₹{walletAmount.toFixed(2)})
                           </label>
                         </div>
 
                         {useWallet && (
                           <div className="mt-2 text-sm text-gray-600">
-                            <p>Amount used: ₹{usedWalletAmount.toFixed(0)}</p>
-                            <p>Remaining: ₹{afterWallet.toFixed(0)}</p>
+                            <p>Amount used: ₹{usedWalletAmount.toFixed(2)}</p>
+                            <p>Remaining: ₹{afterWallet.toFixed(2)}</p>
                           </div>
                         )}
                       </div>
@@ -1403,7 +1391,7 @@ const CheckoutPage: React.FC = () => {
                             ? "Proceed to Payment"
                             : "Place Order"}
                           <span className="ml-2">
-                            ₹{grandTotalAmount.toFixed(0)}
+                            ₹{grandTotalAmount.toFixed(2)}
                           </span>
                         </>
                       )}

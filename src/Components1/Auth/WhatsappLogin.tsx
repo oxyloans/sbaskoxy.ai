@@ -477,18 +477,32 @@ const WhatsappLogin = () => {
       >
         {/* Header */}
         <div className="bg-purple-600 p-6 relative">
-          <button
-            onClick={handleClose}
-            className="absolute right-4 top-4 p-2 rounded-full hover:bg-white/20 transition-colors text-white/80 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <div className="flex flex-col items-center gap-3">
-            <h2 className="text-2xl font-bold text-white text-center">
-              Login to ASKOXY.AI
-            </h2>
+        <button
+          onClick={handleClose}
+          className="absolute right-4 top-4 p-2 rounded-full hover:bg-white/20 transition-colors text-white/80 hover:text-white"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <div className="flex flex-col items-center gap-3">
+        <h2 className="text-2xl font-bold text-white text-center">
+      Login to ASKOXY.AI
+    </h2>
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={() => window.location.href = '/whatsapplogin'}
+              className="bg-white text-purple-600 px-6 py-2 rounded-lg font-medium hover:bg-purple-100 hover:shadow-md hover:scale-105 transition-all duration-200 active:bg-white active:text-purple-600 active:font-bold"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => window.location.href = '/whatsappregister'}
+              className="bg-transparent border-2 border-white text-white px-6 py-2 rounded-lg font-medium hover:bg-white hover:text-purple-600 hover:shadow-md hover:scale-105 transition-all duration-200 active:bg-white active:text-purple-600 active:font-bold"
+            >
+              Register
+            </button>
           </div>
         </div>
+      </div>
 
        {/* Erice Customer Alert - Now conditionally rendered */}
 {showEriceAlert && (

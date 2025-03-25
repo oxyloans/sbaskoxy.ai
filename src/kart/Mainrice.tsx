@@ -8,8 +8,9 @@ import rice1 from "../assets/img/ricecard1.png";
 import rice2 from "../assets/img/ricecard2.png";
 import rice3 from "../assets/img/ricecard3.png";
 import rice4 from "../assets/img/ricecard4.png";
+import CARD from "../assets/img/oxycard1.png";
 import { CartContext } from "../until/CartContext";
-import { FaSearch, FaTimes, FaQuestionCircle } from "react-icons/fa";
+import { FaSearch, FaTimes, FaQuestionCircle,FaExternalLinkAlt } from "react-icons/fa";
 import BASE_URL from "../Config";
 
 interface Item {
@@ -55,6 +56,91 @@ const ProductSkeletonItem: React.FC = () => (
 const CategorySkeletonItem: React.FC = () => (
   <div className="px-2 py-1 rounded-full bg-gray-200 animate-pulse w-24 h-8 mx-1"></div>
 );
+
+
+// New OxyLoans Modal Component
+const OxyLoansModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onClose}) => {
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-blue-700">OxyLoans Services</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+            aria-label="Close modal"
+          >
+            <FaTimes className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <p className="text-gray-600 mb-6">
+          Access OxyLoans services for all your financial needs via our app or website!
+        </p>
+        
+        {/* App Store Buttons */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
+          <a 
+            href="https://play.google.com/store/apps/details?id=com.oxyloans.lender" 
+            className="transition-transform hover:scale-105 w-full sm:w-auto flex justify-center" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/512px-Google_Play_Store_badge_EN.svg.png" 
+              alt="Google Play Store" 
+              className="h-12" 
+            />
+          </a>
+          <a 
+            href="https://apps.apple.com/in/app/oxyloans-lender/id6444208708" 
+            className="transition-transform hover:scale-105 w-full sm:w-auto flex justify-center" 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
+              alt="App Store" 
+              className="h-12" 
+            />
+          </a>
+        </div>
+        
+        {/* Website Button */}
+        <div className="flex justify-center">
+          <a
+            href="https://oxyloans.com/signup"
+            className="bg-white text-blue-600 font-bold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-blue-600 flex items-center"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Go To OxyLoans <FaExternalLinkAlt className="ml-2 w-4 h-4" />
+          </a>
+        </div>
+        
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <p className="text-sm text-gray-500 text-center">
+            Lend and Earn Upto 1.75% Monthly ROI and 24% P.A.
+          </p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
 
 const SkeletonLoader: React.FC = () => (
   <>
@@ -197,8 +283,8 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">What happens if I do not purchase regularly?</h4>
                 <ul className="list-disc ml-5 space-y-1">
-                  <li className="text-gray-700">If you <em>do not make a purchase within 45 days</em>, or</li>
-                  <li className="text-gray-700">If there is a <em>gap of 45 days between purchases</em>,</li>
+                  <li className="text-gray-700">If you <em>do not make a purchase within 90 days</em>, or</li>
+                  <li className="text-gray-700">If there is a <em>gap of 90 days between purchases</em>,</li>
                 </ul>
                 <p className="text-gray-700 mt-2">
                   then the <em>container will be taken back</em>.
@@ -313,11 +399,12 @@ const Ricebags: React.FC = () => {
   const [showAppModal, setShowAppModal] = useState(false);
   // New state for FAQ modal
   const [showFAQModal, setShowFAQModal] = useState(false);
+  const [showOxyLoansModal, setShowOxyLoansModal] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const minSwipeDistance = 50;
-  const bannerImages = [rice1, rice2, rice3,rice4];
+  const bannerImages = [rice1, rice2, rice3,rice4,CARD];
 
   // Get search query from location state if available
   useEffect(() => {
@@ -368,6 +455,10 @@ const handleBannerClick = (index: number) => {
       setShowFAQModal(true);
     }
     // No special action for Rice2 (index 1)
+    else if (index === 4) {
+      // CARD image - Show OxyLoans modal
+      setShowOxyLoansModal(true);
+    }
   };
 
   const sliderVariants = {
@@ -733,6 +824,15 @@ const handleBannerClick = (index: number) => {
           />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+  {showOxyLoansModal && (
+    <OxyLoansModal 
+      isOpen={showOxyLoansModal} 
+      onClose={() => setShowOxyLoansModal(false)} 
+    />
+  )}
+</AnimatePresence>
 
       {/* Search results indicator (if searching) */}
       {searchTerm && (

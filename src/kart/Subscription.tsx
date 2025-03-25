@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Footer from "../components/Footer";
-import { Menu, X, Check, AlertCircle, Loader2, ArrowDownUp, Calendar, Clock, CreditCard } from "lucide-react";
+import { Menu, X, Check, AlertCircle, Loader2,Star,HelpCircle, ArrowDownUp,ArrowDownCircle,RefreshCw, Clock,CreditCard,Shield,Zap, Gift, CheckCircle} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FaBars, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
@@ -85,6 +85,7 @@ const AlertDescription: React.FC<AlertDescriptionProps> = ({ children }) => (
   <div className="text-sm font-medium">{children}</div>
 );
 
+
 const TabPane: React.FC<TabPaneProps> = ({ children }) => <>{children}</>;
 
 const SubscriptionCard: React.FC<{
@@ -93,55 +94,289 @@ const SubscriptionCard: React.FC<{
   planDetails: UserSubscriptionPlan;
   Loading: { [key: string]: boolean };
   onSubscribe: (planId: string) => void;
-}> = ({ plan, isSelected, onSubscribe, planDetails, Loading }) => (
-  <div
-    id={plan.planId}
-    className={`relative rounded-xl border ${
-      isSelected 
-        ? 'border-purple-600 ring-2 ring-purple-600 ring-opacity-50' 
-        : 'border-gray-200'
-    } bg-white shadow-lg transition-all duration-300 hover:shadow-xl flex flex-col h-full transform hover:-translate-y-1`}
-  >
-    <div className="p-6 flex-grow">
-      <div className="text-center space-y-4">
-        <div className="space-y-2">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-            ₹{plan.amount.toLocaleString()}
-          </h2>
-          <p className="text-lg font-medium text-purple-600">
-            Wallet Balance: ₹{plan.getAmount.toLocaleString()}
-          </p>
-          <p className="text-gray-600">
-            Monthly Usage Limit: ₹{plan.limitAmount.toLocaleString()}
-          </p>
+}> = ({ plan, isSelected, onSubscribe, planDetails, Loading }) => {
+  // State for FAQ modal
+  const [showFaqModal, setShowFaqModal] = useState(false);
+  
+  // Calculate bonus amount
+  const bonusAmount = plan.getAmount - plan.amount;
+  const isPremiumPlan = plan.amount === 99000;
+  
+  // Premium plan FAQ data
+  const premiumFaqs = [
+    {
+      question: "What if I withdraw on the 40th day?",
+      answer: "You will receive the wallet amount in proportion to the days completed. For example, if you withdraw after 40 days, you will receive ₹2,667 (₹2,000 for the first 30 days + ₹667 for the extra 10 days)."
+    },
+    {
+      question: "Can I use both my advance and wallet balance for purchases?",
+      answer: "Your advance can only be withdrawn and cannot be used for purchases. You can purchase only with your wallet balance."
+    },
+    {
+      question: "What happens if I withdraw my advance before 30 days?",
+      answer: "If you withdraw before completing 30 days, you will receive a proportionate wallet amount. For example, if you withdraw after 10 days, you will receive ₹667 (since ₹2,000 is for 30 days, the daily rate is ₹67, so ₹67 × 10 = ₹667)."
+    },
+    {
+      question: "Is there a limit on how many times I can withdraw my advance?",
+      answer: "No, you can withdraw your full advance anytime, but your wallet earnings will be added only for the completed days."
+    },
+    {
+      question: "Will I keep earning ₹2,000 every month indefinitely?",
+      answer: "You will receive ₹2,000 every month as long as the ₹99,000 advance remains in your account and the 30-day period is completed."
+    },
+    {
+      question: "Can I add more advance later to increase my earnings?",
+      answer: "Currently, the earnings are based on a fixed advance of ₹99,000. Any changes will be communicated in the future."
+    },
+    {
+      question: "Will my wallet balance expire if I don't use it?",
+      answer: "No, your wallet balance will not expire. It will accumulate indefinitely month after month."
+    },
+    {
+      question: "Can I withdraw my wallet balance instead of using it for purchases?",
+      answer: "No, the wallet balance can only be used for purchases and cannot be withdrawn."
+    }
+  ];
+  
+  return (
+    <>
+      <div
+        id={plan.planId}
+        className={`relative rounded-lg overflow-hidden transition-all duration-200 flex flex-col h-full ${
+          isPremiumPlan ? "bg-purple-50" : "bg-white"
+        } ${
+          isSelected
+            ? "border-2 border-purple-500 shadow-lg"
+            : "border border-gray-200 hover:border-purple-300 hover:shadow-md"
+        }`}
+      >
+        {/* Enhanced top accent - taller for premium */}
+        <div className={`w-full ${isPremiumPlan ? "h-2 bg-gradient-to-r from-purple-500 to-purple-700" : "h-1 bg-purple-500"}`}></div>
+        
+        {/* Popular badge for premium plan */}
+        {isPremiumPlan && (
+          <div className="absolute top-0 right-0">
+            <div className="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-sm">
+              BEST VALUE
+            </div>
+          </div>
+        )}
+        
+        {/* Main content */}
+        <div className="p-4 sm:p-5 flex-grow">
+          {/* Plan Title */}
+          <div className="text-center mb-4">
+            <h3 className={`text-lg font-semibold ${isPremiumPlan ? "text-purple-800" : "text-gray-800"}`}>
+              {isPremiumPlan ? "Premium Plan" : "Standard Plan"}
+            </h3>
+            <div className={`h-px w-16 ${isPremiumPlan ? "bg-purple-400" : "bg-purple-300"} mx-auto mt-2`}></div>
+          </div>
+          
+          {/* Pay Amount Section */}
+          <div className="mb-4 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <span className={`text-sm font-medium ${isPremiumPlan ? "text-purple-700" : "text-gray-600"}`}>Pay</span>
+              <span className={`text-xl font-bold ${isPremiumPlan ? "text-purple-800" : "text-gray-800"}`}>
+                ₹{plan.amount.toLocaleString()}
+              </span>
+            </div>
+          </div>
+          
+          {/* Get Wallet Balance */}
+          <div className={`mb-4 p-3 rounded border ${
+            isPremiumPlan 
+              ? "bg-purple-100 border-purple-200 shadow-sm" 
+              : "bg-gray-50 border-gray-200"
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className={`text-sm font-medium ${isPremiumPlan ? "text-purple-700" : "text-purple-600"}`}>Get</span>
+              <span className={`text-xl font-bold ${isPremiumPlan ? "text-purple-700" : "text-purple-600"}`}>
+                ₹{plan.getAmount.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-xs text-gray-500">in your wallet</span>
+              {bonusAmount > 0 && (
+                <span className={`text-xs font-medium ${isPremiumPlan ? "text-green-700" : "text-green-600"}`}>
+                  +₹{bonusAmount.toLocaleString()} bonus
+                </span>
+              )}
+            </div>
+          </div>
+          
+          {/* Features list */}
+          <div className="mb-4">
+            <h4 className={`text-sm font-bold ${isPremiumPlan ? "text-purple-800" : "text-gray-700"} mb-2`}>Benefits</h4>
+            <ul className="space-y-2">
+              {/* Monthly Usage Limit - Only for non-premium plans */}
+              {!isPremiumPlan && (
+                <li className="flex items-start">
+                  <div className="flex-shrink-0 h-5 w-5 text-purple-500 mt-0.5">
+                    <CheckCircle size={16} />
+                  </div>
+                  <span className="ml-2 text-sm font-bold text-gray-600">
+                    ₹{plan.limitAmount.toLocaleString()} Monthly usage limit
+                  </span>
+                </li>
+              )}
+              
+              {/* Plan-specific features */}
+              {isPremiumPlan ? (
+                <>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-5 w-5 text-purple-600 mt-0.5">
+                      <RefreshCw size={16} />
+                    </div>
+                    <div className="ml-2">
+                      <span className="text-sm font-bold text-purple-700">
+                        ₹2,000 added monthly after 30 days
+                      </span>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-5 w-5 text-purple-600 mt-0.5">
+                      <ArrowDownCircle size={16} />
+                    </div>
+                    <div className="ml-2">
+                      <span className="text-sm font-bold text-purple-700">
+                        Withdraw your ₹99,000 anytime
+                      </span>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-5 w-5 text-purple-500 mt-0.5">
+                      <Zap size={16} />
+                    </div>
+                    <span className="ml-2 text-sm font-bold text-gray-600">
+                      Instant wallet credit
+                    </span>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+        </div>
+        
+        {/* Selected indicator */}
+        {isSelected && (
+          <div className="absolute top-3 right-3 bg-purple-500 rounded-full p-1">
+            <CheckCircle size={14} className="text-white" />
+          </div>
+        )}
+        
+        {/* Button section */}
+        <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-1">
+          {isPremiumPlan && (
+            <button
+              onClick={() => setShowFaqModal(true)}
+              className="w-full mb-2 py-1.5 px-3 rounded text-xs font-medium text-purple-700 bg-purple-100 hover:bg-purple-200 transition-colors"
+            >
+              <span className="flex items-center justify-center">
+                <HelpCircle size={12} className="mr-1" />
+                FAQS
+              </span>
+            </button>
+          )}
+          
+          <button
+            onClick={() => onSubscribe(plan.planId)}
+            className={`w-full py-2 px-4 rounded text-sm font-medium transition-colors
+              ${
+                isSelected || planDetails?.planId === plan.planId
+                  ? isPremiumPlan
+                    ? "bg-purple-700 text-white hover:bg-purple-800 shadow-md"
+                    : "bg-purple-600 text-white hover:bg-purple-700"
+                  : isPremiumPlan
+                    ? "bg-white border border-purple-600 text-purple-700 hover:bg-purple-50"
+                    : "bg-white border border-purple-500 text-purple-600 hover:bg-purple-50"
+              }`}
+            disabled={isSelected || planDetails?.status || Loading[plan.planId]}
+          >
+            {Loading[plan.planId] ? (
+              <span className="flex items-center justify-center">
+                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                <span>Processing...</span>
+              </span>
+            ) : isSelected ? (
+              <span className="flex items-center justify-center">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                <span>Selected</span>
+              </span>
+            ) : planDetails?.planId === plan.planId ? (
+              <span className="flex items-center justify-center">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                <span>Current Plan</span>
+              </span>
+            ) : (
+              <span>{isPremiumPlan ? "Get Premium" : "Choose Plan"}</span>
+            )}
+          </button>
         </div>
       </div>
-    </div>
 
-    <div className="p-6 pt-0">
-      <button
-        onClick={() => onSubscribe(plan.planId)}
-        className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 
-          ${isSelected || planDetails?.planId === plan.planId
-            ? 'bg-purple-700 text-white shadow-lg cursor-not-allowed'
-            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-          } transform hover:scale-[1.02]`}
-        disabled={isSelected || planDetails?.status || Loading[plan.planId]}
-      >
-        {Loading[plan.planId] ? (
-          <span className="flex items-center justify-center">
-            <Loader2 className="animate-spin mr-2 h-5 w-5" />
-            Processing...
-          </span>
-        ) : isSelected ? 'Selected' : planDetails?.planId === plan.planId ? 'Subscribed' : 'Choose Plan'}
-      </button>
-    </div>
-  </div>
-);
+      {/* FAQ Modal */}
+      {showFaqModal && isPremiumPlan && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-hidden">
+            <div className="flex items-center justify-between border-b border-gray-200 p-4">
+              <h3 className="text-lg font-bold text-purple-800">Premium Plan - Frequently Asked Questions</h3>
+              <button 
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                onClick={() => setShowFaqModal(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-4 max-h-96 overflow-y-auto">
+              <div className="space-y-4">
+                {premiumFaqs.map((faq, index) => (
+                  <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
+                    <h4 className="text-sm font-bold text-gray-800 mb-2">{index + 1}. {faq.question}</h4>
+                    <p className="text-sm text-gray-600">{faq.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 p-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowFaqModal(false)}
+                className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded font-medium transition-colors"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 const TransactionHistoryCard: React.FC<{ transaction: SubscriptionHistoryItem }> = ({ transaction }) => {
   const statusColor = {
-    SUCCESS: 'bg-green-100 text-green-800',
+/*************  ✨ Codeium Command ⭐  *************/
+/**
+ * TransactionHistoryCard is a React functional component that displays
+ * details of a subscription transaction. It visually represents the transaction
+ * amount, wallet balance, usage limit, payment status, and creation date.
+ * The component uses different background colors to indicate the transaction
+ * status (e.g., success, failure, pending). It also formats the creation date
+ * and transaction ID for display.
+ *
+ * Props:
+ * - transaction: An object of type SubscriptionHistoryItem containing
+ *   details about the transaction such as id, amount, getAmount, limitAmount,
+ *   createdAt, and paymentStatus.
+ */
+
+/******  79ab252f-a846-4c1e-8a67-cc14b5df46a4  *******/    SUCCESS: 'bg-green-100 text-green-800',
     FAILURE: 'bg-red-100 text-red-800',
     PENDING: 'bg-yellow-100 text-yellow-800',
   }[transaction.paymentStatus] || 'bg-gray-100 text-gray-800';

@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ValidationPopup from "../kart/ValidationPopup";
 import AskOxyLogo from "../assets/img/askoxylogostatic.png";
 import { CartContext } from "../until/CartContext";
+import SearchBar from "../kart/SearchBar";
 import axios from "axios";
 
 import  BASE_URL  from "../Config";
@@ -357,7 +358,8 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Middle: Desktop search (hidden on mobile) */}
             <div className="hidden sm:block flex-grow max-w-xl mx-4">
-              {renderDesktopSearchBar()}
+              {/* {renderDesktopSearchBar()} */}
+              <SearchBar />
             </div>
 
             {/* Right: Action Icons */}

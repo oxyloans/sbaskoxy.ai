@@ -165,8 +165,8 @@ const WriteToUs: React.FC = () => {
   };
 
   const checkProfileCompletion = (): boolean => {
-    const { userFirstName, userLastName, customerEmail } = profileData;
-    if (!userFirstName || !userLastName || !customerEmail) {
+    const { userFirstName, customerEmail } = profileData;
+    if (!userFirstName || !customerEmail) {
       setShowProfileAlert(true);
       return false;
     }

@@ -8,7 +8,7 @@ import {
   ChevronRight,
   Gem,
   Cpu,
-  Package,
+  Package,HandCoins ,
   Globe,
   Scale,
   Factory,
@@ -19,6 +19,7 @@ import {
   Search,
   Copy,
   Check,
+  DollarSign,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../kart/Header3";
@@ -36,6 +37,7 @@ import Legalimage from "../assets/img/legal.png";
 import Rotary from "../assets/img/myrotray (1).png";
 import MMServices from "../assets/img/manufacturing.png";
 import hiring from "../assets/img/wearehiring.png";
+import OxyLoansImage from "../assets/img/oxyloasntemp.png";
 import FreeChatGPTmain from "./FreechatGPTmain";
 import BMVCOINmain from "./BMVcoinmain";
 import BASE_URL from "../Config";
@@ -106,6 +108,16 @@ const DashboardMain: React.FC = () => {
   }, [location.pathname]);
 
   const services: DashboardItem[] = [
+
+    {
+      title: "OxyLoans - RBI Approved P2P NBFC",
+      image: OxyLoansImage,
+      description:
+        "Earn up to 1.75% Monthly ROI and 24% P.A. on your investments.",
+      path: "https://oxyloans.com/",
+      icon: <HandCoins className="text-purple-600" size={24} />,
+      category: "Finance",
+    },
     {
       title: "Free Rudraksha",
       image: RudrakshaImage,
@@ -178,6 +190,7 @@ const DashboardMain: React.FC = () => {
       icon: <Briefcase className="text-purple-600" size={24} />,
       category: "Careers",
     },
+    
   ];
 
   const products: DashboardItem[] = [
