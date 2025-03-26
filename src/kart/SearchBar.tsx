@@ -103,28 +103,33 @@ const SearchBar = () => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
-
-    if (searchValue.trim().length >= 1 && isDataLoaded) { // Reduced to 1 for numeric searches
+  
+    if (searchValue.trim().length >= 1 && isDataLoaded) {
       debounceRef.current = setTimeout(() => {
         searchProducts(searchValue);
-      }, 300);
+      }, 50); // Reduced debounce time for faster response
     } else {
       setSearchResults([]);
     }
-
+  
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
     };
   }, [searchValue, searchProducts, isDataLoaded]);
-
+  
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
-      navigate("/main", { state: { searchQuery: searchValue } });
-      setSearchValue("");
-      setIsFocused(false);
+      // Ensure the latest search results are available by triggering search immediately
+      searchProducts(searchValue);
+      // Small delay to ensure searchResults is updated before navigation
+      setTimeout(() => {
+        navigate("search-main", { state: { searchResults: searchResults } });
+        setSearchValue("");
+        setIsFocused(false);
+      }, 150); // Slightly longer than debounce to ensure results are ready
     }
   };
 

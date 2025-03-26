@@ -59,7 +59,6 @@ import ProfilePage from "./kart/Profile";
 import SubscriptionPage from "./kart/Subscription";
 import WriteToUs from "./kart/Writetous";
 import TicketHistoryPage from "./kart/Tickethistory";
-import BarcodeScanner from "./Dashboard/BarcodeScan";
 import ManageAddressesPage from "./kart/Address";
 import CheckoutPage from "./kart/Checkout";
 import PrivacyPolicy from "./kart/Privacypolicy";
@@ -70,11 +69,12 @@ import FreeChatGPTmain from "./Dashboard/FreechatGPTmain";
 import BMVCOINmain from "./Dashboard/BMVcoinmain";
 import Content1 from "./Dashboard/Content";
 import CampaignDetails from "./Components1/campaignDetails";
-import { SearchProvider } from "./until/SearchContext";
 import FreeChatGPTnormal
  from "./Dashboard/Freechatgptnormal";
 import HiddenLogin from "./Components1/Auth/HiddenLogin";
-import TestimonialsPage from "./Dashboard/TestimoinalsOXY";
+import { SearchProvider } from "./until/SearchContext";
+import SearchMain from "./Dashboard/SearchMain";
+
 
 const App: React.FC = () => {
   return (
@@ -90,12 +90,7 @@ const App: React.FC = () => {
           <Route path="/communities/maruthielite" element={<RiceSalePage />} />
           <Route path="/qrcode" element={<QR />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
-          
-          <Route path="/proud-lender/testimonials" element={<TestimonialsPage/>} />
-
           <Route path="/freechatgptnormal" element={<FreeChatGPTnormal />} />
-          <Route path="/main/dashboard/barscancode-sample" element={<BarcodeScanner />} />
-          
 
           {/* Landing Page (First Page) */}
           <Route path="/" element={<Landingpage />} />
@@ -131,7 +126,6 @@ const App: React.FC = () => {
             <Route path="free-chatgpt" element={<FreeChatGpt />} />
             <Route path="user-profile" element={<UserProfile />} />
             <Route path="bmvcoin" element={<BMVCOIN />} />
-            
             
             <Route path="accommodation-gpt" element={<AccomidationGpt />} />
             <Route
@@ -211,6 +205,7 @@ const App: React.FC = () => {
           <Route path="tickethistory" element={<RequireAuth><TicketHistoryPage /></RequireAuth>} />
           <Route path="checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
           <Route path="manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />
+          <Route path = "search-main" element = {<SearchMain/>} />
           </Route>
         </Routes>
       </div>
