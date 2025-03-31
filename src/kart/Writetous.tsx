@@ -16,7 +16,7 @@ interface ProfileData {
 interface FormErrors {
   query: string;
   documentId: string;
-  profile?: string;
+  userEmail?: string;
 }
 
 interface LocationState {
@@ -37,7 +37,7 @@ const CustomAlert: React.FC<{
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-lg font-semibold mb-2">Complete Your Profile</h3>
         <p className="text-gray-600 mb-6">
-          Please complete your profile before proceeding to cart. This helps us serve you better.
+          Please complete your profile before proceeding. This helps us serve you better.
         </p>
         <div className="flex justify-end gap-3">
           <button
@@ -76,6 +76,8 @@ const WriteToUs: React.FC = () => {
     query: "",
     documentName: "",
     documentId: "",
+    userEmail: "",
+    userFirstName: "",
   });
 
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -89,7 +91,15 @@ const WriteToUs: React.FC = () => {
     const storedProfileData = localStorage.getItem("profileData");
     if (storedProfileData) {
       try {
-        setProfileData(JSON.parse(storedProfileData));
+        const parsedProfileData = JSON.parse(storedProfileData);
+        setProfileData(parsedProfileData);
+        
+        // Pre-fill first name and email if available
+        setFormData(prev => ({
+          ...prev,
+          userFirstName: parsedProfileData.userFirstName || "",
+          userEmail: parsedProfileData.customerEmail || ""
+        }));
       } catch (e) {
         console.error("Error parsing profile data:", e);
       }
@@ -99,18 +109,20 @@ const WriteToUs: React.FC = () => {
     const fromOrdersPage = locationState.fromOrdersPage === true;
 
     if (!fromOrdersPage) {
-      // Not from orders page - clear any order-related data and query
       localStorage.removeItem("selectedOrderId");
       localStorage.removeItem("selectedOrderNewId");
       setShowOrderInfo(false);
       setOrderInfo({ orderId: "", orderNewId: "" });
 
-      // Clear query unless editing an existing ticket
       if (!id) {
-        setFormData({ query: "", documentName: "", documentId: "" });
+        setFormData(prev => ({
+          ...prev,
+          query: "",
+          documentName: "",
+          documentId: "",
+        }));
       }
     } else {
-      // From orders page - pre-fill order reference
       const orderId = locationState.orderId || localStorage.getItem("selectedOrderId") || "";
       const orderNewId = locationState.orderNewId || localStorage.getItem("selectedOrderNewId") || "";
 
@@ -126,7 +138,7 @@ const WriteToUs: React.FC = () => {
 
         setFormData(prev => {
           if (prev.query.startsWith(orderReference)) {
-            return prev;  // Avoid duplication if already present
+            return prev;
           }
           return {
             ...prev,
@@ -143,8 +155,6 @@ const WriteToUs: React.FC = () => {
     const storedCartCount = localStorage.getItem('cartCount');
     setCartCount(storedCartCount ? parseInt(storedCartCount) : 0);
   }, [id, location]);
-
-
 
   const fetchExistingQuery = async () => {
     if (!id) return;
@@ -165,16 +175,15 @@ const WriteToUs: React.FC = () => {
   };
 
   const checkProfileCompletion = (): boolean => {
-    const { userFirstName, customerEmail } = profileData;
-    if (!userFirstName || !customerEmail) {
+    const { userFirstName } = formData;
+    const { userEmail } = formData;
+
+    // Relaxed validation - at least first name and email
+    if (!userFirstName || !userEmail) {
       setShowProfileAlert(true);
       return false;
     }
     return true;
-  };
-
-  const handleProfileRedirect = () => {
-    navigate("/main/profile");
   };
 
   const validateForm = (): boolean => {
@@ -187,6 +196,11 @@ const WriteToUs: React.FC = () => {
 
     if (!formData.query.trim()) {
       newErrors.query = "Query is required";
+      isValid = false;
+    }
+
+    if (!formData.userEmail.trim()) {
+      newErrors.userEmail = "Email is required";
       isValid = false;
     }
 
@@ -203,68 +217,6 @@ const WriteToUs: React.FC = () => {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
-  const handleFormSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-
-    const orderId = showOrderInfo ? orderInfo.orderId : "";
-    const orderNewId = showOrderInfo ? orderInfo.orderNewId : "";
-    const orderReferenceId = orderNewId || orderId;
-
-    let finalQuery = formData.query.trim();
-
-    if (orderReferenceId) {
-      const orderReference = `Regarding Order #${orderReferenceId}`;
-      if (!finalQuery.startsWith(orderReference)) {
-        finalQuery = orderReference + "\n\n" + finalQuery;
-      }
-    }
-
-    const storedUserId = localStorage.getItem("userId") || "";
-    const whatsappNumber = localStorage.getItem("whatsappNumber") || profileData.whatsappNumber;
-
-    const data = {
-      adminDocumentId: "",
-      askOxyOfers: "FREESAMPLE",
-      comments: finalQuery,
-      email: profileData.customerEmail,
-      id: id || "",
-      mobileNumber: whatsappNumber,
-      projectType: "ASKOXY",
-      query: finalQuery,
-      queryStatus: "PENDING",
-      resolvedBy: id ? "user" : "",
-      resolvedOn: "",
-      status: "",
-      userDocumentId: formData.documentId || "",
-      userId: storedUserId,
-      orderId: orderId || undefined,
-      orderNewId: orderNewId || undefined,
-    };
-
-    try {
-      await axios.post(
-        BASE_URL+"/user-service/write/saveData",
-        data
-      );
-      setFormData({ query: "", documentName: "", documentId: "" });
-      showNotification("Query submitted successfully!", "success");
-
-      localStorage.removeItem("selectedOrderId");
-      localStorage.removeItem("selectedOrderNewId");
-
-      navigate("/main/tickethistory");
-    } catch (error) {
-      console.error("Error submitting query", error);
-      showNotification("Failed to submit query. Please try again.", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
 
   const handleFileupload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -305,6 +257,74 @@ const WriteToUs: React.FC = () => {
     }
   };
 
+  const handleFormSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
+    const orderId = showOrderInfo ? orderInfo.orderId : "";
+    const orderNewId = showOrderInfo ? orderInfo.orderNewId : "";
+    const orderReferenceId = orderNewId || orderId;
+
+    let finalQuery = formData.query.trim();
+
+    if (orderReferenceId) {
+      const orderReference = `Regarding Order #${orderReferenceId}`;
+      if (!finalQuery.startsWith(orderReference)) {
+        finalQuery = orderReference + "\n\n" + finalQuery;
+      }
+    }
+
+    const storedUserId = localStorage.getItem("userId") || "";
+    const whatsappNumber = localStorage.getItem("whatsappNumber") || profileData.whatsappNumber;
+
+    const data = {
+      adminDocumentId: "",
+      askOxyOfers: "FREESAMPLE",
+      comments: finalQuery,
+      email: formData.userEmail,
+      id: id || "",
+      mobileNumber: whatsappNumber,
+      projectType: "ASKOXY",
+      query: finalQuery,
+      queryStatus: "PENDING",
+      resolvedBy: id ? "user" : "",
+      resolvedOn: "",
+      status: "",
+      userDocumentId: formData.documentId || "",
+      userId: storedUserId,
+      orderId: orderId || undefined,
+      orderNewId: orderNewId || undefined,
+    };
+
+    try {
+      await axios.post(
+        BASE_URL+"/user-service/write/saveData",
+        data
+      );
+      setFormData({ 
+        query: "", 
+        documentName: "", 
+        documentId: "", 
+        userEmail: formData.userEmail,
+        userFirstName: formData.userFirstName 
+      });
+      showNotification("Query submitted successfully!", "success");
+
+      localStorage.removeItem("selectedOrderId");
+      localStorage.removeItem("selectedOrderNewId");
+
+      navigate("/main/tickethistory");
+    } catch (error) {
+      console.error("Error submitting query", error);
+      showNotification("Failed to submit query. Please try again.", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const showNotification = (message: string, type: "success" | "error") => {
     const notificationElement = document.createElement("div");
     notificationElement.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${type === "success" ? "bg-green-500" : "bg-red-500"
@@ -317,16 +337,15 @@ const WriteToUs: React.FC = () => {
   };
 
   return (
-    <div className=" flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen">
       <CustomAlert
         isOpen={showProfileAlert}
         onClose={() => setShowProfileAlert(false)}
-        onConfirm={handleProfileRedirect}
+        onConfirm={() => navigate("/main/profile")}
       />
 
       <div className="bg-white rounded-xl shadow-sm flex flex-col lg:flex-row gap-6">
-        <main className="  flex-1 p-4 lg:p-6">
-
+        <main className="flex-1 p-4 lg:p-6">
           <div className="p-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
               <div className="space-y-2">
@@ -337,7 +356,6 @@ const WriteToUs: React.FC = () => {
                   <FiClock className="w-4 h-4" />
                   <p>We'll respond within 24 hours</p>
                 </div>
-
               </div>
               <button
                 onClick={() => navigate("/main/tickethistory")}
@@ -348,7 +366,6 @@ const WriteToUs: React.FC = () => {
               </button>
             </div>
 
-            {/* Order Reference Card - Only show if coming from an order page */}
             {showOrderInfo && (orderInfo.orderNewId || orderInfo.orderId) && (
               <div className="mb-8 bg-purple-50 rounded-xl p-4 border border-purple-100">
                 <div className="flex items-center gap-3">
@@ -373,12 +390,15 @@ const WriteToUs: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter your name"
-                    value={`${profileData.userFirstName} ${profileData.userLastName}`.trim()}
-                    className={`w-full px-4 py-3 rounded-lg border ${!profileData.userFirstName && !profileData.userLastName ? 'border-red-500' : 'border-gray-200'
-                      } bg-gray-50`}
-                    readOnly
+                    name="userFirstName"
+                    value={formData.userFirstName}
+                    onChange={handleInputChange}
+                    placeholder="Enter your first name"
+                    className={`w-full px-4 py-3 rounded-lg border ${!formData.userFirstName ? 'border-red-500' : 'border-gray-200'} bg-gray-50`}
                   />
+                  {!formData.userFirstName && (
+                    <p className="text-sm text-red-500">First name is required</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -387,12 +407,15 @@ const WriteToUs: React.FC = () => {
                   </label>
                   <input
                     type="email"
+                    name="userEmail"
+                    value={formData.userEmail}
+                    onChange={handleInputChange}
                     placeholder="Enter your email address"
-                    value={profileData.customerEmail}
-                    className={`w-full px-4 py-3 rounded-lg border ${!profileData.customerEmail ? 'border-red-500' : 'border-gray-200'
-                      } bg-gray-50`}
-                    readOnly
+                    className={`w-full px-4 py-3 rounded-lg border ${!formData.userEmail ? 'border-red-500' : 'border-gray-200'} bg-gray-50`}
                   />
+                  {!formData.userEmail && (
+                    <p className="text-sm text-red-500">Email is required</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -413,7 +436,6 @@ const WriteToUs: React.FC = () => {
                     <label className="text-sm font-semibold text-gray-700">
                       Attachment (Optional)
                     </label>
-
                     <div className="relative">
                       <label className="w-full flex flex-col items-center justify-center h-24 px-4 py-4 bg-purple-50 text-purple-600 rounded-lg border-2 border-purple-100 border-dashed cursor-pointer hover:bg-purple-100 transition-all duration-300">
                         <FiUploadCloud className="w-10 h-10 mb-2" />
@@ -443,7 +465,6 @@ const WriteToUs: React.FC = () => {
                     </div>
                   </div>
                 )}
-
               </div>
 
               <div className="space-y-2">
@@ -456,17 +477,14 @@ const WriteToUs: React.FC = () => {
                   name="query"
                   value={formData.query}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${errors.query ? 'border-red-500' : 'border-gray-200'
-                    }`}
+                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none ${errors.query ? 'border-red-500' : 'border-gray-200'}`}
                   placeholder="Please describe your query in detail..."
                 />
 
-                {/* Display error message if any */}
                 {errors.query && (
                   <p className="text-sm text-red-500">{errors.query}</p>
                 )}
               </div>
-
 
               <button
                 type="submit"
@@ -517,7 +535,6 @@ const WriteToUs: React.FC = () => {
               </button>
             </form>
           </div>
-
         </main>
       </div>
       <Footer />

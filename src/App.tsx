@@ -60,6 +60,7 @@ import SubscriptionPage from "./kart/Subscription";
 import WriteToUs from "./kart/Writetous";
 import TicketHistoryPage from "./kart/Tickethistory";
 import ManageAddressesPage from "./kart/Address";
+import OxyLoans from "./Dashboard/Oxyloans"
 import CheckoutPage from "./kart/Checkout";
 import PrivacyPolicy from "./kart/Privacypolicy";
 import ReferralPage from "./kart/Referral";
@@ -76,6 +77,22 @@ import { SearchProvider } from "./until/SearchContext";
 import SearchMain from "./Dashboard/SearchMain";
 
 
+
+import PartnerLogin from "./PartnerWeb/PartnerLogin";
+import PatnerHome from "./PartnerWeb/PartnerHome";
+import MainPage from "./PartnerWeb/MainPage";
+import NewOrders from "./PartnerWeb/NewOrders";
+import AcceptedOrders from "./PartnerWeb/AcceptedOrders";
+import AssignedOrders from "./PartnerWeb/AssignedOrders";
+import OrderDetails from "./PartnerWeb/OrderDetials";
+import AllOrders from "./PartnerWeb/AllOrders";
+import DeliveryBoyList from "./PartnerWeb/DeliveryBoyList";
+import PartnerAllQueries from "./PartnerWeb/PartnerAllQueries";
+import BarCodeScan from "./PartnerWeb/BarCodeScan";
+import PrtnerItemsList from "./PartnerWeb/PartnerItemsList";
+import DbOrderDetails from "./PartnerWeb/DbOrderList";
+
+
 const App: React.FC = () => {
   return (
     <SearchProvider>
@@ -84,6 +101,24 @@ const App: React.FC = () => {
       <ScrollToTop />
       <div className="App">
         <Routes>
+
+
+        <Route path="/partnerLogin" element={<PartnerLogin />} />
+            <Route path="/home" element={<PatnerHome />}>
+              <Route index element={<MainPage />} />{" "}
+              <Route path="newOrders" element={<NewOrders />} />
+              <Route path="acceptedOrders" element={<AcceptedOrders />} />
+              <Route path="assignedOrders" element={<AssignedOrders />} />
+              <Route path="orderDetails" element={<OrderDetails />} />
+              <Route path="allOrders" element={<AllOrders />} />
+              <Route path="dbList" element={<DeliveryBoyList />} />
+              <Route path="queryManagement" element={<PartnerAllQueries />} />
+              <Route path="scan-qr" element={<BarCodeScan />} />
+              <Route path="itemsList" element={<PrtnerItemsList />} />
+              <Route path="dbOrderList" element={<DbOrderDetails />} />
+            </Route>
+        
+
           <Route path="/whatsapplogin" element={<WhatsappLogin />} />
           <Route path="/whatsappregister" element={<WhatsappRegister />} />
           <Route path="/hiddenlogin" element = {<HiddenLogin/>}/>
@@ -180,6 +215,7 @@ const App: React.FC = () => {
           <Route path="dashboard/:tab" element={<DashboardMain />} />
           {/* <Route path="services/freerudraksha" element={<FreeRudrakshaPage/>} /> */}
           <Route path="services/freerudraksha" element={<Freerudraksha />} />
+         
           <Route path="services/freeai-genai" element={<FreeAiandGenAi />} />
           <Route path="services/campaign/:type" element={<CampaignDetails />} />
           <Route path="services/studyabroad" element={<StudyAbroad />} />
@@ -187,6 +223,7 @@ const App: React.FC = () => {
           <Route path="services/myrotary" element={<MyRotaryServices />} />
           <Route path="services/bmvcoin" element={<BMVCOINmain/>} />
           <Route path="services/freesample-steelcontainer" element={<FreeSample />} />
+          <Route path="services/oxy-loans" element={<OxyLoans />} />
           <Route
               path="services/machines-manufacturing"
               element={<MachinesManufacturingServices />}
@@ -206,6 +243,9 @@ const App: React.FC = () => {
           <Route path="checkout" element={<RequireAuth><CheckoutPage /></RequireAuth>} />
           <Route path="manageaddresses" element={<RequireAuth><ManageAddressesPage /></RequireAuth>} />
           <Route path = "search-main" element = {<SearchMain/>} />
+
+
+          
           </Route>
         </Routes>
       </div>
