@@ -77,7 +77,8 @@ import { SearchProvider } from "./until/SearchContext";
 import SearchMain from "./Dashboard/SearchMain";
 
 
-
+import Register from "./Pages/Auth/UserRegister";
+import Login from "./Pages/Auth/UserLogin";
 import PartnerLogin from "./PartnerWeb/PartnerLogin";
 import PatnerHome from "./PartnerWeb/PartnerHome";
 import MainPage from "./PartnerWeb/MainPage";
@@ -91,7 +92,14 @@ import PartnerAllQueries from "./PartnerWeb/PartnerAllQueries";
 import BarCodeScan from "./PartnerWeb/BarCodeScan";
 import PrtnerItemsList from "./PartnerWeb/PartnerItemsList";
 import DbOrderDetails from "./PartnerWeb/DbOrderList";
-
+import PlanOfTheDay from "./Pages/Auth/PlanOfTheDay";
+import UserPanelLayout
+  from "./Pages/Auth/UserPanelLayout";
+import AllStatusPage from "./Pages/Auth/AllStatus";
+import AssignedTasksPage from "./Pages/Auth/AssignedTasks";
+import UserDetails from "./Pages/Auth/UserDetails";
+import TaskAssignedUser from "./Pages/Auth/TaskAssignedUser";
+import TaskUpdate from "./Pages/Auth/EndoftheDay";
 
 const App: React.FC = () => {
   return (
@@ -117,7 +125,13 @@ const App: React.FC = () => {
               <Route path="itemsList" element={<PrtnerItemsList />} />
               <Route path="dbOrderList" element={<DbOrderDetails />} />
             </Route>
-        
+                 <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />   <Route path="/userPanelLayout" element={<PlanOfTheDay />} />
+          <Route path="/planoftheday" element={<PlanOfTheDay />} />
+          <Route path="/taskupdated" element={<TaskUpdate />} />
+          <Route path="/all-statuses" element={<AllStatusPage />} />
+          <Route path="/assigned-task" element={<AssignedTasksPage />} />
+          <Route path="/taskassigneduser" element={<TaskAssignedUser />} /> 
 
           <Route path="/whatsapplogin" element={<WhatsappLogin />} />
           <Route path="/whatsappregister" element={<WhatsappRegister />} />
