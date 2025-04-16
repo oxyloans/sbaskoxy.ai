@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import UserPanelLayout from "./UserPanelLayout";
-import axios from "axios";
 import BASE_URL from "../../Config";
+import axios from "axios";
 import {
   Card,
   Typography,
@@ -16,6 +16,7 @@ import {
   notification,
   Tag,
   Avatar,
+  Collapse,
 } from "antd";
 import {
   CalendarOutlined,
@@ -25,12 +26,16 @@ import {
   FileSearchOutlined,
   UserOutlined,
   SearchOutlined,
+  MessageOutlined,
+  FileTextOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TabPane } = Tabs;
+const { Panel } = Collapse;
 
 interface UserQueryDocumentStatus {
   userDocumentId: string | null;
@@ -46,14 +51,27 @@ interface UserQueryDocumentStatus {
 }
 
 interface PendingUserTaskResponse {
-  // Define this interface based on your actual data structure
+  taskId: string;
+  pendingEod: string | null;
+  createdAt: string | null;
+  taskStatus: string;
+  updateBy: string;
+  planStat: string | null;
+  userDocumentsId: string | null;
+  userDocumentsCreatedAt: string | null;
+  id: string;
+  adminFilePath: string | null;
+  adminFileName: string | null;
+  adminFileCreatedDate: string | null;
+  adminDocumentsId: string | null;
+  adminDescription: string;
 }
 
 interface TaskData {
   userId: string;
   planOftheDay: string;
   planCreatedAt: string;
-  planUpdatedAt: string;
+  planUpdatedAt: string | null;
   planStatus: string;
   updatedBy: string;
   taskStatus: string;
@@ -68,8 +86,17 @@ interface TaskData {
   id: string;
   userQueryDocumentStatus: UserQueryDocumentStatus;
   pendingUserTaskResponse: PendingUserTaskResponse[];
-  endOftheDay: string;
+  endOftheDay: string | null;
 }
+
+// Custom styles for consistent buttons
+const buttonStyle = {
+  width: "120px",
+  height: "40px",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+};
 
 const AllStatusPage: React.FC = () => {
   const [status, setStatus] = useState<string>("COMPLETED");
@@ -79,6 +106,7 @@ const AllStatusPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(dayjs());
   const [activeTab, setActiveTab] = useState<string>("general");
   const taskId = localStorage.getItem("taskId");
+
 
   useEffect(() => {
     // Get userId from localStorage
@@ -92,7 +120,7 @@ const AllStatusPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${BASE_URL}/user-service/write/getAllTaskUpdates`,
+       `${BASE_URL}/user-service/write/getAllTaskUpdates`,
         {
           taskStatus: status,
           userId: userId,
@@ -223,6 +251,97 @@ const AllStatusPage: React.FC = () => {
     setTasks([]); // Clear previous results when switching tabs
   };
 
+  const renderPendingResponses = (responses: PendingUserTaskResponse[]) => {
+    if (!responses || responses.length === 0) return null;
+
+    const validResponses = responses.filter(
+      (response) => response.pendingEod !== null
+    );
+
+    if (validResponses.length === 0) return null;
+
+    return (
+      <div className="mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <Collapse
+          bordered={false}
+          expandIcon={({ isActive }) => (
+            <DownOutlined rotate={isActive ? 180 : 0} />
+          )}
+          className="bg-transparent"
+        >
+          <Panel
+            header={
+              <div className="flex items-center text-blue-600">
+                <MessageOutlined className="mr-2" />
+                <Text strong>Pending Responses ({validResponses.length})</Text>
+              </div>
+            }
+            key="1"
+            className="bg-white rounded-md mb-2 shadow-sm"
+          >
+            {validResponses.map((response) => (
+              <Card
+                key={response.id}
+                className="mb-3 border-l-4 border-l-blue-400"
+                size="small"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Text className="text-gray-600 block mb-1">
+                      Response Update:
+                    </Text>
+                    <Text className="text-gray-800">
+                      {response.pendingEod || "No update provided"}
+                    </Text>
+                  </div>
+                  <div>
+                    <div className="flex justify-between">
+                      <div>
+                        <Text className="text-gray-600 block mb-1">
+                          Updated By:
+                        </Text>
+                        <Tag color="blue">{response.updateBy}</Tag>
+                      </div>
+                      <div>
+                        <Text className="text-gray-600 block mb-1">
+                          Created At:
+                        </Text>
+                        <Text className="text-gray-800">
+                          {formatDate(response.createdAt)}
+                        </Text>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {response.adminFilePath && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="flex items-center">
+                      <FileTextOutlined className="text-blue-500 mr-2" />
+                      <a
+                        href={response.adminFilePath}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        {response.adminFileName || "View Attachment"}
+                      </a>
+                      <Text className="text-xs text-gray-500 ml-3">
+                        {response.adminFileCreatedDate
+                          ? formatDate(response.adminFileCreatedDate)
+                          : ""}
+                      </Text>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))}
+          </Panel>
+        </Collapse>
+      </div>
+    );
+  };
+
   const renderTaskCard = (task: TaskData) => (
     <Card
       key={task.id}
@@ -301,6 +420,9 @@ const AllStatusPage: React.FC = () => {
         </div>
       </div>
 
+      {task.taskStatus === "PENDING" &&
+        renderPendingResponses(task.pendingUserTaskResponse)}
+
       <Divider className="my-3" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -311,7 +433,9 @@ const AllStatusPage: React.FC = () => {
 
         <div className="flex items-center gap-2 text-gray-500">
           <CalendarOutlined />
-          <Text>Updated: {formatDate(task.planUpdatedAt)}</Text>
+          <Text>
+            Updated: {formatDate(task.planUpdatedAt || task.planCreatedAt)}
+          </Text>
         </div>
       </div>
     </Card>
@@ -324,18 +448,18 @@ const AllStatusPage: React.FC = () => {
           className="shadow-md rounded-lg overflow-hidden border-0"
           bodyStyle={{ padding: 0 }}
         >
-          <div className="bg-gradient-to-r from-blue-500 to-blue-400 p-6 text-white">
-            <Title level={2} className="text-white mb-1">
+          <div className="bg-gradient-to-r p-2 text-black">
+            <Title level={2} className="text-black mb-1">
               Task Status
             </Title>
-            <Text className="text-blue-100">View and manage task statuses</Text>
+       
           </div>
 
-          <div className="p-6">
+          <div className="p-2">
             <Tabs
               activeKey={activeTab}
               onChange={handleTabChange}
-              className="mb-6"
+            
               type="card"
             >
               <TabPane
@@ -368,7 +492,8 @@ const AllStatusPage: React.FC = () => {
                     value={status}
                     onChange={handleStatusChange}
                     className="w-full"
-                    size="large"
+                    size="middle"
+                    style={{ height: "40px" }}
                   >
                     <Option value="PENDING">
                       <div className="flex items-center">
@@ -394,7 +519,7 @@ const AllStatusPage: React.FC = () => {
                       value={selectedDate}
                       onChange={handleDateChange}
                       className="w-full"
-                      size="large"
+                      style={{ height: "40px" }}
                     />
                   </div>
                 )}
@@ -402,14 +527,13 @@ const AllStatusPage: React.FC = () => {
                 <div>
                   <Button
                     type="primary"
-                    size="large"
-                    icon={<SearchOutlined />}
                     onClick={
                       activeTab === "general" ? fetchAllTasks : fetchTasksByDate
                     }
-                    className="bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700 shadow-sm w-full"
+                    className="bg-[#008CBA] shadow-sm"
+                    style={buttonStyle}
                   >
-                    Search Tasks
+                    Search
                   </Button>
                 </div>
               </div>

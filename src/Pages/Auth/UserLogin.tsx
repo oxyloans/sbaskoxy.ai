@@ -128,12 +128,12 @@ const Login: React.FC = () => {
             className="mb-4"
           >
             <Input
-              prefix={<MailOutlined className="text-gray-400 mr-2" />}
+              prefix={<MailOutlined className="text-gray-400 mr-2 " />}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="rounded-md"
+              className="rounded-md "
             />
           </Form.Item>
 

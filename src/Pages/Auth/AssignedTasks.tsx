@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import UserPanelLayout from "./UserPanelLayout";
-import axios from "axios";
 import BASE_URL from "../../Config";
+import axios from "axios";
 import {
   Card,
   Typography,
@@ -54,7 +54,7 @@ const AssignedTasksPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${BASE_URL}/user-service/write/getTaskData`,
+       `${BASE_URL}/user-service/write/getTaskData`,
         {
           headers: {
             accept: "*/*",
@@ -165,9 +165,9 @@ const AssignedTasksPage: React.FC = () => {
                   <Tag color="blue" icon={<UserOutlined />}>
                     {task.createdby}
                   </Tag>
-                  <Tag color={priorityColor} className="capitalize">
+                  {/* <Tag color={priorityColor} className="capitalize">
                     {task.priority} Priority
-                  </Tag>
+                  </Tag> */}
                 </div>
               </div>
             </div>
@@ -241,13 +241,13 @@ const AssignedTasksPage: React.FC = () => {
           className="mb-6 shadow-md border-0 rounded-lg overflow-hidden"
           bodyStyle={{ padding: "0" }}
         >
-          <div className="bg-gradient-to-r from-blue-500 to-blue-400 p-6 text-white">
+          <div className="bg-gradient-to-r  p-6 text-white">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <div>
                 <Title level={2} className="text-white mb-1">
                   Assigned Tasks
                 </Title>
-                <Text className="text-blue-100 opacity-90">
+                <Text className="text-blue-800 opacity-90">
                   View and manage your assigned tasks
                 </Text>
               </div>

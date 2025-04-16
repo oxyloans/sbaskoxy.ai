@@ -139,7 +139,7 @@ const PlanOfTheDay: React.FC = () => {
 
     try {
       const response = await axios.patch<TaskResponse>(
-        `${BASE_URL}/user-service/write/userTaskUpdate`,
+      `${BASE_URL}/user-service/write/userTaskUpdate`,
         {
           planOftheDay: values.planOftheDay,
           taskAssignTo: values.taskAssignTo,
@@ -176,13 +176,13 @@ const PlanOfTheDay: React.FC = () => {
           className="max-w-3xl mx-auto shadow-md rounded-lg overflow-hidden border-0"
           bodyStyle={{ padding: 0 }}
         >
-          <div className="bg-gradient-to-r from-blue-500 to-blue-400 p-6 text-white">
+          <div className="bg-gradient-to-r  p-6 text-black">
             <div className="flex items-center justify-between">
               <div>
-                <Title level={2} className="text-white mb-0">
+                <Title level={2} className="text-black mb-0">
                   Plan Of The Day
                 </Title>
-                <Text className="text-blue-100">
+                <Text className="text-[#008CBA]">
                   <CalendarOutlined className="mr-2" />
                   {currentDate}
                 </Text>
@@ -235,7 +235,7 @@ const PlanOfTheDay: React.FC = () => {
                   label={
                     <span className="text-gray-700 font-medium flex items-center">
                       <TeamOutlined className="mr-2" />
-                      Team
+                      Select Team
                     </span>
                   }
                   rules={[{ required: true, message: "Please select a team!" }]}
@@ -266,7 +266,7 @@ const PlanOfTheDay: React.FC = () => {
                   label={
                     <span className="text-gray-700 font-medium flex items-center">
                       <UserOutlined className="mr-2" />
-                      Assign To
+                      Select Employee Name
                     </span>
                   }
                   rules={[
@@ -277,7 +277,7 @@ const PlanOfTheDay: React.FC = () => {
                   ]}
                 >
                   <Select
-                    placeholder="Select person"
+                    placeholder="Select Employee Name"
                     showSearch
                     className="rounded-md"
                     filterOption={(input, option) =>
@@ -313,9 +313,9 @@ const PlanOfTheDay: React.FC = () => {
                   htmlType="submit"
                   loading={loading}
                   block
-                  size="large"
+                  size="small"
                   icon={<SendOutlined />}
-                  className="h-12 rounded-md bg-[#008CBA] hover:bg-blue-700 border-blue-600 hover:border-blue-700 shadow-sm"
+                  className="h-12 rounded-md bg-[#008CBA] shadow-sm"
                 >
                   Submit Daily Plan
                 </Button>

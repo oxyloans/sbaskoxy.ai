@@ -6,7 +6,6 @@ import { MdLogout, MdSubscriptions, MdInventory } from "react-icons/md";
 import { FaClipboardCheck, FaExchangeAlt } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
 import { FaUserEdit } from "react-icons/fa";
-import BASE_URL from "../../Config";
 import {
   FaTachometerAlt,
   FaUsers,
@@ -58,36 +57,37 @@ const UserPanelLayout: React.FC<UserPanelLayoutProps> = ({ children }) => {
 
   const sidebarItems: SidebarItem[] = [
     {
-      key: "assigned-task",
-      label: "Task Assignments",
-      icon: <FaClipboardCheck />,
-      link: "/assigned-task",
-    },
-    {
       key: "plan-of-the-day",
-      label: "Daily Planning",
+      label: "Plan of the Day",
       icon: <FaTachometerAlt />,
       link: "/planoftheday",
     },
     {
       key: "end-of-the-day",
-      label: "Progress Reports",
-      icon: <FaListAlt />,
+      label: "End of the Day Summary",
+      icon: <FaClipboardCheck />,
       link: "/taskupdated",
     },
     {
-      key: "all-statuses",
+      key: "task-overview",
       label: "Task Overview",
       icon: <FaSlideshare />,
       link: "/all-statuses",
     },
     {
-      key: "all-statuses",
-      label: "Task Assigned By User",
-    icon: <FaUsers />,
+      key: "task-assignments",
+      label: "Assigned Tasks List",
+      icon: <FaExchangeAlt />,
+      link: "/assigned-task",
+    },
+    {
+      key: "user-assigned-tasks",
+      label: "Tasks Assigned by User",
+      icon: <FaUsers />,
       link: "/taskassigneduser",
     },
   ];
+  
 
   const toggleCollapse = (): void => {
     setCollapsed((prev) => !prev);
@@ -113,28 +113,25 @@ const UserPanelLayout: React.FC<UserPanelLayoutProps> = ({ children }) => {
           transition: "left 0.3s ease-in-out",
         }}
       >
-   
         <div className="text-center font-bold mt-4 mb-1 text-lg">
           <div className="text-white">{collapsed ? "A" : "ASKOXY.AI"}</div>
         </div>
 
-   
         <div className="py-2 border-b border-gray-700">
           <Row justify="center" align="middle">
             <div className="text-center font-bold my-0 text-2xl">
-              <Link to="/admin/dashboard" className="text-xl no-underline">
+           
                 <span className="text-green-500">
                   {collapsed ? "T" : "TASK"}
                 </span>{" "}
                 <span className="text-yellow-500">
                   {collapsed ? "" : "MANAGEMENT"}
                 </span>
-              </Link>
+              
             </div>
           </Row>
         </div>
 
-    
         <Menu
           theme="dark"
           mode="inline"
