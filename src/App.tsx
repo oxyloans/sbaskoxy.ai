@@ -125,8 +125,8 @@ const App: React.FC = () => {
               <Route path="itemsList" element={<PrtnerItemsList />} />
               <Route path="dbOrderList" element={<DbOrderDetails />} />
             </Route>
-                 <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />   <Route path="/userPanelLayout" element={<PlanOfTheDay />} />
+                 <Route path="/userregister" element={<Register />} />
+          <Route path="/userlogin" element={<Login />} />   <Route path="/userPanelLayout" element={<PlanOfTheDay />} />
           <Route path="/planoftheday" element={<PlanOfTheDay />} />
           <Route path="/taskupdated" element={<TaskUpdate />} />
           <Route path="/all-statuses" element={<AllStatusPage />} />
