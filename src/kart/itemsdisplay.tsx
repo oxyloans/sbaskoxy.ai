@@ -8,19 +8,18 @@ import {
   ChevronRight,
   Minus,
   Plus,
-  Tag,
   Package2,
   Star,
   Bot,
   X,
   MessageCircle,
   AlertCircle,
-  Loader2,Trash2
+  Loader2,
+  Trash2
 } from "lucide-react";
-import ValidationPopup from "./ValidationPopup";
 import Footer from "../components/Footer";
 import { CartContext } from "../until/CartContext";
-
+import { AxiosError } from 'axios'; 
 import BASE_URL from "../Config";
 
 interface Item {
@@ -63,7 +62,6 @@ const ItemDisplayPage = () => {
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
-  const [showValidationPopup, setShowValidationPopup] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -109,22 +107,17 @@ const ItemDisplayPage = () => {
     navigate(path);
   };
 
-  // Updated useEffect to handle both initial load and navigation
   useEffect(() => {
-    console.log(state.item);
-
-    if (itemId) {
-      if (!state?.item) {
-        // If no state is passed, fetch item details
-        fetchItemDetails(itemId);
-      } else {
-        // If state is passed, use it directly
-        setItemDetails(state.item);
-      }
-      fetchCartData("");
-      fetchRelatedItems();
+  if (itemId) {
+    if (!state?.item) {
+      fetchItemDetails(itemId);
+    } else {
+      setItemDetails(state.item);
     }
-  }, [itemId, state]); // Added state to dependencies
+    fetchCartData("");
+  }
+}, [itemId, state]);
+
 
   // Updated navigation handler for related items
   const handleRelatedItemClick = (item: Item) => {
@@ -183,11 +176,6 @@ const ItemDisplayPage = () => {
     }
   };
 
-  const handleProfileRedirect = () => {
-    setShowValidationPopup(false);
-    handleNavigation("/main/profile");
-  };
-
   const fetchRelatedItems = async () => {
     try {
       const response = await axios.get(
@@ -232,22 +220,6 @@ const ItemDisplayPage = () => {
     }
   };
 
-  const checkProfileCompletion = () => {
-    const profileData = localStorage.getItem("profileData");
-    console.log("profileData", profileData);
-
-    if (profileData) {
-      const parsedData = JSON.parse(profileData);
-      console.log("parsedData", parsedData);
-      return !!(
-        parsedData.userFirstName &&
-        parsedData.userFirstName != "" &&
-        parsedData.mobileNumber && parsedData.mobileNumber !== "" 
-      );
-    }
-    return false;
-  };
-
   const handleAddToCart = async (item: Item) => {
     setLoadingItems((prev) => ({
       ...prev,
@@ -259,14 +231,10 @@ const ItemDisplayPage = () => {
       setTimeout(() => navigate("/whatsapplogin"), 2000);
       return;
     }
-    if (!checkProfileCompletion()) {
-      setShowValidationPopup(true);
-      return;
-    }
 
     try {
       await axios.post(
-        `${BASE_URL}/cart-service/cart/add_Items_ToCart`,
+        `${BASE_URL}/cart-service/cart/addAndIncrementCart`,
         { customerId, itemId: item.itemId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -288,60 +256,85 @@ const ItemDisplayPage = () => {
     }
   };
 
-  const handleQuantityChange = async (item: Item, increment: boolean) => {
-    if (!checkProfileCompletion()) {
-      setShowValidationPopup(true);
-      return;
-    }
-    const endpoint = increment
-      ? `${BASE_URL}/cart-service/cart/incrementCartData`
-      : `${BASE_URL}/cart-service/cart/decrementCartData`;
 
-    if (cartItems[item.itemId] === item.quantity && increment) {
-      message.warning("Sorry, Maximum quantity reached.");
-      return;
+const handleQuantityChange = async (item: Item, increment: boolean) => {
+  const endpoint = increment
+    ? `${BASE_URL}/cart-service/cart/addAndIncrementCart`
+    : `${BASE_URL}/cart-service/cart/minusCartItem`;
+
+  if (cartItems[item.itemId] === item.quantity && increment) {
+    message.warning("Sorry, Maximum quantity reached.");
+    return;
+  }
+
+  setLoadingItems((prev) => ({
+    ...prev,
+    items: { ...prev.items, [item.itemId]: true },
+  }));
+
+  try {
+    if (!increment && cartItems[item.itemId] <= 1) {
+      const targetCartId = cartData.find(
+        (cart) => cart.itemId === item.itemId
+      )?.cartId;
+
+      await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
+        data: { id: targetCartId },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      message.success("Item removed from cart successfully.");
+    } else {
+      const requestConfig = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+      const requestData = { customerId, itemId: item.itemId };
+
+      if (increment) {
+        await axios.post(endpoint, requestData, requestConfig);
+      } else {
+        try {
+          const patchRes = await axios.patch(endpoint, requestData, requestConfig);
+          console.log("PATCH success:", patchRes.status, patchRes.data);
+        } catch (error) {
+          // Check if the error is an AxiosError using 'instanceof'
+          if (error instanceof AxiosError && error.response) {
+            const { status, data } = error.response;
+            console.warn("PATCH error response:", status, data);
+            if (status === 200 || status === 204) {
+              console.log("PATCH treated as error but actually succeeded.");
+            } else {
+              throw error; // Rethrow if the error is not handled
+            }
+          } else {
+            console.error("Network or unknown PATCH error:", error);
+            throw error; // Rethrow non-Axios errors
+          }
+        }
+      }
     }
 
     setLoadingItems((prev) => ({
       ...prev,
-      items: { ...prev.items, [item.itemId]: true },
+      items: { ...prev.items, [item.itemId]: false },
     }));
 
     try {
-      if (!increment && cartItems[item.itemId] <= 1) {
-        const targetCartId = cartData.find(
-          (cart) => cart.itemId === item.itemId
-        )?.cartId;
-        await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
-          data: { id: targetCartId },
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        message.success("Item removed from cart successfully.");
-        setLoadingItems((prev) => ({
-          ...prev,
-          items: { ...prev.items, [item.itemId]: false },
-        }));
-      } else {
-        await axios.patch(
-          endpoint,
-          { customerId, itemId: item.itemId },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
-      setLoadingItems((prev) => ({
-        ...prev,
-        items: { ...prev.items, [item.itemId]: false },
-      }));
-      fetchCartData(item.itemId);
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      message.error("Error updating item quantity");
-      setLoadingItems((prev) => ({
-        ...prev,
-        items: { ...prev.items, [item.itemId]: false },
-      }));
+      await fetchCartData(item.itemId);
+    } catch (err) {
+      console.error("Error fetching updated cart data:", err);
+      message.error("Cart updated, but failed to refresh view.");
     }
-  };
+  } catch (error) {
+    console.error("Error updating quantity:", error);
+    message.error("Error updating item quantity.");
+    setLoadingItems((prev) => ({
+      ...prev,
+      items: { ...prev.items, [item.itemId]: false },
+    }));
+  }
+};
+
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -371,12 +364,6 @@ const ItemDisplayPage = () => {
       content: newMessage.text,
     });
 
-    // // Function to get the last assistant's response
-    // const getLastAssistantMessage = (messages:any) => {
-    //   // Find the last message with the type 'received' (which means it's from the assistant)
-    //   return messages.reverse().find(msg => msg.type === 'received')?.text || '';
-    // };
-
     // Function to get the last assistant's response safely
     const getLastAssistantMessage = (msgs: Message[]) => {
       return (
@@ -402,7 +389,7 @@ const ItemDisplayPage = () => {
         },
         {
           headers: {
-            Authorization: `Bearer  ${apiKey}`,
+            Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
           },
         }
@@ -442,6 +429,7 @@ const ItemDisplayPage = () => {
       ]);
     }
   };
+
   const calculateDiscount = (mrp: number, price: number) => {
     return Math.round(((mrp - price) / mrp) * 100);
   };
@@ -504,8 +492,7 @@ const ItemDisplayPage = () => {
                           Number(itemDetails.itemMrp) ||
                           Number(itemDetails.priceMrp),
                           Number(itemDetails.itemPrice)
-                        )}
-                        % OFF
+                        )}% OFF
                       </span>
                     </div>
                   )}
@@ -514,8 +501,9 @@ const ItemDisplayPage = () => {
                   {itemDetails && (
                     <div className="absolute top-4 left-4">
                       <div
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 ${getStockStatus(itemDetails.quantity).color
-                          }`}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 ${
+                          getStockStatus(itemDetails.quantity).color
+                        }`}
                       >
                         {itemDetails.quantity <= 5 && (
                           <AlertCircle className="w-4 h-4" />
@@ -560,10 +548,11 @@ const ItemDisplayPage = () => {
                         <div className="flex flex-col gap-3">
                           <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
                             <button
-                              className={`p-2 rounded-lg transition-all ${cartItems[itemDetails.itemId] <= 1
+                              className={`p-2 rounded-lg transition-all ${
+                                cartItems[itemDetails.itemId] <= 1
                                   ? "bg-red-100 text-red-600 hover:bg-red-200"
                                   : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                                }`}
+                              }`}
                               onClick={() =>
                                 itemDetails &&
                                 handleQuantityChange(itemDetails, false)
@@ -580,43 +569,58 @@ const ItemDisplayPage = () => {
                               </span>
                             )}
                             <button
-                              className={`p-2 rounded-lg transition-all ${isMaxStockReached(itemDetails)
+                              className={`p-2 rounded-lg transition-all ${
+                                isMaxStockReached(itemDetails)
                                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                   : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                                }`}
+                              }`}
                               onClick={() =>
                                 !isMaxStockReached(itemDetails) &&
                                 handleQuantityChange(itemDetails, true)
                               }
                               disabled={
                                 cartItems[itemDetails.itemId] >=
-                                itemDetails.quantity ||
-                                loadingItems.items[itemDetails.itemId]|| (itemDetails.itemPrice === 1 && cartItems[itemDetails.itemId] >= 1)
+                                  itemDetails.quantity ||
+                                loadingItems.items[itemDetails.itemId] ||
+                                (itemDetails.itemPrice === 1 &&
+                                  cartItems[itemDetails.itemId] >= 1)
                               }
                             >
                               <Plus className="w-5 h-5" />
                             </button>
-                            {/* New Delete Button */}
+                            {/* Delete Button */}
                             <button
                               className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all ml-2"
                               onClick={() => {
                                 if (itemDetails) {
-                                  // Force remove item by setting quantity to 0
                                   const targetCartId = cartData.find(
                                     (cart) => cart.itemId === itemDetails.itemId
                                   )?.cartId;
                                   if (targetCartId) {
-                                    axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
-                                      data: { id: targetCartId },
-                                      headers: { Authorization: `Bearer ${token}` },
-                                    })
+                                    axios
+                                      .delete(
+                                        `${BASE_URL}/cart-service/cart/remove`,
+                                        {
+                                          data: { id: targetCartId },
+                                          headers: {
+                                            Authorization: `Bearer ${token}`,
+                                          },
+                                        }
+                                      )
                                       .then(() => {
-                                        message.success("Item removed from cart successfully.");
+                                        message.success(
+                                          "Item removed from cart successfully."
+                                        );
                                         fetchCartData("");
                                       })
                                       .catch((error) => {
-                                        console.error("Error removing item:", error);
-                                        message.error("Error removing item from cart");
+                                        console.error(
+                                          "Error removing item:",
+                                          error
+                                        );
+                                        message.error(
+                                          "Error removing item from cart"
+                                        );
                                       });
                                   }
                                 }
@@ -644,7 +648,7 @@ const ItemDisplayPage = () => {
           transform transition-all hover:scale-105 flex items-center justify-center gap-2"
                         >
                           {itemDetails &&
-                            loadingItems.items[itemDetails.itemId] ? (
+                          loadingItems.items[itemDetails.itemId] ? (
                             <Loader2 className="mr-2 animate-spin inline-block" />
                           ) : (
                             <>
@@ -681,9 +685,9 @@ const ItemDisplayPage = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 bg-purple-50 p-3 rounded-lg">
-
-
-                  <span className="font-medium"> {itemDetails?.itemDescription}</span>
+                  <span className="font-medium">
+                    {itemDetails?.itemDescription}
+                  </span>
                 </div>
               </div>
             </div>
@@ -716,16 +720,18 @@ const ItemDisplayPage = () => {
                       {messages.map((msg, idx) => (
                         <div
                           key={idx}
-                          className={`flex ${msg.type === "sent"
-                            ? "justify-end"
-                            : "justify-start"
-                            }`}
+                          className={`flex ${
+                            msg.type === "sent"
+                              ? "justify-end"
+                              : "justify-start"
+                          }`}
                         >
                           <div
-                            className={`max-w-[75%] p-3 rounded-lg ${msg.type === "sent"
-                              ? "bg-purple-600 text-white"
-                              : "bg-purple-50 border border-purple-100"
-                              }`}
+                            className={`max-w-[75%] p-3 rounded-lg ${
+                              msg.type === "sent"
+                                ? "bg-purple-600 text-white"
+                                : "bg-purple-50 border border-purple-100"
+                            }`}
                           >
                             {msg.type === "system" && (
                               <Bot className="w-4 h-4 text-purple-600 mb-1" />
@@ -778,8 +784,12 @@ const ItemDisplayPage = () => {
                           {item.itemName}
                         </h3>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">₹{item.itemPrice}</span>
-                          <span className="text-gray-500 text-sm line-through">₹{item.itemMrp}</span>
+                          <span className="font-semibold">
+                            ₹{item.itemPrice}
+                          </span>
+                          <span className="text-gray-500 text-sm line-through">
+                            ₹{item.itemMrp}
+                          </span>
                         </div>
 
                         {/* Related item cart controls */}
@@ -788,10 +798,11 @@ const ItemDisplayPage = () => {
                             cartItems[item.itemId] ? (
                               <div className="flex items-center justify-between bg-purple-50 rounded-lg p-2">
                                 <button
-                                  className={`p-1.5 rounded-lg transition-all ${cartItems[item.itemId] <= 1
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    cartItems[item.itemId] <= 1
                                       ? "bg-red-100 text-red-600 hover:bg-red-200"
                                       : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                                    }`}
+                                  }`}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleQuantityChange(item, false);
@@ -810,10 +821,11 @@ const ItemDisplayPage = () => {
                                 )}
 
                                 <button
-                                  className={`p-1.5 rounded-lg transition-all ${cartItems[item.itemId] >= item.quantity
+                                  className={`p-1.5 rounded-lg transition-all ${
+                                    cartItems[item.itemId] >= item.quantity
                                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                       : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                                    }`}
+                                  }`}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (cartItems[item.itemId] < item.quantity) {
@@ -828,27 +840,39 @@ const ItemDisplayPage = () => {
                                   <Plus className="w-4 h-4" />
                                 </button>
 
-                                {/* New Delete Button for related items */}
+                                {/* Delete Button for related items */}
                                 <button
                                   className="p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all ml-1"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Find the cart ID for this item
                                     const targetCartId = cartData.find(
                                       (cart) => cart.itemId === item.itemId
                                     )?.cartId;
                                     if (targetCartId) {
-                                      axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
-                                        data: { id: targetCartId },
-                                        headers: { Authorization: `Bearer ${token}` },
-                                      })
+                                      axios
+                                        .delete(
+                                          `${BASE_URL}/cart-service/cart/remove`,
+                                          {
+                                            data: { id: targetCartId },
+                                            headers: {
+                                              Authorization: `Bearer ${token}`,
+                                            },
+                                          }
+                                        )
                                         .then(() => {
-                                          message.success("Item removed from cart successfully.");
+                                          message.success(
+                                            "Item removed from cart successfully."
+                                          );
                                           fetchCartData("");
                                         })
                                         .catch((error) => {
-                                          console.error("Error removing item:", error);
-                                          message.error("Error removing item from cart");
+                                          console.error(
+                                            "Error removing item:",
+                                            error
+                                          );
+                                          message.error(
+                                            "Error removing item from cart"
+                                          );
                                         });
                                     }
                                   }}
@@ -889,7 +913,6 @@ flex items-center justify-center gap-1.5 cursor-not-allowed"
                             </button>
                           )}
                         </div>
-
                       </div>
                     </div>
                   ))}
@@ -898,11 +921,6 @@ flex items-center justify-center gap-1.5 cursor-not-allowed"
             </div>
           </div>
         </div>
-        <ValidationPopup
-          isOpen={showValidationPopup}
-          onClose={() => setShowValidationPopup(false)}
-          onAction={handleProfileRedirect}
-        />
       </div>
       <Footer />
     </div>

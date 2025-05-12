@@ -311,22 +311,70 @@ const CartPage: React.FC = () => {
     }
   };
 
-  const handleIncrease = async (item: CartItem) => {
-    setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
-    try {
-      const currentQuantity = cartItems[item.itemId] || 0;
-
-      // Check if increasing would exceed available stock
-      if (currentQuantity >= item.quantity) {
-        message.warning(`Only ${item.quantity} units available in stock`);
-        setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
-        return;
+ const handleIncrease = async (item: CartItem) => {
+  setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
+  
+  try {
+    const currentQuantity = cartItems[item.itemId] || 0;
+    
+    // Check if increasing would exceed available stock
+    if (currentQuantity >= item.quantity) {
+      message.warning(`Only ${item.quantity} units available in stock`);
+      setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
+      return;
+    }
+    
+    const newQuantity = currentQuantity + 1;
+    
+    // Use POST instead of PATCH for increment
+    await axios.post(
+      `${BASE_URL}/cart-service/cart/addAndIncrementCart`,
+      {
+        cartQuantity: newQuantity,
+        customerId,
+        itemId: item.itemId,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
+    );
+    
+    await fetchCartData();
+  } catch (error) {
+    console.error("Failed to increase cart item:", error);
+    
+    // More detailed error handling
+    if (axios.isAxiosError(error)) {
+      const { response } = error;
+      if (response) {
+        console.error("Error response:", response.status, response.data);
+        if (response.status === 200 || response.status === 204) {
+          console.log("Increase request may have succeeded despite error");
+        }
+      }
+    }
+    
+    message.error("Failed to update quantity");
+  } finally {
+    setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
+  }
+};
 
-      const newQuantity = currentQuantity + 1;
-
+const handleDecrease = async (item: CartItem) => {
+  setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
+  
+  try {
+    const currentQuantity = cartItems[item.itemId];
+    
+    if (currentQuantity > 1) {
+      const newQuantity = currentQuantity - 1;
+      
+      // Use PATCH for decrement
       await axios.patch(
-        `${BASE_URL}/cart-service/cart/incrementCartData`,
+        `${BASE_URL}/cart-service/cart/minusCartItem`,
         {
           cartQuantity: newQuantity,
           customerId,
@@ -339,57 +387,37 @@ const CartPage: React.FC = () => {
           },
         }
       );
-
+      
+      // Update local state immediately
+      setCartItems((prev) => ({
+        ...prev,
+        [item.itemId]: newQuantity,
+      }));
+      
+      // Update cart data
       await fetchCartData();
-    } catch (error) {
-      console.error("Failed to increase cart item:", error);
-      message.error("Failed to update quantity");
-    } finally {
-      setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
+    } else {
+      // If quantity is 1, remove the item
+      await removeCartItem(item);
     }
-  };
-
-  const handleDecrease = async (item: CartItem) => {
-    setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
-    try {
-      const currentQuantity = cartItems[item.itemId];
-      if (currentQuantity > 1) {
-        const newQuantity = currentQuantity - 1;
-
-        await axios.patch(
-          `${BASE_URL}/cart-service/cart/decrementCartData`,
-          {
-            cartQuantity: newQuantity,
-            customerId,
-            itemId: item.itemId,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        // Update local state immediately
-        setCartItems((prev) => ({
-          ...prev,
-          [item.itemId]: newQuantity,
-        }));
-
-        // Update cart data
-        await fetchCartData();
-      } else {
-        // If quantity is 1, remove the item
-        await removeCartItem(item);
+  } catch (error) {
+    console.error("Failed to decrease cart item:", error);
+    
+    // More detailed error handling
+    if (axios.isAxiosError(error)) {
+      const { response } = error;
+      if (response) {
+        console.error("Error response:", response.status, response.data);
+        if (response.status === 200 || response.status === 204) {
+          console.log("Decrease request may have succeeded despite error");
+        }
       }
-    } catch (error) {
-      console.error("Failed to decrease cart item:", error);
-      message.error("Failed to update quantity");
-    } finally {
-      setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
-    }
-  };
+    }  
+    message.error("Failed to update quantity");
+  } finally {
+    setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
+  }
+};
 
   const removeCartItem = async (item: CartItem) => {
     try {

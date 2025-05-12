@@ -4,8 +4,8 @@ import axios from "axios";
 import { message, Modal } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Package, AlertCircle, Loader2 } from "lucide-react";
-import  checkProfileCompletion  from "../until/ProfileCheck";
-import  BASE_URL  from "../Config";
+import checkProfileCompletion from "../until/ProfileCheck";
+import BASE_URL from "../Config";
 
 interface Item {
   itemName: string;
@@ -15,7 +15,7 @@ interface Item {
   itemPrice: number;
   quantity: number;
   itemMrp: number;
-  units:string;
+  units: string;
 }
 
 interface SubCategory {
@@ -155,15 +155,15 @@ const Categories: React.FC<CategoriesProps> = ({
       }, 2000);
       return;
     }
-    
+
     // Fixed: Changed boolean to string "true"
-    if(!checkProfileCompletion(userId, "true")){
+    if (!checkProfileCompletion(userId, "true")) {
       console.log(checkProfileCompletion(userId, "true"));
       Modal.error({
         title: "Profile Incomplete",
         content: "Please complete your profile to add items to the cart.",
         onOk: () => navigate("/main/profile"),
-      }); 
+      });
       // message.warning("Please complete your profile to add items to the cart.");
       setTimeout(() => {
         navigate("/main/profile");
@@ -177,7 +177,7 @@ const Categories: React.FC<CategoriesProps> = ({
         items: { ...prev.items, [item.itemId]: true },
       }));
       const response = await axios.post(
-        `${BASE_URL}/cart-service/cart/add_Items_ToCart`,
+        `${BASE_URL}/cart-service/cart/addAndIncrementCart`,
         { customerId: userId, itemId: item.itemId, quantity: 1 },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
@@ -208,30 +208,17 @@ const Categories: React.FC<CategoriesProps> = ({
     increment: boolean,
     status: string
   ) => {
-      if (cartItems[item.itemId] === item.quantity && increment) {
-        message.warning("Sorry, Maximum quantity reached.");
-        return;
-      }
+    if (cartItems[item.itemId] === item.quantity && increment) {
+      message.warning("Sorry, Maximum quantity reached.");
+      return;
+    }
 
-      const userId = localStorage.getItem("userId");
-      // Fixed: Changed boolean to string "true"
-      if(!checkProfileCompletion(userId || "", "true")){
-        console.log(checkProfileCompletion(userId || "", "true"));
-        Modal.error({
-          title: "Profile Incomplete",
-          content: "Please complete your profile to add items to the cart.",
-          onOk: () => navigate("/main/profile"),
-        }); 
-        // message.warning("Please complete your profile to add items to the cart.");
-        setTimeout(() => {
-          navigate("/main/profile");
-        }, 4000);
-        return;
-      }
+    const userId = localStorage.getItem("userId");
+
     try {
       const endpoint = increment
-        ? `${BASE_URL}/cart-service/cart/incrementCartData`
-        : `${BASE_URL}/cart-service/cart/decrementCartData`;
+        ? `${BASE_URL}/cart-service/cart/addAndIncrementCart`
+        : `${BASE_URL}/cart-service/cart/minusCartItem`;
 
       if (!increment && cartItems[item.itemId] <= 1) {
         setLoadingItems((prev) => ({
@@ -239,29 +226,28 @@ const Categories: React.FC<CategoriesProps> = ({
           items: { ...prev.items, [item.itemId]: true },
           status: { ...prev.status, [item.itemId]: status },
         }));
+
         const targetCartId = cartData.find(
           (cart) => cart.itemId === item.itemId
         )?.cartId;
+
         const response = await axios.delete(
           `${BASE_URL}/cart-service/cart/remove`,
           {
             data: { id: targetCartId },
           }
         );
+
+        setLoadingItems((prev) => ({
+          ...prev,
+          items: { ...prev.items, [item.itemId]: false },
+          status: { ...prev.status, [item.itemId]: "" },
+        }));
+
         if (response) {
-          setLoadingItems((prev) => ({
-            ...prev,
-            items: { ...prev.items, [item.itemId]: false },
-            status: { ...prev.status, [item.itemId]: "" },
-          }));
           message.success("Item removed from cart successfully.");
         } else {
-          setLoadingItems((prev) => ({
-            ...prev,
-            items: { ...prev.items, [item.itemId]: false },
-            status: { ...prev.status, [item.itemId]: "" },
-          }));
-          message.success("Sorry, Please try again");
+          message.error("Sorry, Please try again");
         }
       } else {
         setLoadingItems((prev) => ({
@@ -269,25 +255,28 @@ const Categories: React.FC<CategoriesProps> = ({
           items: { ...prev.items, [item.itemId]: true },
           status: { ...prev.status, [item.itemId]: status },
         }));
-        const response = await axios.patch(endpoint, {
+
+        const payload = {
           customerId,
           itemId: item.itemId,
-        });
-        if (response) {
-          setLoadingItems((prev) => ({
-            ...prev,
-            items: { ...prev.items, [item.itemId]: false },
-            status: { ...prev.status, [item.itemId]: "" },
-          }));
-        } else {
-          setLoadingItems((prev) => ({
-            ...prev,
-            items: { ...prev.items, [item.itemId]: false },
-            status: { ...prev.status, [item.itemId]: "" },
-          }));
-          message.success("Sorry, Please try again");
+        };
+
+        const response = increment
+          ? await axios.post(endpoint, payload)
+          : await axios.patch(endpoint, payload);
+
+        // Optional: Show success message only for PATCH (minus)
+        if (!increment) {
+          message.success("Item quantity decreased");
         }
+
+        setLoadingItems((prev) => ({
+          ...prev,
+          items: { ...prev.items, [item.itemId]: false },
+          status: { ...prev.status, [item.itemId]: "" },
+        }));
       }
+
       fetchCartData(item.itemId);
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -355,47 +344,47 @@ const Categories: React.FC<CategoriesProps> = ({
 
       {/* Subcategories */}
       {getCurrentSubCategories().length > 0 && (
-  <div className="mb-6 overflow-x-auto scrollbar whitespace-nowrap">
-    <div className="flex space-x-3 pb-2 w-max">
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-          !activeSubCategory
-            ? "bg-purple-100 text-purple-700"
-            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-        }`}
-        onClick={() => setActiveSubCategory(null)}
-      >
-        All
-      </motion.button>
-      {getCurrentSubCategories().map((subCategory) => (
-        <motion.button
-          key={subCategory.id}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-            activeSubCategory === subCategory.id
-              ? "bg-purple-100 text-purple-700"
-              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-          }`}
-          onClick={() => setActiveSubCategory(subCategory.id)}
-        >
-          <div className="flex items-center space-x-2">
-            {subCategory.image && (
-              <img
-                src={subCategory.image}
-                alt=""
-                className="w-4 h-4 rounded-full"
-              />
-            )}
-            <span>{subCategory.name}</span>
+        <div className="mb-6 overflow-x-auto scrollbar whitespace-nowrap">
+          <div className="flex space-x-3 pb-2 w-max">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                !activeSubCategory
+                  ? "bg-purple-100 text-purple-700"
+                  : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+              }`}
+              onClick={() => setActiveSubCategory(null)}
+            >
+              All
+            </motion.button>
+            {getCurrentSubCategories().map((subCategory) => (
+              <motion.button
+                key={subCategory.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  activeSubCategory === subCategory.id
+                    ? "bg-purple-100 text-purple-700"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                }`}
+                onClick={() => setActiveSubCategory(subCategory.id)}
+              >
+                <div className="flex items-center space-x-2">
+                  {subCategory.image && (
+                    <img
+                      src={subCategory.image}
+                      alt=""
+                      className="w-4 h-4 rounded-full"
+                    />
+                  )}
+                  <span>{subCategory.name}</span>
+                </div>
+              </motion.button>
+            ))}
           </div>
-        </motion.button>
-      ))}
-    </div>
-  </div>
-)}
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -490,7 +479,8 @@ const Categories: React.FC<CategoriesProps> = ({
                     {item.itemName}
                   </h3>
                   <p className="text-sm text-gray-500">
-                  Weight : {item.weight}{item.units}
+                    Weight : {item.weight}
+                    {item.units}
                   </p>
 
                   {/* Price Section - Updated layout */}
@@ -548,7 +538,9 @@ const Categories: React.FC<CategoriesProps> = ({
                           }}
                           disabled={
                             cartItems[item.itemId] >= item.quantity ||
-                            loadingItems.items[item.itemId] || (item.itemPrice === 1 && cartItems[item.itemId] >= 1)
+                            loadingItems.items[item.itemId] ||
+                            (item.itemPrice === 1 &&
+                              cartItems[item.itemId] >= 1)
                           }
                         >
                           {/* {loadingItems.items[item.itemId] &&

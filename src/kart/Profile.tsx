@@ -18,8 +18,6 @@ import axios from "axios";
 import { isWithinRadius } from "./LocationCheck";
 import BASE_URL from "../Config";
 
-
-
 interface Address {
   id?: string;
   flatNo: string;
@@ -55,11 +53,11 @@ const ProfilePage = () => {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [whatsappVerificationCode, setWhatsappVerificationCode] = useState("");
   const [isWhatsappVerified, setIsWhatsappVerified] = useState(false);
-  const [isMobileNumberVerified,setIsMobileNumberVerified] = useState(false)
+  const [isMobileNumberVerified, setIsMobileNumberVerified] = useState(false)
   const [showWhatsappVerificationModal, setShowWhatsappVerificationModal] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
-  const [verifyLoader,setVerifyLoader] = useState(false)
+  const [verifyLoader, setVerifyLoader] = useState(false)
   const [addressFormData, setAddressFormData] = useState<Address>({
     flatNo: "",
     landmark: "",
@@ -94,13 +92,12 @@ const ProfilePage = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [editStatus, setEditStatus] = useState(true);
-  const [salt,setSalt] = useState();
-  const [whatsappOtpSession,setWhatsappOtpSession] = useState()
+  const [salt, setSalt] = useState("");
+  const [whatsappOtpSession, setWhatsappOtpSession] = useState("")
  
   const token = localStorage.getItem("token") || "";
   const loginMethod = localStorage.getItem("loginMethod") || "";
   const isFromWhatsApp = loginMethod === "whatsapp";
-
 
   useEffect(() => {
     // Determine login method and set numbers accordingly
@@ -146,7 +143,6 @@ const ProfilePage = () => {
     }
   }, [formData.mobileNumber, formData.whatsappNumber]);
 
-
   useEffect(() => {
     if (isFromWhatsApp) {
       setFormData((prev) => ({
@@ -164,25 +160,6 @@ const ProfilePage = () => {
   }, [isFromWhatsApp]);
 
   useEffect(() => {
-    // Determine login method and set numbers accordingly
-    if (loginMethod === "whatsapp") {
-      const whatsappNumber = localStorage.getItem("whatsappNumber") || "";
-      setFormData(prev => ({
-        ...prev,
-        whatsappNumber: whatsappNumber,
-        mobileNumber: "", // Clear mobile number
-      }));
-    } else if (loginMethod === "mobile") {
-      const mobileNumber = localStorage.getItem("mobileNumber") || "";
-      setFormData(prev => ({
-        ...prev,
-        mobileNumber: mobileNumber,
-        whatsappNumber: "", // Clear WhatsApp number
-      }));
-    }
-  }, [loginMethod]);
-
-useEffect(() => {
     if (customerId) {
       fetchProfileData();
       fetchAddresses();
@@ -190,7 +167,7 @@ useEffect(() => {
     setCartCount(parseInt(localStorage.getItem("cartCount") || "0"));
   }, [customerId]);
 
- const fetchProfileData = async () => {
+  const fetchProfileData = async () => {
     try {
       setIsLoading(true);
       const response = await axios.get(
@@ -232,8 +209,8 @@ useEffect(() => {
     try {
       setIsLoading(true);
       if(formData.whatsappNumber==""){
-        setError('Please enter whatsapp number')
-        return
+        setError('Please enter whatsapp number');
+        return;
       }
       
       const response = await axios.post(
@@ -241,7 +218,7 @@ useEffect(() => {
         {
           chatId: formData.whatsappNumber.replace(countryCode,""),
           countryCode: countryCode,
-          id:customerId
+          id: customerId
         },
         {
           headers: {
@@ -251,16 +228,16 @@ useEffect(() => {
       );
 
       if (response.data) {
-          if(response.data.whatsappOtpSession==null || response.data.salt==null){
-            setError("This whatsapp number is already in use")
-          }else{
-        setSalt(response.data.salt)
-        setWhatsappOtpSession(response.data.whatsappOtpSession)
-        setSuccessMessage("OTP sent to your WhatsApp number");
-        setTimeout(()=>{
-        setShowWhatsappVerificationModal(true);
-         },1000)
-          }
+        if(response.data.whatsappOtpSession==null || response.data.salt==null){
+          setError("This whatsapp number is already in use");
+        } else {
+          setSalt(response.data.salt);
+          setWhatsappOtpSession(response.data.whatsappOtpSession);
+          setSuccessMessage("OTP sent to your WhatsApp number");
+          setTimeout(() => {
+            setShowWhatsappVerificationModal(true);
+          }, 1000);
+        }
       } else {
         setError("Failed to send OTP");
       }
@@ -279,10 +256,10 @@ useEffect(() => {
         {
           chatId: formData.whatsappNumber.replace(countryCode,""),
           countryCode: countryCode,
-          id:customerId,
+          id: customerId,
           whatsappOtp: whatsappVerificationCode,
-          whatsappOtpSession:whatsappOtpSession,
-          salt:salt
+          whatsappOtpSession: whatsappOtpSession,
+          salt: salt
         },
         {
           headers: {
@@ -327,20 +304,14 @@ useEffect(() => {
   const validateProfileForm = () => {
     const errors: Record<string, string> = {};
 
-    // First Name validation
+    // First Name validation - only this field is mandatory
     if (!formData.userFirstName.trim()) {
       errors.userFirstName = "First name is required";
-
     } else if (!/^[A-Za-z ]+$/.test(formData.userFirstName.trim())) {
       errors.userFirstName = "First name should only contain letters";
-  
     }
 
-    // Mobile number validation
-    if (!formData.mobileNumber.trim()) {
-      errors.mobileNumber = "Mobile number is required";
-      
-    } 
+    // All other fields are optional, so no validation needed
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -392,14 +363,19 @@ useEffect(() => {
       setSuccessMessage("Profile updated successfully!");
       setEditStatus(true);
       localStorage.setItem("profileData", JSON.stringify(payload));
-    } catch (error:any) {
-      setError(error.response.data || "Error updating profile. Please try again.");
+    } catch (error: any) {
+      // FIX: Make sure we extract a string message from the error object
+      const errorMessage = error.response?.data?.message || 
+                         (typeof error.response?.data === 'object' ? 
+                          JSON.stringify(error.response.data) : 
+                          error.response?.data) || 
+                         "Error updating profile. Please try again.";
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
-
-
 
   // Auto-hide messages after 5 seconds
   React.useEffect(() => {
@@ -472,7 +448,14 @@ useEffect(() => {
     } catch (err) {
       setSuccessMessage("");
       const apiError = err as ApiError;
-      setError(apiError.response?.data?.message || "Failed to save address");
+      // FIX: Ensure we extract a string message from the error
+      const errorMessage = apiError.response?.data?.message || 
+                         (typeof apiError.response?.data === 'object' ? 
+                          JSON.stringify(apiError.response.data) : 
+                          (apiError.response?.data || "")) || 
+                         "Failed to save address";
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -645,7 +628,7 @@ useEffect(() => {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">
-                      Last Name <span className="text-red-500"></span>
+                      Last Name
                     </label>
                     <input
                       type="text"
@@ -674,7 +657,7 @@ useEffect(() => {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">
-                      Email Address <span className="text-red-500"></span>
+                      Email Address
                     </label>
                     <input
                       type="email"
@@ -735,16 +718,16 @@ useEffect(() => {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">
-                      Primary Mobile Number {isFromWhatsApp ? "" : <span className="text-red-500">*</span>}
+                      Primary Mobile Number
                     </label>
                     <input
-                    type="tel"
+                      type="tel"
                       value={formData.mobileNumber}
                       disabled={isMobileNumberVerified}
                       onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value || "" })}
                       className={`w-full px-4 py-3 rounded-lg border transition-all
-          ${validationErrors.mobileNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
-        `}
+                        ${validationErrors.mobileNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
+                      `}
                       placeholder="Enter Primary Mobile Number"
                     />
                     {validationErrors.mobileNumber && (
@@ -753,359 +736,361 @@ useEffect(() => {
                   </div>
 
                   <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  WhatsApp Number <span className="text-red-500"></span>
-                </label>
-                <div className="flex items-center space-x-2">
-                  <PhoneInput
-                    defaultCountry="IN"
-                    disabled={isWhatsappVerified} // Disable input only during OTP verification
-                    international={true} // Allow country change for WhatsApp
-                    value={formData.whatsappNumber}
-                    onChange={(value) => {
-                      setFormData({ ...formData, whatsappNumber: value || "" });
-                      setIsWhatsappVerified(false);
-                    }}
-                    className={`flex-grow px-4 py-3 rounded-lg border transition-all
-                      ${validationErrors.whatsappNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
-                    `}
-                    placeholder="Enter WhatsApp number"
-                  />
-                  {!isWhatsappVerified && (
-                    <button
-                      onClick={sendWhatsappOTP}
-                      className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                    >
-                      Send OTP
-                    </button>
-                  )}
-                </div>
-                {validationErrors.whatsappNumber && (
-                  <p className="text-red-500 text-sm">
-                    {validationErrors.whatsappNumber}
-                  </p>
-                )}
-              </div>
+                    <label className="text-sm font-medium text-gray-700">
+                      WhatsApp Number
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <PhoneInput
+                        defaultCountry="IN"
+                        disabled={isWhatsappVerified} // Disable input only during OTP verification
+                        international={true} // Allow country change for WhatsApp
+                        value={formData.whatsappNumber}
+                        onChange={(value) => {
+                          setFormData({ ...formData, whatsappNumber: value || "" });
+                          setIsWhatsappVerified(false);
+                        }}
+                        className={`flex-grow px-4 py-3 rounded-lg border transition-all
+                          ${validationErrors.whatsappNumber ? "border-red-500 ring-1 ring-red-500" : "border-gray-300 focus:ring-2 focus:ring-purple-500"}
+                        `}
+                        placeholder="Enter WhatsApp number"
+                      />
+                      {!isWhatsappVerified && formData.whatsappNumber && (
+                        <button
+                          onClick={sendWhatsappOTP}
+                          className="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                        >
+                          Send OTP
+                        </button>
+                      )}
+                    </div>
+                    {validationErrors.whatsappNumber && (
+                      <p className="text-red-500 text-sm">
+                        {validationErrors.whatsappNumber}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-4">
                   {successMessage && (
                     <div className="flex items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-200">
                       <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium text-green-800">
-                          Success
-                        </div>
-                        <div className="text-green-700 text-sm">
-                          {successMessage}
-                        </div>
-                      </div>
+                      <span className="text-green-600 text-sm">{successMessage}</span>
                     </div>
                   )}
-
                   {error && (
                     <div className="flex items-center gap-2 p-4 rounded-lg bg-red-50 border border-red-200">
                       <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium text-red-800">Error</div>
-                        <div className="text-red-700 text-sm">{error}</div>
-                      </div>
+                      <span className="text-red-600 text-sm">{error}</span>
                     </div>
                   )}
 
-                  <div className="flex justify-end mt-6">
-                    {!editStatus ? (
-                      <button
-                        onClick={handleSaveProfile}
-                        disabled={isLoading}
-                        className="w-full md:w-auto px-6 py-3  bg-gradient-to-r from-purple-600 to-purple-400 text-white rounded-lg transition-colors shadow-md hover:bg-purple-700 disabled:opacity-50"
-                      >
-                        {isLoading ? "Saving..." : "Save Changes"}
-                      </button>
-                    ) : (
+                  <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+                    {editStatus ? (
                       <button
                         onClick={() => setEditStatus(false)}
-                        className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-400 text-white rounded-lg transition-colors shadow-md hover:bg-purple-700"
+                        className="px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
                       >
                         Edit Profile
                       </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            fetchProfileData();
+                            setEditStatus(true);
+                          }}
+                          className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveProfile}
+                          disabled={isLoading}
+                          className="px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                            </>
+                          ) : (
+                            "Save Changes"
+                          )}
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Addresses Section */}
+            {/* Addresses Tab */}
             {activeTab === "addresses" && (
-              <div className="bg-white rounded-lg shadow-sm p-4 lg:p-6">
-                {!showAddressForm ? (
-                  <>
-                    <div className="flex justify-end mb-6">
-                      <button
-                        onClick={() => setShowAddressForm(true)}
-                        className="w-full md:w-auto inline-flex items-center justify-center gap-2  bg-gradient-to-r from-purple-600 to-purple-400 text-white px-6 py-3 rounded-lg hover:bg-purple-700"
-                      >
-                        <FaMapMarkerAlt />
-                        Add New Address
-                      </button>
-                    </div>
-                    {addresses.length === 0 && (
-                      <div className="text-center py-12">
-                        <FaMapMarkerAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          No addresses found
-                        </h3>
-                        <p className="text-gray-500">
-                          Add your first address to get started!
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-                      {addresses.map((address) => (
-                        <div
-                          key={address.id}
-                          className="bg-white border border-gray-200 rounded-xl p-4 lg:p-6 hover:shadow-lg transition-shadow relative group"
-                        >
-                          {/* Address card content */}
-                          <div className="flex items-start gap-4">
-                            <div className="p-2 bg-purple-50 rounded-lg shrink-0">
-                              {address.addressType === "Home" ? (
-                                <FaHome className="text-purple-600" />
-                              ) : address.addressType === "Work" ? (
-                                <FaBriefcase className="text-purple-600" />
-                              ) : (
-                                <FaMapMarkerAlt className="text-purple-600" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                {address.addressType}
-                              </span>
-                              <h3 className="mt-2 font-medium text-gray-900 truncate">
-                                {address.flatNo}
-                              </h3>
-                              <p className="mt-1 text-sm text-gray-500 truncate">
-                                {address.landmark}
-                              </p>
-                              <p className="mt-1 text-sm text-gray-500">
-                                {address.address}
-                              </p>
-                              <p className="mt-1 text-sm text-gray-500">
-                                PIN: {address.pincode}
-                              </p>
-                            </div>
-                            <div className="absolute top-4 right-4 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleEditAddress(address)}
-                                  className="p-2 text-gray-600 hover:text-purple-600 rounded-full hover:bg-purple-50"
-                                >
-                                  {/* <FaPen className="w-4 h-4" /> */}
-                                </button>
-                                {/* <button
-                                                                    onClick={() => address.id && handleDeleteAddress(address.id)}
-                                                                    className="p-2 text-gray-600 hover:text-red-600 rounded-full hover:bg-red-50"
-                                                                >
-                                                                    <FaTrash className="w-4 h-4" />
-                                                                </button> */}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
+              <div className="bg-white p-6 space-y-8">
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  </div>
                 ) : (
-                  <div className=" mx-auto">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                      {editingAddressId ? "Edit Address" : "Add New Address"}
-                    </h3>
-                    <form
-                      className="space-y-6"
-                      onSubmit={(e) => e.preventDefault()}
-                    >
-                      <div className="grid gap-6 sm:grid-cols-2">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Flat/House Number
-                          </label>
-                          <input
-                            type="text"
-                            value={addressFormData.flatNo}
-                            onChange={(e) =>
-                              setAddressFormData({
-                                ...addressFormData,
-                                flatNo: e.target.value,
-                              })
-                            }
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                            placeholder="Enter flat/house number"
-                          />
-                          {addressFormErrors.flatNo && (
-                            <p className="mt-1 text-sm text-red-600">
-                              {addressFormErrors.flatNo}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Landmark
-                          </label>
-                          <input
-                            type="text"
-                            value={addressFormData.landmark}
-                            onChange={(e) =>
-                              setAddressFormData({
-                                ...addressFormData,
-                                landmark: e.target.value,
-                              })
-                            }
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                            placeholder="Enter landmark"
-                          />
-                          {addressFormErrors.landmark && (
-                            <p className="mt-1 text-sm text-red-600">
-                              {addressFormErrors.landmark}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                  <>
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">Saved Addresses</h2>
+                      {!showAddressForm && (
+                        <button
+                          onClick={() => {
+                            setShowAddressForm(true);
+                            setError("");
+                            setSuccessMessage("");
+                          }}
+                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                        >
+                          Add New Address
+                        </button>
+                      )}
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Complete Address
-                        </label>
-                        <textarea
-                          value={addressFormData.address}
-                          onChange={(e) =>
-                            setAddressFormData({
-                              ...addressFormData,
-                              address: e.target.value,
-                            })
-                          }
-                          rows={3}
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none"
-                          placeholder="Enter complete address"
-                        />
-                        {addressFormErrors.address && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {addressFormErrors.address}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="grid gap-6 sm:grid-cols-2">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            PIN Code
-                          </label>
-                          <input
-                            type="text"
-                            value={addressFormData.pincode}
-                            onChange={(e) =>
-                              setAddressFormData({
-                                ...addressFormData,
-                                pincode: e.target.value
-                                  .replace(/\D/g, "")
-                                  .slice(0, 6),
-                              })
-                            }
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                            placeholder="Enter 6-digit PIN code"
-                            maxLength={6}
-                          />
-                          {addressFormErrors.pincode && (
-                            <p className="mt-1 text-sm text-red-600">
-                              {addressFormErrors.pincode}
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Address Type
-                          </label>
-                          <select
-                            value={addressFormData.addressType}
-                            onChange={(e) =>
-                              setAddressFormData({
-                                ...addressFormData,
-                                addressType: e.target.value as
-                                  | "Home"
-                                  | "Work"
-                                  | "Others",
-                              })
-                            }
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                          >
-                            <option value="Home">Home</option>
-                            <option value="Work">Work</option>
-                            <option value="Others">Others</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        {/* Error Message */}
-                        {error && (
-                          <div
-                            className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg"
-                            role="alert"
-                          >
-                            <span className="font-medium">Error:</span> {error}
-                          </div>
-                        )}
-
-                        {/* Success Message */}
-                        {successMessage && (
-                          <div
-                            className="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg"
-                            role="alert"
-                          >
-                            <span className="font-medium">Success:</span>{" "}
-                            {successMessage}
-                          </div>
-                        )}
-
-                        {/* Form Fields would go here */}
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center justify-end gap-4 pt-4">
+                    {/* Address Form */}
+                    {showAddressForm && (
+                      <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 space-y-6">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-medium">
+                            {editingAddressId ? "Edit" : "Add"} Address
+                          </h3>
                           <button
-                            type="button"
                             onClick={resetAddressForm}
-                            className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            <X className="h-6 w-6" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              Flat/House Number <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={addressFormData.flatNo}
+                              onChange={(e) =>
+                                setAddressFormData({
+                                  ...addressFormData,
+                                  flatNo: e.target.value,
+                                })
+                              }
+                              className={`w-full px-4 py-3 rounded-lg border ${
+                                addressFormErrors.flatNo
+                                  ? "border-red-500"
+                                  : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                              }`}
+                              placeholder="Enter Flat/House Number"
+                            />
+                            {addressFormErrors.flatNo && (
+                              <p className="text-red-500 text-sm">
+                                {addressFormErrors.flatNo}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              Landmark <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={addressFormData.landmark}
+                              onChange={(e) =>
+                                setAddressFormData({
+                                  ...addressFormData,
+                                  landmark: e.target.value,
+                                })
+                              }
+                              className={`w-full px-4 py-3 rounded-lg border ${
+                                addressFormErrors.landmark
+                                  ? "border-red-500"
+                                  : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                              }`}
+                              placeholder="Enter nearby landmark"
+                            />
+                            {addressFormErrors.landmark && (
+                              <p className="text-red-500 text-sm">
+                                {addressFormErrors.landmark}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2 md:col-span-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              Address <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                              value={addressFormData.address}
+                              onChange={(e) =>
+                                setAddressFormData({
+                                  ...addressFormData,
+                                  address: e.target.value,
+                                })
+                              }
+                              className={`w-full px-4 py-3 rounded-lg border ${
+                                addressFormErrors.address
+                                  ? "border-red-500"
+                                  : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                              }`}
+                              rows={3}
+                              placeholder="Enter full address"
+                            ></textarea>
+                            {addressFormErrors.address && (
+                              <p className="text-red-500 text-sm">
+                                {addressFormErrors.address}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              PIN Code <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              maxLength={6}
+                              pattern="\d*"
+                              value={addressFormData.pincode}
+                              onChange={(e) =>
+                                setAddressFormData({
+                                  ...addressFormData,
+                                  pincode: e.target.value,
+                                })
+                              }
+                              className={`w-full px-4 py-3 rounded-lg border ${
+                                addressFormErrors.pincode
+                                  ? "border-red-500"
+                                  : "border-gray-300 focus:ring-2 focus:ring-purple-500"
+                              }`}
+                              placeholder="Enter 6-digit PIN code"
+                            />
+                            {addressFormErrors.pincode && (
+                              <p className="text-red-500 text-sm">
+                                {addressFormErrors.pincode}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              Address Type
+                            </label>
+                            <select
+                              value={addressFormData.addressType}
+                              onChange={(e) =>
+                                setAddressFormData({
+                                  ...addressFormData,
+                                  addressType: e.target.value as "Home" | "Work" | "Others",
+                                })
+                              }
+                              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500"
+                            >
+                              <option value="Home">Home</option>
+                              <option value="Work">Work</option>
+                              <option value="Others">Others</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {successMessage && (
+                          <div className="flex items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-200">
+                            <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            <span className="text-green-600 text-sm">{successMessage}</span>
+                          </div>
+                        )}
+
+                        {error && (
+                          <div className="flex items-center gap-2 p-4 rounded-lg bg-red-50 border border-red-200">
+                            <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                            <span className="text-red-600 text-sm">{error}</span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end gap-3">
+                          <button
+                            onClick={resetAddressForm}
+                            className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
                           >
                             Cancel
                           </button>
                           <button
-                            type="button"
                             onClick={handleAddressSubmit}
                             disabled={isLoading}
-                            className="inline-flex items-center justify-center px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                            className="px-6 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 flex items-center gap-2"
                           >
                             {isLoading ? (
                               <>
-                                <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                                {editingAddressId ? "Updating..." : "Adding..."}
+                                <Loader2 className="h-4 w-4 animate-spin" /> Saving...
                               </>
-                            ) : editingAddressId ? (
-                              "Update Address"
                             ) : (
-                              "Add Address"
+                              "Save Address"
                             )}
                           </button>
                         </div>
                       </div>
-                    </form>
-                  </div>
+                    )}
+
+                    {/* Address List */}
+                    <div className="space-y-4">
+                      {addresses.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          No addresses saved yet. Add your first address.
+                        </div>
+                      ) : (
+                        addresses.map((address) => (
+                          <div
+                            key={address.id}
+                            className="border border-gray-200 rounded-lg p-4 hover:border-purple-200 transition-colors"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex items-center gap-2">
+                                {address.addressType === "Home" && (
+                                  <FaHome className="text-purple-600" />
+                                )}
+                                {address.addressType === "Work" && (
+                                  <FaBriefcase className="text-purple-600" />
+                                )}
+                                {address.addressType === "Others" && (
+                                  <FaMapMarkerAlt className="text-purple-600" />
+                                )}
+                                <span className="font-medium">{address.addressType}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleEditAddress(address)}
+                                  className="p-1.5 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-colors"
+                                >
+                                  <FaPen className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteAddress(address.id || "")}
+                                  className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                >
+                                  <FaTrash className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="mt-2 text-gray-700">
+                              <p>{address.flatNo}, {address.landmark}</p>
+                              <p className="mt-1">{address.address}</p>
+                              <p className="mt-1">PIN: {address.pincode}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             )}
           </div>
         </div>
-        <Footer />
       </div>
+      <Footer />
     </div>
   );
 };

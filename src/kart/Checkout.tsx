@@ -277,12 +277,13 @@ const CheckoutPage: React.FC = () => {
     message.success(`Delivery time slot selected: ${date}, ${timeSlot}`);
   };
 
-  const fetchCartData = async () => {
+const fetchCartData = async () => {
     try {
       const response = await axios.get(
-        `${BASE_URL}/cart-service/cart/customersCartItems?customerId=${customerId}`,
+        `${BASE_URL}/cart-service/cart/userCartInfo?customerId=${customerId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
       if (response.data.customerCartResponseList) {
         const cartItemsMap = response.data.customerCartResponseList.reduce(
           (acc: { [key: string]: number }, item: CartItem) => {
@@ -292,7 +293,7 @@ const CheckoutPage: React.FC = () => {
           {}
         );
         const totalQuantity = Object.values(cartItemsMap as Record<string, number>).reduce((sum, qty) => sum + qty, 0);
-        setCartData(response.data?.customerCartResponseList || []);
+        setCartData(response.data.customerCartResponseList || []);
         setCount(totalQuantity);
       } else {
         setCartData([]);
@@ -306,20 +307,20 @@ const CheckoutPage: React.FC = () => {
 
   const totalCart = async () => {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/cart-service/cart/cartItemData`,
-        { customerId },
+      const response = await axios.get(
+        `${BASE_URL}/cart-service/cart/userCartInfo?customerId=${customerId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setGrandTotalAmount(parseFloat(response.data.totalSumWithGstSum));
-      setSubGst(response.data.totalGstSum);
-      const totalDeliveryFee = response.data?.cartResponseList.reduce(
-        (sum: number, item: CartData) => sum + item.deliveryBoyFee,
+      
+      setGrandTotalAmount(parseFloat(response.data.amountToPay || '0'));
+      setSubGst(parseFloat(response.data.totalGstAmountToPay || '0'));
+      const totalDeliveryFee = response.data.customerCartResponseList.reduce(
+        (sum: number, item: CartData) => sum + (item.deliveryBoyFee || 0),
         0
       );
       setDeliveryBoyFee(totalDeliveryFee);
-      setTotalAmount(parseFloat(response.data.totalSumWithGstSum));
-      setGrandTotal(parseFloat(response.data.totalSum));
+      setTotalAmount(parseFloat(response.data.totalCartValue || '0'));
+      setGrandTotal(parseFloat(response.data.totalCartValue || '0'));
     } catch (error) {
       console.error("Error fetching cart items:", error);
       message.error("Failed to fetch cart items");
