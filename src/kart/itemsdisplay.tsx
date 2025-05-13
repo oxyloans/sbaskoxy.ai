@@ -15,11 +15,11 @@ import {
   MessageCircle,
   AlertCircle,
   Loader2,
-  Trash2
+  Trash2,
 } from "lucide-react";
 import Footer from "../components/Footer";
 import { CartContext } from "../until/CartContext";
-import { AxiosError } from 'axios'; 
+import { AxiosError } from "axios";
 import BASE_URL from "../Config";
 
 interface Item {
@@ -108,16 +108,15 @@ const ItemDisplayPage = () => {
   };
 
   useEffect(() => {
-  if (itemId) {
-    if (!state?.item) {
-      fetchItemDetails(itemId);
-    } else {
-      setItemDetails(state.item);
+    if (itemId) {
+      if (!state?.item) {
+        fetchItemDetails(itemId);
+      } else {
+        setItemDetails(state.item);
+      }
+      fetchCartData("");
     }
-    fetchCartData("");
-  }
-}, [itemId, state]);
-
+  }, [itemId, state]);
 
   // Updated navigation handler for related items
   const handleRelatedItemClick = (item: Item) => {
@@ -256,85 +255,114 @@ const ItemDisplayPage = () => {
     }
   };
 
-
-const handleQuantityChange = async (item: Item, increment: boolean) => {
-  const endpoint = increment
-    ? `${BASE_URL}/cart-service/cart/addAndIncrementCart`
-    : `${BASE_URL}/cart-service/cart/minusCartItem`;
-
-  if (cartItems[item.itemId] === item.quantity && increment) {
-    message.warning("Sorry, Maximum quantity reached.");
-    return;
-  }
-
-  setLoadingItems((prev) => ({
-    ...prev,
-    items: { ...prev.items, [item.itemId]: true },
-  }));
-
-  try {
-    if (!increment && cartItems[item.itemId] <= 1) {
-      const targetCartId = cartData.find(
-        (cart) => cart.itemId === item.itemId
-      )?.cartId;
-
-      await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
-        data: { id: targetCartId },
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      message.success("Item removed from cart successfully.");
-    } else {
-      const requestConfig = {
-        headers: { Authorization: `Bearer ${token}` },
-      };
-      const requestData = { customerId, itemId: item.itemId };
-
-      if (increment) {
-        await axios.post(endpoint, requestData, requestConfig);
-      } else {
-        try {
-          const patchRes = await axios.patch(endpoint, requestData, requestConfig);
-          console.log("PATCH success:", patchRes.status, patchRes.data);
-        } catch (error) {
-          // Check if the error is an AxiosError using 'instanceof'
-          if (error instanceof AxiosError && error.response) {
-            const { status, data } = error.response;
-            console.warn("PATCH error response:", status, data);
-            if (status === 200 || status === 204) {
-              console.log("PATCH treated as error but actually succeeded.");
-            } else {
-              throw error; // Rethrow if the error is not handled
-            }
-          } else {
-            console.error("Network or unknown PATCH error:", error);
-            throw error; // Rethrow non-Axios errors
-          }
-        }
-      }
-    }
-
+  // Function to handle removing an item completely from the cart
+  const handleRemoveItem = async (itemId: string) => {
     setLoadingItems((prev) => ({
       ...prev,
-      items: { ...prev.items, [item.itemId]: false },
+      items: { ...prev.items, [itemId]: true },
     }));
 
     try {
-      await fetchCartData(item.itemId);
-    } catch (err) {
-      console.error("Error fetching updated cart data:", err);
-      message.error("Cart updated, but failed to refresh view.");
+      // Use the minusCartItem endpoint with PATCH
+      await axios.patch(
+        `${BASE_URL}/cart-service/cart/minusCartItem`,
+        { customerId, itemId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      message.success("Item removed from cart successfully.");
+      await fetchCartData("");
+    } catch (error) {
+      console.error("Error removing item:", error);
+      message.error("Error removing item from cart");
+    } finally {
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [itemId]: false },
+      }));
     }
-  } catch (error) {
-    console.error("Error updating quantity:", error);
-    message.error("Error updating item quantity.");
+  };
+
+  // Modified handleQuantityChange function
+  const handleQuantityChange = async (item: Item, increment: boolean) => {
+    const endpoint = increment
+      ? `${BASE_URL}/cart-service/cart/addAndIncrementCart`
+      : `${BASE_URL}/cart-service/cart/minusCartItem`;
+
+    if (cartItems[item.itemId] === item.quantity && increment) {
+      message.warning("Sorry, Maximum quantity reached.");
+      return;
+    }
+
     setLoadingItems((prev) => ({
       ...prev,
-      items: { ...prev.items, [item.itemId]: false },
+      items: { ...prev.items, [item.itemId]: true },
     }));
-  }
-};
 
+    try {
+      if (!increment && cartItems[item.itemId] <= 1) {
+        // Instead of using the DELETE endpoint, use minusCartItem
+        // to remove the last item
+        await axios.patch(
+          `${BASE_URL}/cart-service/cart/minusCartItem`,
+          { customerId, itemId: item.itemId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        message.success("Item removed from cart successfully.");
+      } else {
+        const requestConfig = {
+          headers: { Authorization: `Bearer ${token}` },
+        };
+        const requestData = { customerId, itemId: item.itemId };
+
+        if (increment) {
+          await axios.post(endpoint, requestData, requestConfig);
+        } else {
+          try {
+            const patchRes = await axios.patch(
+              endpoint,
+              requestData,
+              requestConfig
+            );
+            console.log("PATCH success:", patchRes.status, patchRes.data);
+          } catch (error) {
+            // Check if the error is an AxiosError using 'instanceof'
+            if (error instanceof AxiosError && error.response) {
+              const { status, data } = error.response;
+              console.warn("PATCH error response:", status, data);
+              if (status === 200 || status === 204) {
+                console.log("PATCH treated as error but actually succeeded.");
+              } else {
+                throw error; // Rethrow if the error is not handled
+              }
+            } else {
+              console.error("Network or unknown PATCH error:", error);
+              throw error; // Rethrow non-Axios errors
+            }
+          }
+        }
+      }
+
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [item.itemId]: false },
+      }));
+
+      try {
+        await fetchCartData(item.itemId);
+      } catch (err) {
+        console.error("Error fetching updated cart data:", err);
+        message.error("Cart updated, but failed to refresh view.");
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      message.error("Error updating item quantity.");
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [item.itemId]: false },
+      }));
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -490,9 +518,10 @@ const handleQuantityChange = async (item: Item, increment: boolean) => {
                       <span className="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-lg">
                         {calculateDiscount(
                           Number(itemDetails.itemMrp) ||
-                          Number(itemDetails.priceMrp),
+                            Number(itemDetails.priceMrp),
                           Number(itemDetails.itemPrice)
-                        )}% OFF
+                        )}
+                        % OFF
                       </span>
                     </div>
                   )}
@@ -593,36 +622,7 @@ const handleQuantityChange = async (item: Item, increment: boolean) => {
                               className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all ml-2"
                               onClick={() => {
                                 if (itemDetails) {
-                                  const targetCartId = cartData.find(
-                                    (cart) => cart.itemId === itemDetails.itemId
-                                  )?.cartId;
-                                  if (targetCartId) {
-                                    axios
-                                      .delete(
-                                        `${BASE_URL}/cart-service/cart/remove`,
-                                        {
-                                          data: { id: targetCartId },
-                                          headers: {
-                                            Authorization: `Bearer ${token}`,
-                                          },
-                                        }
-                                      )
-                                      .then(() => {
-                                        message.success(
-                                          "Item removed from cart successfully."
-                                        );
-                                        fetchCartData("");
-                                      })
-                                      .catch((error) => {
-                                        console.error(
-                                          "Error removing item:",
-                                          error
-                                        );
-                                        message.error(
-                                          "Error removing item from cart"
-                                        );
-                                      });
-                                  }
+                                  handleRemoveItem(itemDetails.itemId);
                                 }
                               }}
                               disabled={loadingItems.items[itemDetails.itemId]}
@@ -828,7 +828,9 @@ const handleQuantityChange = async (item: Item, increment: boolean) => {
                                   }`}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (cartItems[item.itemId] < item.quantity) {
+                                    if (
+                                      cartItems[item.itemId] < item.quantity
+                                    ) {
                                       handleQuantityChange(item, true);
                                     }
                                   }}
@@ -845,36 +847,7 @@ const handleQuantityChange = async (item: Item, increment: boolean) => {
                                   className="p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all ml-1"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const targetCartId = cartData.find(
-                                      (cart) => cart.itemId === item.itemId
-                                    )?.cartId;
-                                    if (targetCartId) {
-                                      axios
-                                        .delete(
-                                          `${BASE_URL}/cart-service/cart/remove`,
-                                          {
-                                            data: { id: targetCartId },
-                                            headers: {
-                                              Authorization: `Bearer ${token}`,
-                                            },
-                                          }
-                                        )
-                                        .then(() => {
-                                          message.success(
-                                            "Item removed from cart successfully."
-                                          );
-                                          fetchCartData("");
-                                        })
-                                        .catch((error) => {
-                                          console.error(
-                                            "Error removing item:",
-                                            error
-                                          );
-                                          message.error(
-                                            "Error removing item from cart"
-                                          );
-                                        });
-                                    }
+                                    handleRemoveItem(item.itemId);
                                   }}
                                   disabled={loadingItems.items[item.itemId]}
                                 >

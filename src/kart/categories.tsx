@@ -220,62 +220,36 @@ const Categories: React.FC<CategoriesProps> = ({
         ? `${BASE_URL}/cart-service/cart/addAndIncrementCart`
         : `${BASE_URL}/cart-service/cart/minusCartItem`;
 
-      if (!increment && cartItems[item.itemId] <= 1) {
-        setLoadingItems((prev) => ({
-          ...prev,
-          items: { ...prev.items, [item.itemId]: true },
-          status: { ...prev.status, [item.itemId]: status },
-        }));
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [item.itemId]: true },
+        status: { ...prev.status, [item.itemId]: status },
+      }));
 
-        const targetCartId = cartData.find(
-          (cart) => cart.itemId === item.itemId
-        )?.cartId;
+      const payload = {
+        customerId,
+        itemId: item.itemId,
+      };
 
-        const response = await axios.delete(
-          `${BASE_URL}/cart-service/cart/remove`,
-          {
-            data: { id: targetCartId },
-          }
+      // Always use minusCartItem API, even when reducing quantity to zero
+      const response = increment
+        ? await axios.post(endpoint, payload)
+        : await axios.patch(endpoint, payload);
+
+      // Message based on the action taken
+      if (!increment) {
+        message.success(
+          cartItems[item.itemId] <= 1
+            ? "Item removed from cart successfully."
+            : "Item quantity decreased"
         );
-
-        setLoadingItems((prev) => ({
-          ...prev,
-          items: { ...prev.items, [item.itemId]: false },
-          status: { ...prev.status, [item.itemId]: "" },
-        }));
-
-        if (response) {
-          message.success("Item removed from cart successfully.");
-        } else {
-          message.error("Sorry, Please try again");
-        }
-      } else {
-        setLoadingItems((prev) => ({
-          ...prev,
-          items: { ...prev.items, [item.itemId]: true },
-          status: { ...prev.status, [item.itemId]: status },
-        }));
-
-        const payload = {
-          customerId,
-          itemId: item.itemId,
-        };
-
-        const response = increment
-          ? await axios.post(endpoint, payload)
-          : await axios.patch(endpoint, payload);
-
-        // Optional: Show success message only for PATCH (minus)
-        if (!increment) {
-          message.success("Item quantity decreased");
-        }
-
-        setLoadingItems((prev) => ({
-          ...prev,
-          items: { ...prev.items, [item.itemId]: false },
-          status: { ...prev.status, [item.itemId]: "" },
-        }));
       }
+
+      setLoadingItems((prev) => ({
+        ...prev,
+        items: { ...prev.items, [item.itemId]: false },
+        status: { ...prev.status, [item.itemId]: "" },
+      }));
 
       fetchCartData(item.itemId);
     } catch (error) {

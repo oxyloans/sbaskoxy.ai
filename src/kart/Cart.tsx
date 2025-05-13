@@ -419,12 +419,17 @@ const handleDecrease = async (item: CartItem) => {
   }
 };
 
-  const removeCartItem = async (item: CartItem) => {
+ const removeCartItem = async (item: CartItem) => {
     try {
-      await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
-        data: {
-          id: item.cartId,
-        },
+      // Set loading state for this item
+      setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
+      
+      // Use the minusCartItem PATCH endpoint instead of the remove DELETE endpoint
+      await axios.patch(`${BASE_URL}/cart-service/cart/minusCartItem`, {
+        cartQuantity: 0, // Setting quantity to 0 to remove the item
+        customerId,
+        itemId: item.itemId,
+      }, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -455,7 +460,19 @@ const handleDecrease = async (item: CartItem) => {
       message.success("Item removed from cart successfully.", 5);
     } catch (error) {
       console.error("Failed to remove cart item:", error);
+      
+      // More detailed error handling
+      if (axios.isAxiosError(error)) {
+        const { response } = error;
+        if (response) {
+          console.error("Error response:", response.status, response.data);
+        }
+      }
+      
       message.error("Failed to remove item");
+    } finally {
+      // Clear loading state for this item
+      setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
     }
   };
 
