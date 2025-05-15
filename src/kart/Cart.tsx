@@ -1,14 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Loader2, X ,Trash2} from "lucide-react";
+import { Loader2, X, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { isWithinRadius } from "./LocationCheck";
-import { Button, message, Modal, } from "antd";
+import { Button, message, Modal } from "antd";
 import Footer from "../components/Footer";
 import { CartContext } from "../until/CartContext";
 import { LoadingOutlined } from "@ant-design/icons";
-import  BASE_URL  from "../Config";
+import BASE_URL from "../Config";
 
 interface Address {
   id?: string;
@@ -30,6 +30,7 @@ interface CartItem {
   weight: string;
   cartQuantity: number;
   cartId: string;
+  status: string;
   quantity: number;
 }
 
@@ -64,6 +65,7 @@ const CartPage: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [checkoutError, setCheckoutError] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const isFreeItem = (item: any) => item.status === "FREE";
   const [addressFormData, setAddressFormData] = useState<AddressFormData>({
     flatNo: "",
     landMark: "",
@@ -311,70 +313,24 @@ const CartPage: React.FC = () => {
     }
   };
 
- const handleIncrease = async (item: CartItem) => {
-  setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
-  
-  try {
-    const currentQuantity = cartItems[item.itemId] || 0;
-    
-    // Check if increasing would exceed available stock
-    if (currentQuantity >= item.quantity) {
-      message.warning(`Only ${item.quantity} units available in stock`);
-      setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
-      return;
-    }
-    
-    const newQuantity = currentQuantity + 1;
-    
-    // Use POST instead of PATCH for increment
-    await axios.post(
-      `${BASE_URL}/cart-service/cart/addAndIncrementCart`,
-      {
-        cartQuantity: newQuantity,
-        customerId,
-        itemId: item.itemId,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    
-    await fetchCartData();
-  } catch (error) {
-    console.error("Failed to increase cart item:", error);
-    
-    // More detailed error handling
-    if (axios.isAxiosError(error)) {
-      const { response } = error;
-      if (response) {
-        console.error("Error response:", response.status, response.data);
-        if (response.status === 200 || response.status === 204) {
-          console.log("Increase request may have succeeded despite error");
-        }
-      }
-    }
-    
-    message.error("Failed to update quantity");
-  } finally {
-    setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
-  }
-};
+  const handleIncrease = async (item: CartItem) => {
+    setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
 
-const handleDecrease = async (item: CartItem) => {
-  setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
-  
-  try {
-    const currentQuantity = cartItems[item.itemId];
-    
-    if (currentQuantity > 1) {
-      const newQuantity = currentQuantity - 1;
-      
-      // Use PATCH for decrement
-      await axios.patch(
-        `${BASE_URL}/cart-service/cart/minusCartItem`,
+    try {
+      const currentQuantity = cartItems[item.itemId] || 0;
+
+      // Check if increasing would exceed available stock
+      if (currentQuantity >= item.quantity) {
+        message.warning(`Only ${item.quantity} units available in stock`);
+        setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
+        return;
+      }
+
+      const newQuantity = currentQuantity + 1;
+
+      // Use POST instead of PATCH for increment
+      await axios.post(
+        `${BASE_URL}/cart-service/cart/addAndIncrementCart`,
         {
           cartQuantity: newQuantity,
           customerId,
@@ -387,54 +343,104 @@ const handleDecrease = async (item: CartItem) => {
           },
         }
       );
-      
-      // Update local state immediately
-      setCartItems((prev) => ({
-        ...prev,
-        [item.itemId]: newQuantity,
-      }));
-      
-      // Update cart data
+
       await fetchCartData();
-    } else {
-      // If quantity is 1, remove the item
-      await removeCartItem(item);
-    }
-  } catch (error) {
-    console.error("Failed to decrease cart item:", error);
-    
-    // More detailed error handling
-    if (axios.isAxiosError(error)) {
-      const { response } = error;
-      if (response) {
-        console.error("Error response:", response.status, response.data);
-        if (response.status === 200 || response.status === 204) {
-          console.log("Decrease request may have succeeded despite error");
+    } catch (error) {
+      console.error("Failed to increase cart item:", error);
+
+      // More detailed error handling
+      if (axios.isAxiosError(error)) {
+        const { response } = error;
+        if (response) {
+          console.error("Error response:", response.status, response.data);
+          if (response.status === 200 || response.status === 204) {
+            console.log("Increase request may have succeeded despite error");
+          }
         }
       }
-    }  
-    message.error("Failed to update quantity");
-  } finally {
-    setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
-  }
-};
 
- const removeCartItem = async (item: CartItem) => {
+      message.error("Failed to update quantity");
+    } finally {
+      setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
+    }
+  };
+
+  const handleDecrease = async (item: CartItem) => {
+    setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
+
+    try {
+      const currentQuantity = cartItems[item.itemId];
+
+      if (currentQuantity > 1) {
+        const newQuantity = currentQuantity - 1;
+
+        // Use PATCH for decrement
+        await axios.patch(
+          `${BASE_URL}/cart-service/cart/minusCartItem`,
+          {
+            cartQuantity: newQuantity,
+            customerId,
+            itemId: item.itemId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        // Update local state immediately
+        setCartItems((prev) => ({
+          ...prev,
+          [item.itemId]: newQuantity,
+        }));
+
+        // Update cart data
+        await fetchCartData();
+      } else {
+        // If quantity is 1, remove the item
+        await removeCartItem(item);
+      }
+    } catch (error) {
+      console.error("Failed to decrease cart item:", error);
+
+      // More detailed error handling
+      if (axios.isAxiosError(error)) {
+        const { response } = error;
+        if (response) {
+          console.error("Error response:", response.status, response.data);
+          if (response.status === 200 || response.status === 204) {
+            console.log("Decrease request may have succeeded despite error");
+          }
+        }
+      }
+      message.error("Failed to update quantity");
+    } finally {
+      setLoadingItems((prev) => ({ ...prev, [item.itemId]: false }));
+    }
+  };
+
+  const removeCartItem = async (item: CartItem) => {
     try {
       // Set loading state for this item
       setLoadingItems((prev) => ({ ...prev, [item.itemId]: true }));
-      
+
       // Use the minusCartItem PATCH endpoint instead of the remove DELETE endpoint
-      await axios.patch(`${BASE_URL}/cart-service/cart/minusCartItem`, {
-        cartQuantity: 0, // Setting quantity to 0 to remove the item
-        customerId,
-        itemId: item.itemId,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      await axios.patch(
+        `${BASE_URL}/cart-service/cart/minusCartItem`,
+        {
+          cartQuantity: 0, // Setting quantity to 0 to remove the item
+          customerId,
+          itemId: item.itemId,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       // Remove item from local state immediately
       setCartData((prev) =>
@@ -460,7 +466,7 @@ const handleDecrease = async (item: CartItem) => {
       message.success("Item removed from cart successfully.", 5);
     } catch (error) {
       console.error("Failed to remove cart item:", error);
-      
+
       // More detailed error handling
       if (axios.isAxiosError(error)) {
         const { response } = error;
@@ -468,7 +474,7 @@ const handleDecrease = async (item: CartItem) => {
           console.error("Error response:", response.status, response.data);
         }
       }
-      
+
       message.error("Failed to remove item");
     } finally {
       // Clear loading state for this item
@@ -694,139 +700,160 @@ const handleDecrease = async (item: CartItem) => {
               ) : (
                 cartData.map((item) => (
                   <div
-                  key={item.itemId}
-                  className="border rounded-lg p-4 mb-4 flex flex-col md:flex-row w-full"
-                >
-                  {/* Left Section: Image and Item Details */}
-                  <div className="flex flex-1 mb-4 md:mb-0">
-                    <div
-                      className="w-20 h-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 cursor-pointer shadow-sm"
-                      onClick={() =>
-                        navigate(`/main/itemsdisplay/${item.itemId}`, {
-                          state: { item },
-                        })
-                      }
-                    >
-                      <img
-                        src={item.image}
-                        alt={item.itemName}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                
-                    <div className="ml-4 flex flex-col justify-center">
-                      {/* Display available stock quantity */}
-                      {item.quantity < 6 && item.quantity > 0 && (
-                        <p className="text-xs font-medium text-red-500 mb-1">
-                          Only {item.quantity} {item.quantity === 1 ? 'item' : 'items'} left
-                        </p>
+                    key={item.itemId}
+                    className="border rounded-lg p-4 mb-4 flex flex-col md:flex-row w-full"
+                  >
+                    {/* Left Section: Image and Item Details */}
+                    <div className="flex flex-1 mb-4 md:mb-0">
+                      <div
+                        className="w-20 h-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 cursor-pointer shadow-sm"
+                        onClick={() =>
+                          navigate(`/main/itemsdisplay/${item.itemId}`, {
+                            state: { item },
+                          })
+                        }
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.itemName}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      <div className="ml-4 flex flex-col justify-center">
+                        {/* Display available stock quantity */}
+                        {item.quantity < 6 && item.quantity > 0 && (
+                          <p className="text-xs font-medium text-red-500 mb-1">
+                            Only {item.quantity}{" "}
+                            {item.quantity === 1 ? "item" : "items"} left
+                          </p>
                         )}
                         <h3 className="text-smc md:text-lg font-bold text-gray-800 mb-1 line-clamp-2">
                           {item.itemName}
                         </h3>
                         <p className="text-sm text-gray-600">
-                        Weight: {item.weight} {item.units}
-                      </p>
-                      <div className="flex items-center mt-1">
-                        <p className="text-sm line-through text-gray-400 mr-2">
-                          ₹{item.priceMrp}
+                          Weight: {item.weight} {item.units}
                         </p>
-                        <p className="text-green-600 font-bold">
-                          ₹{item.itemPrice}
-                        </p>
+                        <div className="flex items-center mt-1">
+                          <p className="text-sm line-through text-gray-400 mr-2">
+                            ₹{item.priceMrp}
+                          </p>
+                          <p className="text-green-600 font-bold">
+                            ₹{item.itemPrice}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                
-                  {/* Right Section: Quantity Controls & Price */}
-                  {item.quantity !== 0 ? (
-                    <div className="flex flex-col md:items-end justify-center space-y-3 w-full md:w-auto">
-                      <div className="flex items-center justify-between md:justify-end w-full">
-                        {/* Quantity Controls - Updated with new design */}
-                        <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1">
-                          <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 hover:shadow-md transition-shadow"
-                            onClick={() => handleDecrease(item)}
-                            disabled={loadingItems[item.itemId]}
-                            aria-label="Decrease quantity"
-                          >
-                            <span className="font-medium">-</span>
-                          </motion.button>
-                          
-                          <div className="px-4">
-                            {loadingItems[item.itemId] ? (
-                              <Loader2 className="animate-spin text-purple-600" />
-                            ) : (
-                              <span className="font-medium text-purple-700">{cartItems[item.itemId]}</span>
-                            )}
+
+                    {/* Right Section: Quantity Controls & Price */}
+                    {item.quantity !== 0 ? (
+                      isFreeItem(item) ? (
+                        // FREE ITEM UI
+                        <div className="flex flex-col md:items-end justify-center space-y-3 w-full md:w-auto">
+                          <p className="text-green-600 font-bold text-base mb-2">
+                            FREE Item
+                          </p>
+                          <div className="w-full flex justify-end">
+                            <p className="text-green-600 font-semibold">
+                              Total: ₹0.00
+                            </p>
                           </div>
-                          
-                          <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            className={`w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 hover:shadow-md transition-shadow ${
-                              cartItems[item.itemId] >= item.quantity
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }`}
-                            onClick={() => {
-                              if (cartItems[item.itemId] < item.quantity) {
-                                handleIncrease(item);
-                              }
-                            }}
-                            disabled={
-                              cartItems[item.itemId] >= item.quantity ||
-                              loadingItems[item.itemId]|| (parseInt(item.itemPrice) === 1 && cartItems[item.itemId] >= 1)
-                            }
-                            aria-label="Increase quantity"
-                          >
-                            <span className="font-medium">+</span>
-                          </motion.button>
                         </div>
-                
-                        {/* Delete Button - Updated with icon */}
+                      ) : (
+                        // NORMAL ITEM UI
+                        <div className="flex flex-col md:items-end justify-center space-y-3 w-full md:w-auto">
+                          <div className="flex items-center justify-between md:justify-end w-full">
+                            {/* Quantity Controls - Updated with new design */}
+                            <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1">
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 hover:shadow-md transition-shadow"
+                                onClick={() => handleDecrease(item)}
+                                disabled={loadingItems[item.itemId]}
+                                aria-label="Decrease quantity"
+                              >
+                                <span className="font-medium">-</span>
+                              </motion.button>
+
+                              <div className="px-4">
+                                {loadingItems[item.itemId] ? (
+                                  <Loader2 className="animate-spin text-purple-600" />
+                                ) : (
+                                  <span className="font-medium text-purple-700">
+                                    {cartItems[item.itemId]}
+                                  </span>
+                                )}
+                              </div>
+
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                className={`w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 hover:shadow-md transition-shadow ${
+                                  cartItems[item.itemId] >= item.quantity
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                }`}
+                                onClick={() => {
+                                  if (cartItems[item.itemId] < item.quantity) {
+                                    handleIncrease(item);
+                                  }
+                                }}
+                                disabled={
+                                  cartItems[item.itemId] >= item.quantity ||
+                                  loadingItems[item.itemId] ||
+                                  (parseInt(item.itemPrice) === 1 &&
+                                    cartItems[item.itemId] >= 1)
+                                }
+                                aria-label="Increase quantity"
+                              >
+                                <span className="font-medium">+</span>
+                              </motion.button>
+                            </div>
+
+                            {/* Delete Button - Updated with icon */}
+                            <motion.button
+                              whileTap={{ scale: 0.95 }}
+                              className="ml-4 bg-red-500 hover:bg-red-600 hover:shadow-md text-white w-8 h-8 rounded-md transition-all duration-200 flex items-center justify-center"
+                              onClick={async () => {
+                                await removeCartItem(item);
+                              }}
+                              aria-label="Delete item from cart"
+                            >
+                              <Trash2 size={16} />
+                            </motion.button>
+                          </div>
+
+                          {/* Total Price */}
+                          <div className="w-full flex justify-end">
+                            <p className="text-purple-700 font-bold text-base">
+                              Total: ₹
+                              {(
+                                parseFloat(item.itemPrice) *
+                                (cartItems[item.itemId] || 0)
+                              ).toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      // OUT OF STOCK UI
+                      <div className="flex flex-col md:items-end justify-center space-y-3 w-full md:w-auto">
+                        <p className="text-red-600 font-bold text-base mb-2">
+                          Out of Stock
+                        </p>
                         <motion.button
                           whileTap={{ scale: 0.95 }}
-                          className="ml-4 bg-red-500 hover:bg-red-600 hover:shadow-md text-white w-8 h-8 rounded-md transition-all duration-200 flex items-center justify-center"
+                          className="bg-red-500 hover:bg-red-600 hover:shadow-md text-white px-4 py-2 rounded-md transition-all duration-200 text-sm flex items-center justify-center"
                           onClick={async () => {
                             await removeCartItem(item);
                           }}
                           aria-label="Delete item from cart"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={16} className="mr-1" />
+                          Delete
                         </motion.button>
                       </div>
-                
-                      {/* Total Price */}
-                      <div className="w-full flex justify-end">
-                        <p className="text-purple-700 font-bold text-base">
-                          Total: ₹
-                          {(
-                            parseFloat(item.itemPrice) *
-                            (cartItems[item.itemId] || 0)
-                          ).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col md:items-end justify-center space-y-3 w-full md:w-auto">
-                      <p className="text-red-600 font-bold text-base mb-2">
-                        Out of Stock
-                      </p>
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
-                        className="bg-red-500 hover:bg-red-600 hover:shadow-md text-white px-4 py-2 rounded-md transition-all duration-200 text-sm flex items-center justify-center"
-                        onClick={async () => {
-                          await removeCartItem(item);
-                        }}
-                        aria-label="Delete item from cart"
-                      >
-                        <Trash2 size={16} className="mr-1" />
-                        Delete
-                      </motion.button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
                 ))
               )}
             </div>
@@ -884,7 +911,8 @@ const handleDecrease = async (item: CartItem) => {
                     <span className="font-semibold">
                       ₹
                       {cartData
-                        ?.reduce(
+                        ?.filter((item) => item.status !== "FREE")
+                        .reduce(
                           (acc, item) =>
                             acc +
                             parseFloat(item.itemPrice) * item.cartQuantity,
@@ -902,7 +930,8 @@ const handleDecrease = async (item: CartItem) => {
                     <span>
                       ₹
                       {cartData
-                        ?.reduce(
+                        ?.filter((item) => item.status !== "FREE")
+                        .reduce(
                           (acc, item) =>
                             acc +
                             parseFloat(item.itemPrice) * item.cartQuantity,

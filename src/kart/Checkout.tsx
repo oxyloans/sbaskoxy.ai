@@ -25,6 +25,7 @@ interface CartItem {
   itemPrice: string;
   cartQuantity: string;
   quantity: number;
+  status: string;
 }
 
 interface CartData {
@@ -105,6 +106,7 @@ const CheckoutPage: React.FC = () => {
   const userData = localStorage.getItem("profileData");
   const [isButtonDisabled, setisButtonDisabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isFreeItem = (item: CartItem) => item.status === "FREE";
 
   const context = useContext(CartContext);
   if (!context) {
@@ -387,11 +389,24 @@ const CheckoutPage: React.FC = () => {
         setCount(totalQuantity);
 
         // Immediately extract and set all price data
-        const amountToPay = parseFloat(cartResponse.data.amountToPay || "0");
+        const amountToPay = cartResponse.data.customerCartResponseList
+          .filter((item: CartItem) => item.status !== "FREE")
+          .reduce((sum: number, item: CartItem) => {
+            return (
+              sum + parseFloat(item.itemPrice) * parseInt(item.cartQuantity)
+            );
+          }, 0);
+
         const gstAmount = parseFloat(
           cartResponse.data.totalGstAmountToPay || "0"
         );
-        const cartValue = parseFloat(cartResponse.data.totalCartValue || "0");
+        const cartValue = cartResponse.data.customerCartResponseList
+          .filter((item: CartItem) => item.status !== "FREE")
+          .reduce((sum: number, item: CartItem) => {
+            return (
+              sum + parseFloat(item.itemPrice) * parseInt(item.cartQuantity)
+            );
+          }, 0);
 
         const totalDeliveryFee =
           cartResponse.data.customerCartResponseList.reduce(
@@ -1168,7 +1183,11 @@ const CheckoutPage: React.FC = () => {
                               Qty: {item.cartQuantity}
                             </p>
                           </div>
-                          <p className="font-medium">₹{item.itemPrice}</p>
+                          {isFreeItem(item) ? (
+                            <p className="text-green-600 font-semibold">FREE</p>
+                          ) : (
+                            <p className="font-medium">₹{item.itemPrice}</p>
+                          )}
                         </div>
                       ))}
                     </div>
