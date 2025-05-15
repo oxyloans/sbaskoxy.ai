@@ -109,7 +109,7 @@ const CartPage: React.FC = () => {
   const fetchCartData = async () => {
     try {
       const response = await axios.get(
-        `${BASE_URL}/cart-service/cart/customersCartItems?customerId=${customerId}`,
+        `${BASE_URL}/cart-service/cart/userCartInfo?customerId=${customerId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

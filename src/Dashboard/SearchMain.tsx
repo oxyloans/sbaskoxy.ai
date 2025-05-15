@@ -51,7 +51,7 @@ const SearchMain: React.FC = () => {
         const fetchCartData = async () => {
             try {
                 const response = await axios.get(
-                    `https://meta.oxyglobal.tech/api/cart-service/cart/customersCartItems?customerId=${customerId}`,
+                    `https://meta.oxyglobal.tech/api/cart-service/cart/userCartInfo?customerId=${customerId}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 if (response.data.customerCartResponseList) {
@@ -108,7 +108,7 @@ const SearchMain: React.FC = () => {
             );
             message.success("Item added to cart successfully.");
             const response = await axios.get(
-                `https://meta.oxyglobal.tech/api/cart-service/cart/customersCartItems?customerId=${customerId}`,
+                `https://meta.oxyglobal.tech/api/cart-service/cart/userCartInfo?customerId=${customerId}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             const cartItemsMap = response.data.customerCartResponseList.reduce(
@@ -168,7 +168,7 @@ const SearchMain: React.FC = () => {
                 );
             }
             const response = await axios.get(
-                `https://meta.oxyglobal.tech/api/cart-service/cart/customersCartItems?customerId=${customerId}`,
+                `https://meta.oxyglobal.tech/api/cart-service/cart/userCartInfo?customerId=${customerId}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             const cartItemsMap = response.data.customerCartResponseList.reduce(
@@ -216,7 +216,7 @@ const SearchMain: React.FC = () => {
                 });
                 message.success("Item removed from cart successfully.");
                 const response = await axios.get(
-                    `https://meta.oxyglobal.tech/api/cart-service/cart/customersCartItems?customerId=${customerId}`,
+                    `https://meta.oxyglobal.tech/api/cart-service/cart/userCartInfo?customerId=${customerId}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 const cartItemsMap = response.data.customerCartResponseList.reduce(

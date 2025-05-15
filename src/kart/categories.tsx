@@ -87,7 +87,7 @@ const Categories: React.FC<CategoriesProps> = ({
 
     try {
       const response = await axios.get(
-        `${BASE_URL}/cart-service/cart/customersCartItems?customerId=${Id}`
+        `${BASE_URL}/cart-service/cart/userCartInfo?customerId=${Id}`
       );
 
       if (response.data.customerCartResponseList) {
