@@ -79,7 +79,7 @@ const CoursesPage: React.FC<{
 
     try {
       const response = await axios.post(
-        'http://65.0.147.157:9001/api/student-service/student/getCountryBasedData',
+        'https://meta.oxyloans.com/api/student-service/student/getCountryBasedData',
         { countryName: state.selectedCountry }
       );
 
@@ -108,7 +108,7 @@ const fetchUniversities = async (course: Course) => {
 
   try {
     const response = await axios.get(
-      `http://65.0.147.157:9001/api/student-service/student/${encodeURIComponent(course.courseName)}/getCoursesBasedUniversities`,
+      `https://meta.oxyloans.com/api/student-service/student/${encodeURIComponent(course.courseName)}/getCoursesBasedUniversities`,
       {} // Empty body since we're sending the course name as part of the URL
     );
     

@@ -23,7 +23,7 @@ const UserSelectionPage = () => {
   const fetchCountries = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://65.0.147.157:9001/api/student-service/student/getAll-countries');
+      const response = await axios.get('https://meta.oxyloans.com/api/student-service/student/getAll-countries');
       // Extract countries from the nested response
       const countriesData = response.data.countries || [];
       // Sort countries alphabetically

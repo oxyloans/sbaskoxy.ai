@@ -97,7 +97,7 @@ const fetchUniversities = async () => {
   try {
     const courseName = state.course.courseName; 
     const response = await axios.get(
-      `http://65.0.147.157:9001/api/student-service/student/${encodeURIComponent(courseName)}/getCoursesBasedUniversities`,
+      `https://meta.oxyloans.com/api/student-service/student/${encodeURIComponent(courseName)}/getCoursesBasedUniversities`,
       {} // Empty body since we're sending the course name as part of the URL
     );
     
