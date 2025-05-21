@@ -31,6 +31,20 @@ interface Category {
   subCategories?: SubCategory[];
 }
 
+interface Offer {
+  id: string;
+  offerName: string;
+  minQtyKg: number;
+  minQty: number;
+  freeItemName: string;
+  freeItemId: string;
+  freeGivenItemId: string;
+  freeQty: number;
+  freeOnce: boolean;
+  active: boolean;
+  offerCreatedAt: number;
+}
+
 interface CategoriesProps {
   categories: Category[];
   activeCategory: string | null;
@@ -63,16 +77,17 @@ const Categories: React.FC<CategoriesProps> = ({
 }) => {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
-  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(
-    null
-  );
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [isOffersModalVisible, setIsOffersModalVisible] = useState(false);
+  const [isFetchingOffers, setIsFetchingOffers] = useState(false);
   const navigate = useNavigate();
   const [loadingItems, setLoadingItems] = useState<{
     items: { [key: string]: boolean };
     status: { [key: string]: string };
   }>({
-    items: {}, // Stores boolean values for each item
-    status: {}, // Stores status strings for each item
+    items: {},
+    status: {},
   });
 
   const fetchCartData = async (itemId: string) => {
@@ -105,7 +120,6 @@ const Categories: React.FC<CategoriesProps> = ({
         );
         console.log({ cartItemsMap });
 
-        // Fix: Use cartItemsMap and correct syntax
         const totalQuantity = Object.values(
           cartItemsMap as Record<string, number>
         ).reduce((sum, qty) => sum + qty, 0);
@@ -135,12 +149,38 @@ const Categories: React.FC<CategoriesProps> = ({
     }
   };
 
+  const fetchOffers = async () => {
+    const accessToken = localStorage.getItem("accessToken");
+    setIsFetchingOffers(true);
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/cart-service/cart/activeOffers`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      setOffers(response.data); // Response is an array of offers
+      setIsFetchingOffers(false);
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+      message.error("Failed to load offers.");
+      setIsFetchingOffers(false);
+    }
+  };
+
   useEffect(() => {
+    const hasShownOffers = localStorage.getItem("hasShownOffers");
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (userId && accessToken && !hasShownOffers) {
+      fetchOffers();
+      setIsOffersModalVisible(true);
+      localStorage.setItem("hasShownOffers", "true");
+    }
+
     fetchCartData("");
   }, []);
 
   useEffect(() => {
-    // Reset subcategory when category changes
     setActiveSubCategory(null);
   }, [activeCategory]);
 
@@ -156,15 +196,12 @@ const Categories: React.FC<CategoriesProps> = ({
       return;
     }
 
-    // Fixed: Changed boolean to string "true"
     if (!checkProfileCompletion(userId, "true")) {
-      console.log(checkProfileCompletion(userId, "true"));
       Modal.error({
         title: "Profile Incomplete",
         content: "Please complete your profile to add items to the cart.",
         onOk: () => navigate("/main/profile"),
       });
-      // message.warning("Please complete your profile to add items to the cart.");
       setTimeout(() => {
         navigate("/main/profile");
       }, 4000);
@@ -231,12 +268,10 @@ const Categories: React.FC<CategoriesProps> = ({
         itemId: item.itemId,
       };
 
-      // Always use minusCartItem API, even when reducing quantity to zero
       const response = increment
         ? await axios.post(endpoint, payload)
         : await axios.patch(endpoint, payload);
 
-      // Message based on the action taken
       if (!increment) {
         message.success(
           cartItems[item.itemId] <= 1
@@ -269,7 +304,6 @@ const Categories: React.FC<CategoriesProps> = ({
       categories[0];
     if (!currentCategory) return [];
 
-    // If no subcategory is selected, show all items
     if (!activeSubCategory) {
       return currentCategory.itemsResponseDtoList;
     }
@@ -284,8 +318,67 @@ const Categories: React.FC<CategoriesProps> = ({
     return category?.subCategories || [];
   };
 
+  const handleOffersModalClose = () => {
+    setIsOffersModalVisible(false);
+  };
+
   return (
     <div className="bg-white shadow-lg px-3 sm:px-6 lg:px-6 py-3">
+      {/* Custom Styles for Hidden Scrollbar */}
+      <style>
+        {`
+          .offers-scroll-container::-webkit-scrollbar {
+            display: none;
+          }
+          .offers-scroll-container {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+          }
+        `}
+      </style>
+
+      {/* Offers Modal */}
+      <Modal
+        title="Available Offers"
+        open={isOffersModalVisible}
+        onCancel={handleOffersModalClose}
+        footer={[
+          <button
+            key="close"
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900"
+            onClick={handleOffersModalClose}
+          >
+            Close
+          </button>,
+        ]}
+        centered
+        width="90%"
+        style={{ maxWidth: "600px" }}
+        bodyStyle={{ maxHeight: "60vh", padding: "16px" }}
+      >
+        {isFetchingOffers ? (
+          <div className="flex justify-center">
+            <Loader2 className="animate-spin text-purple-600" />
+          </div>
+        ) : offers.length > 0 ? (
+          <div
+            className="space-y-4 offers-scroll-container"
+            style={{ maxHeight: "50vh", overflowY: "auto" }}
+          >
+            {offers.map((offer) => (
+              <div
+                key={offer.id}
+                className="p-4 bg-gray-100 rounded-lg"
+              >
+                <h3 className="font-semibold text-purple-800">{offer.offerName}</h3>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500">No offers available at the moment.</p>
+        )}
+      </Modal>
+
       {/* Category Tabs */}
       <div className="mb-4 overflow-x-auto scrollbar-hide">
         <div className="flex space-x-4 pb-4">
@@ -376,7 +469,7 @@ const Categories: React.FC<CategoriesProps> = ({
               transition={{ delay: index * 0.05 }}
               className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden"
             >
-              {/* Discount Label - Updated to match reference design */}
+              {/* Discount Label */}
               {item.itemMrp &&
                 item.itemPrice &&
                 item.itemMrp > item.itemPrice && (
@@ -392,7 +485,6 @@ const Categories: React.FC<CategoriesProps> = ({
                         Off
                       </span>
                     </div>
-                    {/* Custom shape for bottom edge */}
                     <div
                       className="absolute bottom-0 right-0 transform translate-y 
                       border-t-4 border-r-4 
@@ -431,7 +523,6 @@ const Categories: React.FC<CategoriesProps> = ({
                 className="p-4 cursor-pointer"
                 onClick={() => onItemClick(item)}
               >
-                {/* Image Container */}
                 <div className="aspect-square mb-3 overflow-hidden rounded-lg bg-gray-50 relative group">
                   <img
                     src={item.itemImage ?? "https://via.placeholder.com/150"}
@@ -447,7 +538,6 @@ const Categories: React.FC<CategoriesProps> = ({
                   )}
                 </div>
 
-                {/* Product Details */}
                 <div className="space-y-2">
                   <h3 className="font-medium text-gray-800 line-clamp-2 min-h-[2.5rem] text-sm">
                     {item.itemName}
@@ -457,7 +547,6 @@ const Categories: React.FC<CategoriesProps> = ({
                     {item.units}
                   </p>
 
-                  {/* Price Section - Updated layout */}
                   <div className="flex items-baseline space-x-2">
                     <span className="text-lg font-semibold text-gray-900">
                       ₹{item.itemPrice}
@@ -469,7 +558,6 @@ const Categories: React.FC<CategoriesProps> = ({
                     )}
                   </div>
 
-                  {/* Add to Cart Button Section */}
                   {item.quantity !== 0 ? (
                     cartItems[item.itemId] > 0 ? (
                       <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1 mt-2">
@@ -482,12 +570,6 @@ const Categories: React.FC<CategoriesProps> = ({
                           }}
                           disabled={loadingItems.items[item.itemId]}
                         >
-                          {/* {loadingItems.items[item.itemId] &&
-                          loadingItems.status[item.itemId] == "sub" ? (
-                            <Loader2 className="mr-1 animate-spin inline-block" />
-                          ) : (
-                            "-"
-                          )} */}
                           -
                         </motion.button>
                         {loadingItems.items[item.itemId] ? (
@@ -517,34 +599,26 @@ const Categories: React.FC<CategoriesProps> = ({
                               cartItems[item.itemId] >= 1)
                           }
                         >
-                          {/* {loadingItems.items[item.itemId] &&
-                          loadingItems.status[item.itemId] == "Add" ? (
-                            <Loader2 className="mr-1 animate-spin inline-block" />
-                          ) : (
-                            "+"
-                          )} */}
                           +
                         </motion.button>
                       </div>
                     ) : (
-                      <>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full py-2 mt-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg transition-all duration-300 hover:shadow-md"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(item);
-                          }}
-                          disabled={loadingItems.items[item.itemId]}
-                        >
-                          {loadingItems.items[item.itemId] ? (
-                            <Loader2 className="mr-2 animate-spin inline-block" />
-                          ) : (
-                            "Add to Cart"
-                          )}
-                        </motion.button>
-                      </>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-2 mt-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg transition-all duration-300 hover:shadow-md"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(item);
+                        }}
+                        disabled={loadingItems.items[item.itemId]}
+                      >
+                        {loadingItems.items[item.itemId] ? (
+                          <Loader2 className="mr-2 animate-spin inline-block" />
+                        ) : (
+                          "Add to Cart"
+                        )}
+                      </motion.button>
                     )
                   ) : (
                     <button

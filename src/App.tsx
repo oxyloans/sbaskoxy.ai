@@ -52,6 +52,14 @@ import WhatsappRegister from "./Components1/Auth/WhatsappRegister";
 import AllQueries from "./Pages/AllQueries";
 import RequireAuth from "./auth/RequireAuth";
 import ItemDisplayPage from "./kart/itemsdisplay";
+import CoursesPage from "./StudyAbroad/Course";
+import UserSelectionPage from "./StudyAbroad/Homepage";
+import UniversityDetailsPage from "./StudyAbroad/Univerisityhome";
+import PersonalDetailsPage from "./StudyAbroad/PersonalDetails";
+import ApplicationUpload from "./StudyAbroad/DocumentsUpload";
+import UniversityListPage from "./StudyAbroad/Universitylist";
+
+
 import MyWalletPage from "./kart/Wallet";
 import CartPage from "./kart/Cart";
 import MyOrders from "./kart/Myorders";
@@ -75,6 +83,8 @@ import FreeChatGPTnormal
 import HiddenLogin from "./Components1/Auth/HiddenLogin";
 import { SearchProvider } from "./until/SearchContext";
 import SearchMain from "./Dashboard/SearchMain";
+import StudyAbroadWEB from "./StudyAbroad/abroadmain";
+import StudyAbroadLandingPage from "./StudyAbroad/StudyAbroadLandingPage";
 
 
 import Register from "./Pages/Auth/UserRegister";
@@ -132,6 +142,10 @@ const App: React.FC = () => {
           <Route path="/all-statuses" element={<AllStatusPage />} />
           <Route path="/assigned-task" element={<AssignedTasksPage />} />
           <Route path="/taskassigneduser" element={<TaskAssignedUser />} /> 
+          <Route path="/studyabroad" element={<StudyAbroadWEB />} />
+            <Route path="/studyabroad-web" element={<StudyAbroadLandingPage />} />
+
+
 
           <Route path="/whatsapplogin" element={<WhatsappLogin />} />
           <Route path="/whatsappregister" element={<WhatsappRegister />} />
@@ -140,6 +154,13 @@ const App: React.FC = () => {
           <Route path="/qrcode" element={<QR />} />
           <Route path="/thank-you" element={<ThankYouPage />} />
           <Route path="/freechatgptnormal" element={<FreeChatGPTnormal />} />
+
+          <Route path="/student-home" element={<UserSelectionPage />} />
+                                  <Route path="/universities" element={<UniversityDetailsPage />} />
+                                  <Route path="/listofuniversities" element={<UniversityListPage />} />
+                                  <Route path="/course" element={<CoursesPage />} />
+                                  <Route path="/studentdetails" element={<PersonalDetailsPage />} />
+                                  <Route path="/applicationsupload" element={<ApplicationUpload />} />
 
           {/* Landing Page (First Page) */}
           <Route path="/" element={<Landingpage />} />
