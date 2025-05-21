@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { Globe, X, MapPin, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface StudyAbroadHeaderProps {
-  onNavClick: (id: "home" | "countries" | "universities" | "testimonials" | "contact") => void;
+  onNavClick: (id: "home" | "countries" | "universities" | "testimonials") => void;
   activeLink: string;
 }
 
@@ -11,6 +12,8 @@ const StudyAbroadHeader = memo(function StudyAbroadHeader({ onNavClick, activeLi
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // Initialize isScrolled based on current scroll position to prevent initial flash
   const [isScrolled, setIsScrolled] = useState(() => window.scrollY > 50);
+  const [clicked, setClicked] = useState(false);
+   const navigate = useNavigate();
 
   // Use a ref to track the current scroll state without causing re-renders
   const scrollRef = React.useRef(isScrolled);
@@ -39,9 +42,15 @@ const StudyAbroadHeader = memo(function StudyAbroadHeader({ onNavClick, activeLi
     return () => window.removeEventListener("scroll", handleScroll);
   }, []); // Empty dependency array - this effect only runs once
 
+  const handleClick = () => {
+    setClicked(true);
+    navigate("/student-home");
+    console.log("Navigating to /student-home");
+  };
+
   // Stable reference to the nav click handler
   const handleNavClick = useCallback((
-    id: "home" | "countries" | "universities" | "testimonials" | "contact"
+    id: "home" | "countries" | "universities" | "testimonials"
   ): void => {
     // Use a function reference to ensure we're working with the latest state
     requestAnimationFrame(() => {
@@ -90,7 +99,6 @@ const StudyAbroadHeader = memo(function StudyAbroadHeader({ onNavClick, activeLi
     { id: "countries", label: "Countries" },
     { id: "universities", label: "Universities" },
     { id: "testimonials", label: "Success Stories" },
-    { id: "contact", label: "Contact" },
   ] as const, []);
 
   // Use useCallback for event handlers to maintain stable references
@@ -181,16 +189,17 @@ const StudyAbroadHeader = memo(function StudyAbroadHeader({ onNavClick, activeLi
                 />
               </span>
             </button>
-            <button 
-              className="relative overflow-hidden bg-gradient-to-r from-purple-700 to-purple-500 text-white font-medium py-2 px-5 rounded-full hover:shadow-lg hover:shadow-purple-200 group"
-              style={{ transition: 'box-shadow 0.2s' }}
-            >
-              <span className="relative z-10">Apply Now</span>
-              <span 
-                className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-400 transform scale-x-0 group-hover:scale-x-100 origin-left"
-                style={{ transition: 'transform 0.3s' }}
-              ></span>
-            </button>
+             <button
+        className="relative overflow-hidden bg-gradient-to-r from-purple-700 to-purple-500 text-white font-medium py-2 px-5 rounded-full hover:shadow-lg hover:shadow-purple-200 group"
+        style={{ transition: 'box-shadow 0.2s' }}
+        onClick={handleClick}
+      >
+        <span className="relative z-10">Apply Now</span>
+        <span
+          className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-400 transform scale-x-0 group-hover:scale-x-100 origin-left"
+          style={{ transition: 'transform 0.3s' }}
+        ></span>
+      </button>
           </div>
 
           {/* Mobile menu toggle with improved styling */}

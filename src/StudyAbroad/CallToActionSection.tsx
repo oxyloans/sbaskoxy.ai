@@ -72,11 +72,11 @@ const CallToActionSection = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <div className="font-bold text-purple-600">75+</div>
+                    <div className="font-bold text-purple-600">100+</div>
                     <div className="text-gray-600">Universities</div>
                   </div>
                   <div>
-                    <div className="font-bold text-purple-600">7</div>
+                    <div className="font-bold text-purple-600">10+</div>
                     <div className="text-gray-600">Countries</div>
                   </div>
                 </div>

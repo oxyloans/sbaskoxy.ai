@@ -41,28 +41,28 @@ const StudyAbroadFooter = () => {
             </p>
             <div className="flex gap-4 mb-6">
               <a
-                href="#"
+                href="https://www.facebook.com/StudyAbroadAskoxy"
                 aria-label="Facebook"
                 className="bg-white p-2 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-600 transition-all"
               >
                 <Facebook size={18} />
               </a>
-              <a
+              {/* <a
                 href="#"
                 aria-label="Twitter"
                 className="bg-white p-2 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-600 transition-all"
               >
                 <Twitter size={18} />
-              </a>
+              </a> */}
               <a
-                href="#"
+                href="https://www.linkedin.com/company/89893468/admin/dashboard/"
                 aria-label="LinkedIn"
                 className="bg-white p-2 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-600 transition-all"
               >
                 <Linkedin size={18} />
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/studyabroad_askoxy.ai/"
                 aria-label="Instagram"
                 className="bg-white p-2 rounded-full shadow-sm border border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-600 transition-all"
               >
@@ -165,31 +165,38 @@ const StudyAbroadFooter = () => {
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
                 <address className="not-italic text-gray-600">
-                  StudyAbroad Global<br />
-                  123 Education Street<br />
-                  City, State 12345
+                  CC-03, Block-C, Indu Fortune Fields - The Annexe
+                  KPHB Colony, K P H B Phase 9, Kukatpally, Hyderabad<br />
+                  Telangana 500085
                 </address>
               </div>
               
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-purple-600" />
                 <a
-                  href="tel:+1234567890"
+                  href=""
                   className="text-gray-600 hover:text-purple-600 transition-colors"
                 >
-                  +1 (234) 567-890
+                  89196 36330
                 </a>
               </div>
-              
               <div className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-purple-600" />
                 <a
                   href="mailto:info@studyabroad.com"
                   className="text-gray-600 hover:text-purple-600 transition-colors"
                 >
-                  info@studyabroad.com
+                  studyabroad@askoxy.ai
                 </a>
               </div>
+              {/* <div className="flex items-center gap-3">         
+                <a
+                  href=""
+                  className="text-Purple-600 hover:text-purple-600 transition-colors"
+                >
+                  CIN : U72900TG2020PTC140756
+                </a>
+              </div> */}
             </div>
           </div>
         </div>
