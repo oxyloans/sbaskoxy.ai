@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Users, ArrowLeft, CheckCircle, ChevronDown, Globe, Search, X, Loader2, MapPin, Sparkles } from 'lucide-react';
+import { GraduationCap, Users, ArrowLeft, CheckCircle, ChevronDown, Globe, Search, X, Loader2, MapPin, Flag } from 'lucide-react';
 import axios from 'axios';
+import Student1 from "../assets/img/page1.png"; // Character illustration
+import mapbw from "../assets/img/mapbw.png"; // Map background
 
 interface Country {
   countryName: string;
+  countryCode?: string;
   // Add other properties if needed
 }
 
@@ -17,16 +20,17 @@ const UserSelectionPage = () => {
   const [countries, setCountries] = useState<Country[]>([]);
   const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showCountrySelection, setShowCountrySelection] = useState(false);
+  const [hoveredCountry, setHoveredCountry] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
   
   // Fetch countries from API
   const fetchCountries = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('https://meta.oxyloans.com/api/student-service/student/getAll-countries');
-      // Extract countries from the nested response
+      const response = await axios.get('http://65.0.147.157:9001/api/student-service/student/getAll-countries');
       const countriesData = response.data.countries || [];
-      // Sort countries alphabetically
       const sortedCountries = [...countriesData].sort((a: Country, b: Country) => 
         a.countryName.localeCompare(b.countryName)
       );
@@ -39,18 +43,27 @@ const UserSelectionPage = () => {
     }
   };
 
-  // Load countries when component mounts
-  useEffect(() => {
-    fetchCountries();
-  }, []);
-  
-  // Filter countries based on search query
   useEffect(() => {
     const filtered = countries.filter(country => 
       country.countryName.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredCountries(filtered);
   }, [searchQuery, countries]);
+
+  const handleStudentClick = () => {
+    setUserRole('student');
+    fetchCountries();
+    // Delay showing country selection for smooth transition
+    setTimeout(() => {
+      setShowCountrySelection(true);
+    }, 300);
+  };
+
+  const handleCountrySelect = (countryName: string) => {
+    setSelectedCountry(countryName);
+    setSearchQuery('');
+    setIsCountryDropdownOpen(false);
+  };
 
   const handleContinue = () => {
     if (selectedCountry) {
@@ -63,7 +76,6 @@ const UserSelectionPage = () => {
     }
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -78,235 +90,248 @@ const UserSelectionPage = () => {
   }, []);
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 flex items-center justify-center p-4 font-sans relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-      </div>
+    <div className="min-h-screen bg-white p-6 font-sans">
+      {/* Main rounded container with white border effect */}
+      <div className="w-full max-w-6xl mx-auto h-screen max-h-screen bg-gradient-to-br from-purple-300 via-purple-400 to-purple-500 rounded-3xl relative overflow-hidden shadow-2xl">
+        
+        {/* Background world map overlay */}
+        <div 
+          className="absolute inset-0 opacity-15 bg-no-repeat bg-center bg-cover"
+          style={{
+            backgroundImage: `url(${mapbw})`,
+          }}
+        />
 
-      <div className="max-w-lg w-full bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden transition-all duration-700 relative">
-        {/* Animated gradient border */}
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 rounded-3xl opacity-20 animate-gradient-x"></div>
-        <div className="relative bg-white rounded-3xl m-0.5">
+        {/* Main content container */}
+        <div className="relative z-10 h-full flex items-center">
           
-          <div className="px-8 pt-10 pb-8">
-            {/* Header with enhanced animation */}
-            <div className="text-center mb-8 ">
-              <div className="relative inline-block mb-6">
-                <div className="h-20 w-20 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg mx-auto relative">
-                  <Globe className="h-10 w-10 text-white" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full opacity-20"></div>
-                </div>
-              </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
-                Study Abroad
-              </h1>
-              <p className="text-gray-600 text-lg font-medium">Your journey begins here ✨</p>
+          {/* Left side - Character illustration - Hidden on mobile */}
+          <div className="hidden lg:block lg:w-1/2 h-full relative">
+            <div className="absolute bottom-0 left-8 xl:left-16 w-80 xl:w-96 h-full flex items-end">
+              <img 
+                src={Student1}
+                alt="Student Character" 
+                className="w-full h-auto max-h-full object-contain object-bottom"
+                style={{ maxHeight: '85%' }}
+              />
             </div>
-            
-            {!userRole ? (
-              <div className="space-y-5 animate-slideUp">
-                <h2 className="text-2xl font-semibold text-gray-800 text-center mb-8">I am a...</h2>
+          </div>
+
+          {/* Right side - Modal content */}
+          <div className="w-full lg:w-1/2 flex items-center justify-center px-6 lg:px-8 xl:px-16">
+            <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+              
+              {/* Modal content */}
+              <div className="p-8">
                 
-                <button
-                  onClick={() => setUserRole('student')}
-                  className="w-full group bg-gradient-to-r from-white to-gray-50 hover:from-purple-500 hover:to-blue-500 text-gray-800 hover:text-white rounded-2xl p-6 transition-all duration-500 flex items-center justify-between border-2 border-gray-100 hover:border-transparent shadow-lg hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1"
-                >
-                  <div className="flex items-center">
-                    <div className="bg-gradient-to-r from-purple-100 to-blue-100 group-hover:from-white group-hover:to-white p-4 rounded-2xl mr-5 transition-all duration-300">
-                      <GraduationCap size={28} className="text-purple-600 group-hover:text-purple-600" />
-                    </div>
-                    <div className="text-left">
-                      <span className="font-semibold text-xl block">Student</span>
-                      <span className="text-sm text-gray-500 group-hover:text-purple-100">Explore study abroad opportunities</span>
-                    </div>
-                  </div>
-                  <div className="h-10 w-10 rounded-full border-2 border-gray-200 group-hover:border-white group-hover:bg-white flex items-center justify-center transform group-hover:rotate-90 transition-all duration-300">
-                    <ChevronDown size={20} className="text-gray-400 group-hover:text-purple-600 transform rotate-270" />
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => setUserRole('counselor')}
-                  className="w-full group bg-gradient-to-r from-white to-gray-50 hover:from-purple-500 hover:to-blue-500 text-gray-800 hover:text-white rounded-2xl p-6 transition-all duration-500 flex items-center justify-between border-2 border-gray-100 hover:border-transparent shadow-lg hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1"
-                >
-                  <div className="flex items-center">
-                    <div className="bg-gradient-to-r from-purple-100 to-blue-100 group-hover:from-white group-hover:to-white p-4 rounded-2xl mr-5 transition-all duration-300">
-                      <Users size={28} className="text-purple-600 group-hover:text-purple-600" />
-                    </div>
-                    <div className="text-left">
-                      <span className="font-semibold text-xl block">Counselor</span>
-                      <span className="text-sm text-gray-500 group-hover:text-purple-100">Guide students to success</span>
-                    </div>
-                  </div>
-                  <div className="h-10 w-10 rounded-full border-2 border-gray-200 group-hover:border-white group-hover:bg-white flex items-center justify-center transform group-hover:rotate-90 transition-all duration-300">
-                    <ChevronDown size={20} className="text-gray-400 group-hover:text-purple-600 transform rotate-270" />
-                  </div>
-                </button>
-              </div>
-            ) : userRole === 'student' ? (
-              <div className="animate-slideUp">
-                <div className="flex items-center mb-10">
-                  <button 
-                    onClick={() => setUserRole(null)} 
-                    className="flex items-center group"
-                  >
-                    <div className="h-10 w-10 bg-gradient-to-r from-purple-100 to-blue-100 rounded-full flex items-center justify-center mr-4 transform group-hover:-translate-x-1 transition-all duration-300 group-hover:shadow-lg">
-                      <ArrowLeft size={20} className="text-purple-600" />
-                    </div>
-                    <span className="text-gray-500 group-hover:text-purple-600 transition-colors">Back</span>
-                  </button>
-                </div>
-                
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-3">What's your dream destination? 🌍</h2>
-                  <p className="text-gray-600">Select the country where you want to study</p>
-                </div>
-                
-                <div className="mb-8 relative" ref={dropdownRef}>
-                  <div 
-                    onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                    className={`flex items-center justify-between px-6 py-4 border-2 ${
-                      selectedCountry 
-                        ? 'border-purple-300 bg-gradient-to-r from-purple-50 to-blue-50' 
-                        : 'border-gray-200 bg-white'
-                    } rounded-2xl cursor-pointer hover:border-purple-400 hover:shadow-lg transition-all duration-300 group`}
-                  >
-                    <div className="flex items-center">
-                      <div className={`p-2 rounded-lg mr-4 transition-all duration-300 ${
-                        selectedCountry 
-                          ? 'bg-purple-100' 
-                          : 'bg-gray-100 group-hover:bg-purple-50'
-                      }`}>
-                        <MapPin size={22} className={`${
-                          selectedCountry ? 'text-purple-600' : 'text-gray-400 group-hover:text-purple-500'
-                        }`} />
+                {!userRole ? (
+                  <div className="space-y-6">
+                    {/* Purple header with yellow accent */}
+                    <div className="text-center mb-8">
+                      <div className="inline-flex items-center bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-full shadow-lg mb-6">
+                        <span className="text-base font-medium">
+                          Welcome to <span className="text-yellow-300 font-semibold">Study Abroad</span>
+                        </span>
                       </div>
-                      <span className={`text-lg ${
-                        selectedCountry 
-                          ? 'text-purple-700 font-semibold' 
-                          : 'text-gray-500 group-hover:text-gray-700'
-                      }`}>
-                        {selectedCountry || 'Select your country'}
-                      </span>
                     </div>
-                    <ChevronDown 
-                      size={20} 
-                      className={`text-gray-400 group-hover:text-purple-500 transform transition-all duration-300 ${
-                        isCountryDropdownOpen ? 'rotate-180' : ''
-                      }`} 
-                    />
+
+                    <div className="text-center mb-8">
+                      <h2 className="text-xl font-medium text-gray-700">You are...</h2>
+                    </div>
+                    
+                    {/* Student Option */}
+                    <div className="space-y-4">
+                      <button
+                        onClick={handleStudentClick}
+                        className="w-full bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-2xl p-4 transition-all duration-300 flex items-center justify-between group"
+                      >
+                        <div className="flex items-center">
+                          <div className="bg-purple-100 p-3 rounded-xl mr-4 group-hover:bg-purple-200 transition-colors">
+                            <GraduationCap size={20} className="text-purple-600" />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-medium text-gray-800 text-base">Student</div>
+                            <div className="text-sm text-gray-500">Explore study abroad opportunities</div>
+                          </div>
+                        </div>
+                        <ChevronDown size={16} className="text-gray-400 transform rotate-270 group-hover:text-purple-500 transition-colors" />
+                      </button>
+                      
+                      {/* Counselor Option */}
+                      <button
+                        onClick={() => setUserRole('counselor')}
+                        className="w-full bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-2xl p-4 transition-all duration-300 flex items-center justify-between group"
+                      >
+                        <div className="flex items-center">
+                          <div className="bg-purple-100 p-3 rounded-xl mr-4 group-hover:bg-purple-200 transition-colors">
+                            <Users size={20} className="text-purple-600" />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-medium text-gray-800 text-base">Counselor</div>
+                            <div className="text-sm text-gray-500">Guide students to success</div>
+                          </div>
+                        </div>
+                        <ChevronDown size={16} className="text-gray-400 transform rotate-270 group-hover:text-purple-500 transition-colors" />
+                      </button>
+                    </div>
                   </div>
-                  
-                  {isCountryDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-200 rounded-2xl shadow-2xl z-10 max-h-80 overflow-hidden animate-slideDown backdrop-blur-lg">
-                      <div className="sticky top-0 bg-gradient-to-r from-purple-50 to-blue-50 p-4 border-b border-gray-100">
-                        <div className="relative">
-                          <Search size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search countries..."
-                            className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-300"
-                          />
-                          {searchQuery && (
-                            <button 
-                              onClick={() => setSearchQuery('')}
-                              className="absolute right-4 top-1/2 transform -translate-y-1/2 hover:bg-gray-100 rounded-lg p-1 transition-colors"
-                            >
-                              <X size={16} className="text-gray-400 hover:text-gray-600" />
-                            </button>
-                          )}
+                ) : userRole === 'student' && showCountrySelection ? (
+                  <div>
+                    {/* Back Button */}
+                    <div className="flex items-center mb-6">
+                      <button 
+                        onClick={() => {
+                          setUserRole(null);
+                          setShowCountrySelection(false);
+                          setSelectedCountry('');
+                          setSearchQuery('');
+                        }} 
+                        className="flex items-center group text-gray-600 hover:text-purple-600 transition-colors"
+                      >
+                        <div className="h-8 w-8 bg-gray-100 group-hover:bg-purple-100 rounded-full flex items-center justify-center mr-3 transition-all duration-300">
+                          <ArrowLeft size={14} className="text-gray-600 group-hover:text-purple-600" />
+                        </div>
+                        <span className="text-sm font-medium">Back</span>
+                      </button>
+                    </div>
+                    
+                    {/* Header */}
+                    <div className="text-center mb-6">
+                      <h2 className="text-xl font-semibold text-gray-800 mb-2">What's your dream destination? 🌍</h2>
+                      <p className="text-gray-600 text-sm">Select the country where you want to study</p>
+                    </div>
+                    
+                    {/* Selected Country Display */}
+                    {selectedCountry && (
+                      <div className="mb-6 bg-purple-50 border border-purple-200 rounded-xl p-4 text-center">
+                        <div className="flex items-center justify-center">
+                          <Flag size={16} className="text-purple-600 mr-2" />
+                          <span className="text-purple-700 font-medium">{selectedCountry}</span>
                         </div>
                       </div>
-                      
-                      <div className="overflow-y-auto max-h-60">
-                        {loading ? (
-                          <div className="px-6 py-8 text-center">
-                            <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-500 mb-3" />
-                            <p className="text-gray-500">Loading countries...</p>
+                    )}
+                    
+                    {/* Loading State */}
+                    {loading ? (
+                      <div className="text-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-500 mb-4" />
+                        <p className="text-gray-500 text-sm">Loading countries...</p>
+                      </div>
+                    ) : (
+                      <>
+
+                        
+                        {/* Search All Countries */}
+                        <div className="mb-6">
+                          <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                            <Search size={14} className="mr-2" />
+                            All Countries
+                          </h3>
+                          
+                          {/* Search Input */}
+                          <div className="relative mb-3">
+                            <Search size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <input
+                              type="text"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              placeholder="Search for a country..."
+                              className="w-full pl-9 pr-9 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            />
+                            {searchQuery && (
+                              <button 
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:bg-gray-100 rounded p-1"
+                              >
+                                <X size={12} className="text-gray-400" />
+                              </button>
+                            )}
                           </div>
-                        ) : filteredCountries.length > 0 ? (
-                          filteredCountries.map((country, index) => (
-                            <div
-                              key={country.countryName}
-                              onClick={() => {
-                                setSelectedCountry(country.countryName);
-                                setIsCountryDropdownOpen(false);
-                                setSearchQuery('');
-                              }}
-                              className={`px-6 py-4 flex items-center cursor-pointer transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-blue-50 ${
-                                selectedCountry === country.countryName 
-                                  ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700' 
-                                  : ''
-                              }`}
-                              style={{ animationDelay: `${index * 0.02}s` }}
-                            >
-                              <div className="flex items-center flex-1">
-                                <div className={`w-2 h-2 rounded-full mr-4 ${
-                                  selectedCountry === country.countryName ? 'bg-purple-500' : 'bg-gray-300'
-                                }`}></div>
-                                <span className={`text-lg ${
-                                  selectedCountry === country.countryName ? 'font-semibold' : 'font-medium'
-                                }`}>
-                                  {country.countryName}
-                                </span>
+                          
+                          {/* Countries List */}
+                          <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl">
+                            {filteredCountries.length > 0 ? (
+                              filteredCountries.map((country) => (
+                                <div
+                                  key={country.countryName}
+                                  onClick={() => handleCountrySelect(country.countryName)}
+                                  onMouseEnter={() => setHoveredCountry(country.countryName)}
+                                  onMouseLeave={() => setHoveredCountry('')}
+                                  className={`px-4 py-3 flex items-center cursor-pointer transition-all duration-200 first:rounded-t-xl last:rounded-b-xl border-b border-gray-100 last:border-b-0 ${
+                                    selectedCountry === country.countryName 
+                                      ? 'bg-purple-100 text-purple-700' 
+                                      : hoveredCountry === country.countryName
+                                        ? 'bg-purple-50'
+                                        : 'hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <div className="flex items-center flex-1">
+                                    <div className={`w-2 h-2 rounded-full mr-3 ${
+                                      selectedCountry === country.countryName ? 'bg-purple-500' : 'bg-gray-300'
+                                    }`}></div>
+                                    <span className="text-sm">
+                                      {country.countryName}
+                                    </span>
+                                  </div>
+                                  {selectedCountry === country.countryName && (
+                                    <CheckCircle size={14} className="text-purple-600" />
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="px-4 py-6 text-center">
+                                <Globe className="h-6 w-6 text-gray-300 mx-auto mb-2" />
+                                <p className="text-gray-500 text-xs">No countries found</p>
                               </div>
-                              {selectedCountry === country.countryName && (
-                                <CheckCircle size={20} className="text-purple-600 animate-bounce" />
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="px-6 py-8 text-center">
-                            <Globe className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                            <p className="text-gray-500 text-lg">No countries found</p>
-                            <p className="text-gray-400 text-sm mt-1">Try adjusting your search</p>
+                            )}
                           </div>
-                        )}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Continue Button */}
+                    <button 
+                      onClick={handleContinue}
+                      disabled={!selectedCountry}
+                      className={`w-full rounded-xl py-3 font-medium text-sm transition-all duration-300 ${
+                        selectedCountry 
+                          ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl' 
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {selectedCountry ? 'Continue Your Journey →' : 'Select a Country First'}
+                    </button>
+                  </div>
+                ) : userRole === 'student' && !showCountrySelection ? (
+                  // Loading transition for student
+                  <div className="text-center py-12">
+                    <div className="relative">
+                      <div className="w-16 h-16 mx-auto mb-4 relative">
+                        <div className="absolute inset-0 rounded-full border-4 border-purple-200"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-purple-600 border-t-transparent animate-spin"></div>
+                        <Globe className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-purple-600" size={24} />
                       </div>
                     </div>
-                  )}
-                </div>
-                
-                <button 
-                  onClick={handleContinue}
-                  disabled={!selectedCountry}
-                  className={`w-full rounded-2xl py-5 font-semibold text-lg transition-all duration-500 ${
-                    selectedCountry 
-                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1' 
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {selectedCountry ? 'Continue Your Journey →' : 'Select a Country First'}
-                </button>
-              </div>
-            ) : (
-              <div className="text-center py-8 animate-slideUp">
-                <div className="relative">
-                  <div className="h-24 w-24 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
-                    <CheckCircle size={48} className="text-white" />
+                    <p className="text-gray-600 text-sm">Preparing your destination selection...</p>
                   </div>
-                </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-3">Thank You! 🎉</h2>
-                <p className="text-gray-600 text-lg mb-10">We'll notify you when our counselor portal launches.</p>
-                <button 
-                  onClick={() => setUserRole(null)}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1 font-semibold"
-                >
-                  ← Return Home
-                </button>
+                ) : (
+                  // Counselor Thank You Page
+                  <div className="text-center py-6">
+                    <div className="h-16 w-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                      <CheckCircle size={28} className="text-white" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-800 mb-3">Thank You! 🎉</h2>
+                    <p className="text-gray-600 text-sm mb-6">We'll notify you when our counselor portal launches.</p>
+                    <button 
+                      onClick={() => setUserRole(null)}
+                      className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl font-medium text-sm"
+                    >
+                      ← Return Home
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          
-          <div className="px-8 py-6 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200">
-            <p className="text-sm text-gray-500 text-center font-medium">
-              © 2025 ASKOXY.AI
-            </p>
+            </div>
           </div>
         </div>
       </div>

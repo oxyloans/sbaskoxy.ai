@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Globe, BookOpen, GraduationCap, MapPin, Briefcase, Award } from "lucide-react";
+import { ArrowRight, Globe, BookOpen, GraduationCap, MapPin, Briefcase, Award, DollarSign, FileText } from "lucide-react";
 import Heroimg from "../assets/img/heroimg3.png"
 
 function StudyAbroadHeroSection() {
@@ -81,9 +81,57 @@ function StudyAbroadHeroSection() {
               Our vision is to connect all stakeholders seamlessly with high trust. 
               <p className="text-purple-600 text-lg mt-2"><strong>10+ countries</strong> with <strong>95% visa success rate</strong>.</p>
             </p>
+
+             {/* Enhanced WE OFFER Section - Compact Design */}
+           <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        {/* Header Strip */}
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+          <h3 className="text-white font-bold text-center text-xl">
+            WE OFFER | <span className="text-yellow-300">ASKOXY.AI</span>
+          </h3>
+        </div>
+
+      {/* Content */}
+      <div className="p-6">
+        <div className="grid grid-cols-3 gap-4">
+          {/* Cashback Offer */}
+          <div className="flex items-center gap-3 bg-gradient-to-r from-green-50 to-green-100 px-4 py-4 rounded-xl border-2 border-green-200 hover:shadow-lg hover:scale-105 transition-all duration-300">
+            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-md">
+              <span className="text-white text-lg font-bold">%</span>
+            </div>
+            <div>
+              <div className="font-bold text-green-700 text-sm">Up to 5% Cashback</div>
+              <div className="text-green-600 text-xs">Save on university fees</div>
+            </div>
+          </div>
+
+          {/* Scholarship Offer */}
+          <div className="flex items-center gap-3 bg-gradient-to-r from-yellow-50 to-yellow-100 px-4 py-4 rounded-xl border-2 border-yellow-200 hover:shadow-lg hover:scale-105 transition-all duration-300">
+            <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center shadow-md">
+              <GraduationCap className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="font-bold text-yellow-700 text-sm">Up to 100% Scholarship</div>
+              <div className="text-yellow-600 text-xs">For selected students</div>
+            </div>
+          </div>
+
+          {/* Quick Offer Letter */}
+          <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-4 rounded-xl border-2 border-blue-200 hover:shadow-lg hover:scale-105 transition-all duration-300">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="font-bold text-blue-700 text-sm">Offer letter in 10 Min</div>
+              <div className="text-blue-600 text-xs">Quick sample offers</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
             
             {/* Information box moved from bottom of right panel to left panel */}
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg p-4 text-white shadow-md">
+            {/* <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg p-4 text-white shadow-md">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <GraduationCap className="w-6 h-6" />
@@ -94,24 +142,25 @@ function StudyAbroadHeroSection() {
                   <span className="font-bold">95% Success Rate</span>
                 </div>
               </div>
-            </div>
+            </div> */}
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button
-                onClick={handleExploreCountries}
-                className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white font-medium py-3 px-6 rounded-md flex items-center justify-center gap-2 hover:from-yellow-600 hover:to-amber-600 shadow-md w-full sm:w-auto text-lg"
-              >
-                Explore Options
-                <Globe className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handleFreeConsultation}
-                className="border-2 border-purple-600 bg-white text-purple-600 font-medium py-3 px-6 rounded-md hover:bg-purple-50 flex items-center justify-center gap-2 w-full sm:w-auto text-lg"
-              >
-                Free Consultation
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
+<div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+  <button
+    onClick={handleExploreCountries}
+    className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-bold py-2.5 px-5 rounded-full flex items-center justify-center gap-2 hover:from-yellow-500 hover:via-amber-500 hover:to-yellow-600 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto text-sm transform hover:scale-105"
+  >
+    Explore Options
+    <Globe className="w-4 h-4" />
+  </button>
+  
+  <button
+    onClick={handleFreeConsultation}
+    className="bg-white text-purple-600 font-semibold py-2.5 px-5 rounded-full hover:bg-purple-600 hover:text-white flex items-center justify-center gap-2 w-full sm:w-auto text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-purple-200"
+  >
+    Get Started
+    <ArrowRight className="w-4 h-4" />
+  </button>
+</div>
           </div>
 
           {/* Right Content - Hero Image */}
