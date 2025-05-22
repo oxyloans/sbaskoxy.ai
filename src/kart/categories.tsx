@@ -45,6 +45,12 @@ interface Offer {
   offerCreatedAt: number;
 }
 
+interface UserEligibleOffer {
+  offerName: string;
+  eligible: boolean;
+  weight: number;
+}
+
 interface CategoriesProps {
   categories: Category[];
   activeCategory: string | null;
@@ -77,8 +83,13 @@ const Categories: React.FC<CategoriesProps> = ({
 }) => {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
-  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(
+    null
+  );
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [userEligibleOffers, setUserEligibleOffers] = useState<
+    UserEligibleOffer[]
+  >([]);
   const [isOffersModalVisible, setIsOffersModalVisible] = useState(false);
   const [isFetchingOffers, setIsFetchingOffers] = useState(false);
   const navigate = useNavigate();
@@ -149,36 +160,142 @@ const Categories: React.FC<CategoriesProps> = ({
     }
   };
 
+  // Function to normalize weight values (remove units, convert to number)
+  const normalizeWeight = (value: any): number | null => {
+    if (value === null || value === undefined) return null;
+    const cleanedValue = String(value).replace(/[^0-9.]/g, ""); // Remove non-numeric chars (e.g., "26kg" -> "26")
+    const parsed = Number(cleanedValue);
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  // Function to fetch user-eligible offers
+  const fetchUserEligibleOffers = async (userId: string) => {
+    const accessToken = localStorage.getItem("accessToken");
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/cart-service/cart/userEligibleOffer/${userId}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      console.log("User Eligible Offers Response:", response.data);
+      const normalizedOffers = (response.data || []).map(
+        (offer: UserEligibleOffer) => ({
+          ...offer,
+          weight: normalizeWeight(offer.weight),
+        })
+      );
+      setUserEligibleOffers(normalizedOffers);
+    } catch (error) {
+      console.error("Error fetching user-eligible offers:", error);
+      message.error("Failed to load user-eligible offers.");
+      setUserEligibleOffers([]);
+    }
+  };
+
+  // Function to fetch and filter active offers
   const fetchOffers = async () => {
     const accessToken = localStorage.getItem("accessToken");
     setIsFetchingOffers(true);
     try {
-      const response = await axios.get(
+      const offersResponse = await axios.get(
         `${BASE_URL}/cart-service/cart/activeOffers`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      setOffers(response.data); // Response is an array of offers
+      const activeOffers = offersResponse.data || [];
+      console.log("Active Offers Response:", activeOffers);
+
+      // Log current userEligibleOffers for debugging
+      console.log("Current User Eligible Offers:", userEligibleOffers);
+
+      // Filter out availed offers
+      const filteredOffers = activeOffers.filter((offer: Offer) => {
+        const offerMinQtyKg = normalizeWeight(offer.minQtyKg);
+        if (offerMinQtyKg === null) {
+          console.warn(
+            `Offer ${offer.offerName} has invalid minQtyKg: ${offer.minQtyKg}`
+          );
+          return true; // Include offer if minQtyKg is invalid
+        }
+
+        // Exclude if offer is marked as eligible or has matching weight
+        const isExcluded = userEligibleOffers.some((eligibleOffer) => {
+          const eligibleWeight = normalizeWeight(eligibleOffer.weight);
+          if (eligibleWeight === null) {
+            console.warn(
+              `Invalid weight for eligible offer ${eligibleOffer.offerName}: ${eligibleOffer.weight}`
+            );
+            return false; // Skip invalid weights
+          }
+
+          // Check eligibility and weight match
+          const isEligible = eligibleOffer.eligible === true;
+          const isWeightMatch =
+            Math.abs(eligibleWeight - offerMinQtyKg) < 0.0001;
+          const shouldExclude = isEligible && isWeightMatch;
+
+          console.log(
+            `Checking offer ${offer.offerName}: minQtyKg=${offerMinQtyKg}, ` +
+              `eligibleWeight=${eligibleWeight}, eligible=${eligibleOffer.eligible}, ` +
+              `exclude=${shouldExclude}`
+          );
+
+          return shouldExclude;
+        });
+
+        if (isExcluded) {
+          console.log(
+            `Excluding offer ${offer.offerName} due to eligibility or weight match`
+          );
+        } else {
+          console.log(`Including offer ${offer.offerName}`);
+        }
+
+        return !isExcluded;
+      });
+
+      console.log("Filtered Offers:", filteredOffers);
+      setOffers(filteredOffers);
       setIsFetchingOffers(false);
     } catch (error) {
       console.error("Error fetching offers:", error);
       message.error("Failed to load offers.");
+      setOffers([]);
       setIsFetchingOffers(false);
     }
   };
 
+  // Fetch user-eligible offers and cart data on mount
   useEffect(() => {
     const hasShownOffers = localStorage.getItem("hasShownOffers");
     const userId = localStorage.getItem("userId");
     const accessToken = localStorage.getItem("accessToken");
 
     if (userId && accessToken && !hasShownOffers) {
-      fetchOffers();
-      setIsOffersModalVisible(true);
-      localStorage.setItem("hasShownOffers", "true");
+      fetchUserEligibleOffers(userId);
     }
 
     fetchCartData("");
   }, []);
+
+  // Fetch offers only after userEligibleOffers is updated
+  useEffect(() => {
+    const hasShownOffers = localStorage.getItem("hasShownOffers");
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (
+      userId &&
+      accessToken &&
+      !hasShownOffers &&
+      userEligibleOffers.length >= 0
+    ) {
+      fetchOffers().then(() => {
+        if (offers.length > 0) {
+          setIsOffersModalVisible(true);
+          localStorage.setItem("hasShownOffers", "true");
+        }
+      });
+    }
+  }, [userEligibleOffers, offers]);
 
   useEffect(() => {
     setActiveSubCategory(null);
@@ -366,11 +483,10 @@ const Categories: React.FC<CategoriesProps> = ({
             style={{ maxHeight: "50vh", overflowY: "auto" }}
           >
             {offers.map((offer) => (
-              <div
-                key={offer.id}
-                className="p-4 bg-gray-100 rounded-lg"
-              >
-                <h3 className="font-semibold text-purple-800">{offer.offerName}</h3>
+              <div key={offer.id} className="p-4 bg-gray-100 rounded-lg">
+                <h3 className="font-semibold text-purple-800">
+                  {offer.offerName}
+                </h3>
               </div>
             ))}
           </div>

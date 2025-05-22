@@ -62,7 +62,9 @@ interface ContainerEligibility {
 const CartPage: React.FC = () => {
   const [cartData, setCartData] = useState<CartItem[]>([]);
   const [cartItems, setCartItems] = useState<{ [key: string]: number }>({});
-  const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>({});
+  const [loadingItems, setLoadingItems] = useState<{ [key: string]: boolean }>(
+    {}
+  );
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -81,14 +83,24 @@ const CartPage: React.FC = () => {
   const isFreeItem = (item: any) => item.status === "FREE";
   const modalDisplayedRef = useRef<boolean>(false);
 
-  const [regularCartItems, setRegularCartItems] = useState<{ [key: string]: number }>({});
-  const [freeCartItems, setFreeCartItems] = useState<{ [key: string]: number }>({});
+  const [regularCartItems, setRegularCartItems] = useState<{
+    [key: string]: number;
+  }>({});
+  const [freeCartItems, setFreeCartItems] = useState<{ [key: string]: number }>(
+    {}
+  );
 
-  const [isPlanDetailsModalOpen, setIsPlanDetailsModalOpen] = useState<boolean>(false);
-  const [currentPlanDetails, setCurrentPlanDetails] = useState<"planA" | "planB" | null>(null);
-  const [containerPreference, setContainerPreference] = useState<string | null>(null);
+  const [isPlanDetailsModalOpen, setIsPlanDetailsModalOpen] =
+    useState<boolean>(false);
+  const [currentPlanDetails, setCurrentPlanDetails] = useState<
+    "planA" | "planB" | null
+  >(null);
+  const [containerPreference, setContainerPreference] = useState<string | null>(
+    null
+  );
   const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
-  const [isReferralModalVisible, setIsReferralModalVisible] = useState<boolean>(false);
+  const [isReferralModalVisible, setIsReferralModalVisible] =
+    useState<boolean>(false);
   const [mobileNumbers, setMobileNumbers] = useState<string[]>([]);
   const [currentNumber, setCurrentNumber] = useState<string>("");
   const containerExistsRef = useRef<boolean>(false);
@@ -140,113 +152,148 @@ const CartPage: React.FC = () => {
     }
   };
 
-  const updateContainerPreference = async (preferenceTypes: string[], collectedNumb: string[]) => {
-    try {
-      const itemIds = cartData.map((item) => item.itemId);
+  const updateContainerPreference = async (
+  preferenceTypes: string[],
+  collectedNumb: string[]
+) => {
+  try {
+    const itemIds = cartData.map((item) => item.itemId);
 
-      let trimmed = rawNumber.trim();
-      let mobilenumber = trimmed.length > 10 ? trimmed.replace(/^(\+91|91)/, "") : trimmed;
+    let trimmed = rawNumber.trim();
+    let mobilenumber =
+      trimmed.length > 10 ? trimmed.replace(/^(\+91|91)/, "") : trimmed;
 
-      const requestBody: any = {
-        created_at: new Date().toISOString(),
-        itemIds: itemIds,
-        mobilenumber: mobilenumber,
-        referenceMobileNumbers: collectedNumb,
-        user_id: customerId,
-      };
+    const requestBody: any = {
+      created_at: new Date().toISOString(),
+      itemIds: itemIds,
+      mobilenumber: mobilenumber,
+      referenceMobileNumbers: collectedNumb,
+      user_id: customerId,
+    };
 
-      if (preferenceTypes.includes("planA")) {
-        requestBody.plana = "YES";
+    if (preferenceTypes.includes("planA")) {
+      requestBody.plana = "YES";
+    }
+
+    if (preferenceTypes.includes("planB")) {
+      requestBody.planb = "YES";
+    }
+
+    const response = await axios.post(
+      `${BASE_URL}/reference-service/referenceoffer`,
+      requestBody,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        validateStatus: () => true,
       }
+    );
 
-      if (preferenceTypes.includes("planB")) {
-        requestBody.planb = "YES";
-      }
+    console.log("updateContainerPreference response:", response.status, response.data);
 
-      const response = await axios.post(
-        `${BASE_URL}/reference-service/referenceoffer`,
-        requestBody,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+    if (response.status === 400) {
+      const errorMessage = response.data.message || "";
+      // Check for variations of the error message
+      if (
+        errorMessage.toLowerCase().includes("reference offer already exists")
+      ) {
+        Modal.info({
+          title: "Plan Already Selected",
+          content: (
+            <p>
+              You have already opted for a plan. Please proceed to checkout to avail the free container offer.
+            </p>
+          ),
+          okText: "Proceed to Checkout",
+          onOk: () => {
+            if (selectedAddress) {
+              navigate("/main/checkout", { state: { selectedAddress } });
+            } else {
+              message.error("Please select an address before proceeding to checkout.");
+            }
           },
-          validateStatus: () => true,
-        }
-      );
-
-      if (response.status === 400) {
-        if (preferenceTypes.includes("planA") || preferenceTypes.includes("planB")) {
-          message.error(response.data.message || "Something went wrong.", 5);
-        }
+          cancelButtonProps: { style: { display: "none" } },
+        });
         return false;
       }
-
-      if (response.status === 200) {
-        const resData = response.data;
-        const messages = [];
-
-        const isPlanA = preferenceTypes.includes("planA");
-        const isPlanB = preferenceTypes.includes("planB");
-
-        const alreadySaved = Array.isArray(resData.alreadySavedReferences)
-          ? resData.alreadySavedReferences
-          : [];
-        const newlySaved = Array.isArray(resData.newlySavedReferences)
-          ? resData.newlySavedReferences
-          : [];
-
-        if ((isPlanA && isPlanB) || isPlanB) {
-          if (alreadySaved.length > 0 && newlySaved.length > 0) {
-            messages.push(
-              `Already referred numbers: ${alreadySaved.join(", ")}. ` +
-                `Newly referred numbers: ${newlySaved.join(", ")}.`
-            );
-          } else if (alreadySaved.length > 0) {
-            messages.push(`These numbers are already referred: ${alreadySaved.join(", ")}`);
-          } else if (newlySaved.length > 0) {
-            messages.push(
-              `The following numbers have been referred successfully: ${newlySaved.join(", ")}`
-            );
-          }
-        } else if (isPlanA) {
-          messages.push("Plan A updated successfully.");
-        } else if (isPlanB) {
-          if (alreadySaved.length > 0 && newlySaved.length === 0) {
-            messages.push(
-              `These numbers are referred successfully : ${alreadySaved.join(", ")}`
-            );
-          }
-
-          if (alreadySaved.length === 0 && newlySaved.length > 0) {
-            messages.push(
-              `The following numbers have been referred successfully: ${newlySaved.join(", ")}`
-            );
-          }
-        }
-
-        if (messages.length > 0) {
-          message.success({
-            content: messages.join(" "),
-            duration: 8,
-          });
-        } else {
-          message.success({
-            content: resData.message || "Plans updated successfully.",
-            duration: 5,
-          });
-        }
-
-        return true;
-      }
-
-      message.error("Unexpected response from the server.");
-      return false;
-    } catch (error) {
-      console.error("Error submitting reference offer:", error);
+      message.error(errorMessage || "Something went wrong.", 5);
       return false;
     }
-  };
+
+    if (response.status === 200) {
+      const resData = response.data;
+      const messages = [];
+
+      const isPlanA = preferenceTypes.includes("planA");
+      const isPlanB = preferenceTypes.includes("planB");
+
+      const alreadySaved = Array.isArray(resData.alreadySavedReferences)
+        ? resData.alreadySavedReferences
+        : [];
+      const newlySaved = Array.isArray(resData.newlySavedReferences)
+        ? resData.newlySavedReferences
+        : [];
+
+      if ((isPlanA && isPlanB) || isPlanB) {
+        if (alreadySaved.length > 0 && newlySaved.length > 0) {
+          messages.push(
+            `Already referred numbers: ${alreadySaved.join(", ")}. ` +
+              `Newly referred numbers: ${newlySaved.join(", ")}.`
+          );
+        } else if (alreadySaved.length > 0) {
+          messages.push(
+            `These numbers are already referred: ${alreadySaved.join(", ")}`
+          );
+        } else if (newlySaved.length > 0) {
+          messages.push(
+            `The following numbers have been referred successfully: ${newlySaved.join(
+              ", "
+            )}`
+          );
+        }
+      } else if (isPlanA) {
+        messages.push("Plan A updated successfully.");
+      } else if (isPlanB) {
+        if (alreadySaved.length > 0 && newlySaved.length === 0) {
+          messages.push(
+            `These numbers are referred successfully: ${alreadySaved.join(", ")}`
+          );
+        }
+
+        if (alreadySaved.length === 0 && newlySaved.length > 0) {
+          messages.push(
+            `The following numbers have been referred successfully: ${newlySaved.join(
+              ", "
+            )}`
+          );
+        }
+      }
+
+      if (messages.length > 0) {
+        message.success({
+          content: messages.join(" "),
+          duration: 8,
+        });
+      } else {
+        message.success({
+          content: resData.message || "Plans updated successfully.",
+          duration: 5,
+        });
+      }
+
+      return true;
+    }
+
+    message.error("Unexpected response from the server.");
+    return false;
+  } catch (error) {
+    console.error("Error submitting reference offer:", error);
+    message.error("Failed to submit reference offer.");
+    return false;
+  }
+};
 
   const handleReferralOk = async () => {
     if (mobileNumbers.length === 0) {
@@ -254,7 +301,10 @@ const CartPage: React.FC = () => {
       return;
     }
 
-    const prefUpdated = await updateContainerPreference(selectedPlans, mobileNumbers);
+    const prefUpdated = await updateContainerPreference(
+      selectedPlans,
+      mobileNumbers
+    );
 
     if (prefUpdated) {
       try {
@@ -277,7 +327,9 @@ const CartPage: React.FC = () => {
 
       const eligibility = checkEligibilityForContainer(cartData);
       if (eligibility.eligible && eligibility.containerType) {
-        await addContainerToCart(eligibility.containerType as "HEAVY_BAG" | "LIGHT_BAG");
+        await addContainerToCart(
+          eligibility.containerType as "HEAVY_BAG" | "LIGHT_BAG"
+        );
       }
     }
 
@@ -315,7 +367,11 @@ const CartPage: React.FC = () => {
   };
 
   const handleAddNumber = () => {
-    if (!currentNumber || currentNumber.length !== 10 || !/^[6-9]\d{9}$/.test(currentNumber)) {
+    if (
+      !currentNumber ||
+      currentNumber.length !== 10 ||
+      !/^[6-9]\d{9}$/.test(currentNumber)
+    ) {
       message.error("Please enter a valid 10-digit mobile number");
       return;
     }
@@ -378,10 +434,10 @@ const CartPage: React.FC = () => {
   // };
 
   const showContainerModal = () => {
-  console.log("Showing container modal");
-  setIsPlanModalVisible(true);
-  modalDisplayedRef.current = true;
-};
+    console.log("Showing container modal");
+    setIsPlanModalVisible(true);
+    modalDisplayedRef.current = true;
+  };
 
   useEffect(() => {
     if (cartData.length === 0) {
@@ -438,28 +494,34 @@ const CartPage: React.FC = () => {
   // }, [cartData]);
 
   useEffect(() => {
-  const checkAndShowModal = async () => {
-    if (cartData.length > 0 && !modalDisplayedRef.current) {
-      const freeContainer = cartData.find(
-        (item) =>
-          [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(item.itemId) &&
-          item.status === "FREE"
-      );
+    const checkAndShowModal = async () => {
+      if (cartData.length > 0 && !modalDisplayedRef.current) {
+        const freeContainer = cartData.find(
+          (item) =>
+            [
+              CONTAINER_ITEM_IDS.HEAVY_BAG,
+              CONTAINER_ITEM_IDS.LIGHT_BAG,
+            ].includes(item.itemId) && item.status === "FREE"
+        );
 
-      if (freeContainer) {
-        console.log("Free container found in cart, showing container plans modal");
-        showContainerModal();
-        containerExistsRef.current = true;
+        if (freeContainer) {
+          console.log(
+            "Free container found in cart, showing container plans modal"
+          );
+          showContainerModal();
+          containerExistsRef.current = true;
+        }
       }
-    }
-  };
+    };
 
-  checkAndShowModal();
-}, [cartData]);
+    checkAndShowModal();
+  }, [cartData]);
 
   const fetchContainerPreference = async (): Promise<string | null> => {
     try {
-      console.log(`Fetching container preference for customer ID: ${customerId}`);
+      console.log(
+        `Fetching container preference for customer ID: ${customerId}`
+      );
       const response = await axios.get(
         `${BASE_URL}/cart-service/cart/ContainerInterested/${customerId}`,
         {
@@ -498,20 +560,46 @@ const CartPage: React.FC = () => {
     return result;
   };
 
-  const checkEligibilityForContainer = (cartItems: CartItem[]): ContainerEligibility => {
+  const checkEligibilityForContainer = (
+    cartItems: CartItem[]
+  ): ContainerEligibility => {
     console.log("Checking eligibility with items:", cartItems);
 
     if (!cartItems || cartItems.length === 0) {
       return { eligible: false, reason: "empty_cart" };
     }
 
-    const hasContainer = cartItems.some((item) =>
-      [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(item.itemId)
+    // Check for existing containers, but allow free containers
+    const hasContainer = cartItems.some(
+      (item) =>
+        [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(
+          item.itemId
+        ) && item.status !== "FREE"
     );
 
     if (hasContainer) {
-      console.log("Container already in cart");
+      console.log("Non-free container already in cart");
       return { eligible: false, reason: "already_has_container" };
+    }
+
+    // Check if a free container is already in the cart
+    const freeContainer = cartItems.find(
+      (item) =>
+        [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(
+          item.itemId
+        ) && item.status === "FREE"
+    );
+
+    if (freeContainer) {
+      console.log("Free container found in cart, allowing eligibility");
+      return {
+        eligible: true,
+        containerType:
+          freeContainer.itemId === CONTAINER_ITEM_IDS.HEAVY_BAG
+            ? "HEAVY_BAG"
+            : "LIGHT_BAG",
+        containerId: freeContainer.itemId,
+      };
     }
 
     const hasHeavyRice = cartItems.some((item) => {
@@ -560,10 +648,14 @@ const CartPage: React.FC = () => {
     return { eligible: false, reason: "no_eligible_items" };
   };
 
-  const addContainerToCart = async (containerType: "HEAVY_BAG" | "LIGHT_BAG") => {
+  const addContainerToCart = async (
+    containerType: "HEAVY_BAG" | "LIGHT_BAG"
+  ) => {
     try {
       const containerId = CONTAINER_ITEM_IDS[containerType];
-      console.log(`Adding container to cart: ${containerType}, ID: ${containerId}`);
+      console.log(
+        `Adding container to cart: ${containerType}, ID: ${containerId}`
+      );
 
       await axios.post(
         `${BASE_URL}/cart-service/cart/addAndIncrementCart`,
@@ -596,8 +688,9 @@ const CartPage: React.FC = () => {
     try {
       const containerItem = cartData.find(
         (item) =>
-          [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(item.itemId) &&
-          item.status === "FREE"
+          [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(
+            item.itemId
+          ) && item.status === "FREE"
       );
 
       if (containerItem) {
@@ -605,20 +698,23 @@ const CartPage: React.FC = () => {
           `Removing free container from cart: ID ${containerItem.itemId}, cartId ${containerItem.cartId}`
         );
 
-        await axios.delete(`${BASE_URL}/cart-service/cart/removeFreeContainer`, {
-          data: {
-            id: containerItem.cartId,
-            customerId,
-            itemId: containerItem.itemId,
-            status: "FREE",
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        await axios.delete(
+          `${BASE_URL}/cart-service/cart/removeFreeContainer`,
+          {
+            data: {
+              id: containerItem.cartId,
+              customerId,
+              itemId: containerItem.itemId,
+              status: "FREE",
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-        message.info("Container removed from your cart");
+        message.info("Free Container removed from your cart");
         await fetchCartData();
         containerExistsRef.current = false;
         return true;
@@ -651,7 +747,9 @@ const CartPage: React.FC = () => {
         console.log(`Fetched ${cartItems.length} items in cart`);
 
         const hasContainer = cartItems.some((item: CartItem) =>
-          [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(item.itemId)
+          [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(
+            item.itemId
+          )
         );
 
         containerExistsRef.current = hasContainer;
@@ -676,10 +774,9 @@ const CartPage: React.FC = () => {
         setFreeCartItems(freeItemsMap);
 
         // Calculate total quantity for regular items only
-        const totalQuantity = Object.values(regularItemsMap as Record<string, number>).reduce(
-          (sum, qty) => sum + qty,
-          0
-        );
+        const totalQuantity = Object.values(
+          regularItemsMap as Record<string, number>
+        ).reduce((sum, qty) => sum + qty, 0);
         setCount(totalQuantity);
       } else {
         setRegularCartItems({});
@@ -752,10 +849,13 @@ const CartPage: React.FC = () => {
       pincode: "",
     };
 
-    if (!addressFormData.flatNo.trim()) errors.flatNo = "Flat/House number is required";
-    if (!addressFormData.landMark.trim()) errors.landmark = "Landmark is required";
+    if (!addressFormData.flatNo.trim())
+      errors.flatNo = "Flat/House number is required";
+    if (!addressFormData.landMark.trim())
+      errors.landmark = "Landmark is required";
     if (!addressFormData.address.trim()) errors.address = "Address is required";
-    if (!addressFormData.pincode.trim()) errors.pincode = "PIN code is required";
+    if (!addressFormData.pincode.trim())
+      errors.pincode = "PIN code is required";
     else if (!/^\d{6}$/.test(addressFormData.pincode))
       errors.pincode = "Please enter a valid 6-digit PIN code";
 
@@ -775,7 +875,9 @@ const CartPage: React.FC = () => {
       const coordinates = await getCoordinates(fullAddress);
 
       if (!coordinates) {
-        message.error("Unable to find location coordinates. Please check the address.");
+        message.error(
+          "Unable to find location coordinates. Please check the address."
+        );
         return;
       }
 
@@ -796,9 +898,9 @@ const CartPage: React.FC = () => {
             <>
               <p>
                 Sorry! We're unable to deliver to this address as it is{" "}
-                {withinRadius.distanceInKm} km away, beyond our 20 km delivery radius. Please select
-                another saved address within the radius or add a new one to proceed. We appreciate your
-                understanding!
+                {withinRadius.distanceInKm} km away, beyond our 20 km delivery
+                radius. Please select another saved address within the radius or
+                add a new one to proceed. We appreciate your understanding!
               </p>
               <div className="flex justify-end space-x-2 mt-4">
                 <Button type="default" onClick={() => Modal.destroyAll()}>
@@ -833,9 +935,13 @@ const CartPage: React.FC = () => {
       };
 
       if (editingAddressId) {
-        await axios.put(`${BASE_URL}/user-service/updateAddress/${editingAddressId}`, data, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.put(
+          `${BASE_URL}/user-service/updateAddress/${editingAddressId}`,
+          data,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         message.success("Address updated successfully.", 5);
       } else {
         await axios.post(`${BASE_URL}/user-service/addAddress`, data, {
@@ -929,7 +1035,9 @@ const CartPage: React.FC = () => {
 
     try {
       const isFreeItem = item.status === "FREE";
-      const currentQuantity = isFreeItem ? freeCartItems[item.itemId] : regularCartItems[item.itemId];
+      const currentQuantity = isFreeItem
+        ? freeCartItems[item.itemId]
+        : regularCartItems[item.itemId];
 
       if (currentQuantity > 1) {
         const newQuantity = currentQuantity - 1;
@@ -988,9 +1096,10 @@ const CartPage: React.FC = () => {
       const isEligibleRice =
         item.itemName.toLowerCase().includes("rice") &&
         (parseWeight(item.weight) === 10 || parseWeight(item.weight) === 26);
-      const isContainer = [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(
-        itemIdToRemove
-      );
+      const isContainer = [
+        CONTAINER_ITEM_IDS.HEAVY_BAG,
+        CONTAINER_ITEM_IDS.LIGHT_BAG,
+      ].includes(itemIdToRemove);
 
       console.log(
         `Removing item: ${item.itemName}, ID: ${itemIdToRemove}, cartId: ${cartIdToRemove}, ` +
@@ -999,18 +1108,21 @@ const CartPage: React.FC = () => {
 
       if (isFreeItem) {
         // Remove free items using removeFreeContainer API
-        await axios.delete(`${BASE_URL}/cart-service/cart/removeFreeContainer`, {
-          data: {
-            id: cartIdToRemove,
-            customerId,
-            itemId: itemIdToRemove,
-            status: "FREE",
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        await axios.delete(
+          `${BASE_URL}/cart-service/cart/removeFreeContainer`,
+          {
+            data: {
+              id: cartIdToRemove,
+              customerId,
+              itemId: itemIdToRemove,
+              status: "FREE",
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
       } else {
         // Remove non-free items using the standard remove API
         await axios.delete(`${BASE_URL}/cart-service/cart/remove`, {
@@ -1073,7 +1185,11 @@ const CartPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to remove cart item:", error);
       if (axios.isAxiosError(error) && error.response) {
-        console.error("Error response:", error.response.status, error.response.data);
+        console.error(
+          "Error response:",
+          error.response.status,
+          error.response.data
+        );
       }
       message.error("Failed to remove item");
 
@@ -1189,7 +1305,10 @@ const CartPage: React.FC = () => {
       return false;
     }
 
-    const prefUpdated = await updateContainerPreference(selectedPlanTypes, mobileNumbers);
+    const prefUpdated = await updateContainerPreference(
+      selectedPlanTypes,
+      mobileNumbers
+    );
 
     if (prefUpdated === true) {
       try {
@@ -1227,14 +1346,22 @@ const CartPage: React.FC = () => {
     if (isPlanDetailsModalOpen && currentPlanDetails) {
       try {
         Modal.info({
-          title: currentPlanDetails === "planA" ? "Free Steel Container Policy" : "Referral Program",
+          title:
+            currentPlanDetails === "planA"
+              ? "Free Steel Container Policy"
+              : "Referral Program",
           content: (
             <div className="space-y-4 text-left">
               {currentPlanDetails === "planA" ? (
                 <>
                   <ul className="list-disc pl-5 text-gray-700 space-y-1">
-                    <li>Buy 9 bags of rice in 3 years to keep the container forever</li>
-                    <li>Refer 9 friends who make a purchase – keep the container</li>
+                    <li>
+                      Buy 9 bags of rice in 3 years to keep the container
+                      forever
+                    </li>
+                    <li>
+                      Refer 9 friends who make a purchase – keep the container
+                    </li>
                     <li>Gap of 90 days = container is taken back</li>
                   </ul>
                 </>
@@ -1265,7 +1392,10 @@ const CartPage: React.FC = () => {
       try {
         console.log("Initializing cart page...");
         await fetchAddresses();
-        const [cartResponse, preference] = await Promise.all([fetchCartData(), fetchContainerPreference()]);
+        const [cartResponse, preference] = await Promise.all([
+          fetchCartData(),
+          fetchContainerPreference(),
+        ]);
         console.log("Initialization complete - preference:", preference);
         setContainerPreference(preference);
 
@@ -1295,7 +1425,9 @@ const CartPage: React.FC = () => {
     const coordinates = await getCoordinates(fullAddress);
 
     if (!coordinates) {
-      message.error("Unable to find location coordinates. Please check the address.");
+      message.error(
+        "Unable to find location coordinates. Please check the address."
+      );
       return;
     }
 
@@ -1309,9 +1441,9 @@ const CartPage: React.FC = () => {
           <>
             <p>
               Sorry! We're unable to deliver to this address as it is{" "}
-              {withinRadius.distanceInKm} km away, beyond our 20 km delivery radius. Please select
-              another saved address within the radius or add a new one to proceed. We appreciate your
-              understanding!
+              {withinRadius.distanceInKm} km away, beyond our 20 km delivery
+              radius. Please select another saved address within the radius or
+              add a new one to proceed. We appreciate your understanding!
             </p>
             <div className="flex justify-end space-x-2 mt-4">
               <Button type="default" onClick={() => Modal.destroyAll()}>
@@ -1355,7 +1487,9 @@ const CartPage: React.FC = () => {
 
     const hasExceededStockItems = cartData.some((item) => {
       const quantity =
-        item.status === "FREE" ? freeCartItems[item.itemId] || 0 : regularCartItems[item.itemId] || 0;
+        item.status === "FREE"
+          ? freeCartItems[item.itemId] || 0
+          : regularCartItems[item.itemId] || 0;
       return quantity > item.quantity;
     });
     if (hasExceededStockItems) {
@@ -1416,11 +1550,21 @@ const CartPage: React.FC = () => {
         console.error("Error updating container status:", error);
       }
 
-      await addContainerToCart(eligibility.containerType as "HEAVY_BAG" | "LIGHT_BAG");
+      await addContainerToCart(
+        eligibility.containerType as "HEAVY_BAG" | "LIGHT_BAG"
+      );
     }
   };
 
   const handlePlanOk = async () => {
+  // Check if a free container exists in the cart
+  const freeContainer = cartData.find(
+    (item) =>
+      [CONTAINER_ITEM_IDS.HEAVY_BAG, CONTAINER_ITEM_IDS.LIGHT_BAG].includes(
+        item.itemId
+      ) && item.status === "FREE"
+  );
+
   if (selectedPlan.length === 0) {
     Modal.confirm({
       title: "Decline Free Container?",
@@ -1431,10 +1575,9 @@ const CartPage: React.FC = () => {
       onOk: async () => {
         try {
           // Remove free container from cart using the specified API
-          await removeContainerFromCart(); // Calls /api/cart-service/cart/removeFreeContainer
-
-          message.info("Container offer declined and removed from cart");
+          await removeContainerFromCart();
           setIsPlanModalVisible(false);
+          modalDisplayedRef.current = true; // Prevent modal from reopening
         } catch (error) {
           console.error("Error declining container offer:", error);
           message.error("Failed to decline container offer");
@@ -1444,8 +1587,47 @@ const CartPage: React.FC = () => {
     return;
   }
 
-  setIsPlanModalVisible(false);
+  // Prepare success message based on selected plan(s)
+  const planDescriptions: { [key: string]: string } = {
+    planA:
+      "Standard Plan: Earn ownership by purchasing 9 bags of rice within 3 years.",
+    planB:
+      "Referral Plan: Refer friends to earn ownership faster and get ₹50 cashback per successful referral.",
+  };
+  const selectedPlanMessage = selectedPlan
+    .map((plan) => planDescriptions[plan])
+    .join(" and ");
 
+  // Show success alert with selected plan details
+  message.success({
+    content: `Plan(s) selected successfully: ${selectedPlanMessage}`,
+    duration: 5,
+  });
+
+  setIsPlanModalVisible(false);
+  modalDisplayedRef.current = true; // Prevent modal from reopening
+
+  // If a free container is already in the cart, use its type and skip eligibility check
+  if (freeContainer) {
+    const containerType =
+      freeContainer.itemId === CONTAINER_ITEM_IDS.HEAVY_BAG
+        ? "HEAVY_BAG"
+        : "LIGHT_BAG";
+
+    if (selectedPlan.includes("planB")) {
+      setMobileNumbers([]);
+      setCurrentNumber("");
+      setIsReferralModalVisible(true);
+    } else {
+      const success = await handleInterested(selectedPlan);
+      if (success) {
+        message.info("Free container is already in your cart.");
+      }
+    }
+    return;
+  }
+
+  // If no free container, check eligibility
   const eligibility = checkEligibilityForContainer(cartData);
   if (!eligibility.eligible || !eligibility.containerType) {
     message.error("Something went wrong. No eligible container found.");
@@ -1457,7 +1639,10 @@ const CartPage: React.FC = () => {
     setCurrentNumber("");
     setIsReferralModalVisible(true);
   } else {
-    await handleInterested(selectedPlan);
+    const success = await handleInterested(selectedPlan);
+    if (success) {
+      message.info("Free container added to your cart.");
+    }
   }
 };
 
@@ -1470,24 +1655,10 @@ const CartPage: React.FC = () => {
       cancelText: "Stay",
       onOk: async () => {
         try {
-          await axios.post(
-            `${BASE_URL}/cart-service/cart/updateContainerStatus`,
-            {
-              customerId,
-              status: "declined",
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
           // Remove free container from cart if it exists
           await removeContainerFromCart();
 
-          message.info("Container offer declined");
+          // message.info("Container offer declined");
         } catch (error) {
           console.error("Error declining container offer:", error);
           message.error("Failed to decline container offer");
@@ -1557,7 +1728,8 @@ const CartPage: React.FC = () => {
                       <div className="ml-4 flex flex-col justify-center">
                         {item.quantity < 6 && item.quantity > 0 && (
                           <p className="text-xs font-medium text-red-500 mb-1">
-                            Only {item.quantity} {item.quantity === 1 ? "item" : "items"} left
+                            Only {item.quantity}{" "}
+                            {item.quantity === 1 ? "item" : "items"} left
                           </p>
                         )}
                         <h3 className="text-smc md:text-lg font-bold text-gray-800 mb-1 line-clamp-2">
@@ -1567,8 +1739,12 @@ const CartPage: React.FC = () => {
                           Weight: {item.weight} {item.units}
                         </p>
                         <div className="flex items-center mt-1">
-                          <p className="text-sm line-through text-gray-400 mr-2">₹{item.priceMrp}</p>
-                          <p className="text-green-600 font-bold">₹{item.itemPrice}</p>
+                          <p className="text-sm line-through text-gray-400 mr-2">
+                            ₹{item.priceMrp}
+                          </p>
+                          <p className="text-green-600 font-bold">
+                            ₹{item.itemPrice}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1576,22 +1752,52 @@ const CartPage: React.FC = () => {
                     {item.quantity !== 0 ? (
                       isFreeItem(item) ? (
                         <div className="flex flex-col md:items-end justify-center space-y-3 w-full md:w-auto">
-                          <p className="text-green-600 font-bold text-base mb-2">FREE Item</p>
-                          <div className="w-full flex justify-end">
-                            <p className="text-green-600 font-semibold">Total: ₹0.00</p>
-                          </div>
+                          <p className="text-green-600 font-bold text-base mb-2">
+                            FREE Item
+                          </p>
+                          <div className="flex items-center justify-between md:justify-end w-full">
+                            <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1">
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 opacity-50 cursor-not-allowed"
+                                disabled={true}
+                                aria-label="Decrease quantity (disabled)"
+                              >
+                                <span className="font-medium">-</span>
+                              </motion.button>
 
-                          <motion.button
-                            whileTap={{ scale: 0.95 }}
-                            className="bg-red-500 hover:bg-red-600 hover:shadow-md text-white px-3 py-1 rounded-md transition-all duration-200 text-sm flex items-center justify-center"
-                            onClick={async () => {
-                              await removeCartItem(item);
-                            }}
-                            aria-label="Delete item from cart"
-                          >
-                            <Trash2 size={14} className="mr-1" />
-                            Remove
-                          </motion.button>
+                              <div className="px-4">
+                                <span className="font-medium text-purple-700">
+                                  {freeCartItems[item.itemId] || 0}
+                                </span>
+                              </div>
+
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-purple-600 opacity-50 cursor-not-allowed"
+                                disabled={true}
+                                aria-label="Increase quantity (disabled)"
+                              >
+                                <span className="font-medium">+</span>
+                              </motion.button>
+                            </div>
+
+                            <motion.button
+                              whileTap={{ scale: 0.95 }}
+                              className="ml-4 bg-red-500 hover:bg-red-600 hover:shadow-md text-white w-8 h-8 rounded-md transition-all duration-200 flex items-center justify-center"
+                              onClick={async () => {
+                                await removeCartItem(item);
+                              }}
+                              aria-label="Delete item from cart"
+                            >
+                              <Trash2 size={16} />
+                            </motion.button>
+                          </div>
+                          <div className="w-full flex justify-end">
+                            <p className="text-green-600 font-semibold">
+                              Total: ₹0.00
+                            </p>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex flex-col md:items-end justify-center space-y-3 w-full md:w-auto">
@@ -1625,13 +1831,16 @@ const CartPage: React.FC = () => {
                                     : ""
                                 }`}
                                 onClick={() => {
-                                  if (regularCartItems[item.itemId] < item.quantity) {
+                                  if (
+                                    regularCartItems[item.itemId] <
+                                    item.quantity
+                                  ) {
                                     handleIncrease(item);
                                   }
                                 }}
                                 disabled={
-                                  regularCartItems[item.itemId] >= item.quantity ||
-                                  loadingItems[item.itemId]
+                                  regularCartItems[item.itemId] >=
+                                    item.quantity || loadingItems[item.itemId]
                                 }
                                 aria-label="Increase quantity"
                               >
@@ -1654,16 +1863,19 @@ const CartPage: React.FC = () => {
                           <div className="w-full flex justify-end">
                             <p className="text-purple-700 font-bold text-base">
                               Total: ₹
-                              {(parseFloat(item.itemPrice) * (regularCartItems[item.itemId] || 0)).toFixed(
-                                2
-                              )}
+                              {(
+                                parseFloat(item.itemPrice) *
+                                (regularCartItems[item.itemId] || 0)
+                              ).toFixed(2)}
                             </p>
                           </div>
                         </div>
                       )
                     ) : (
                       <div className="flex flex-col md:items-end justify-center space-y-3 w-full md:w-auto">
-                        <p className="text-red-600 font-bold text-base mb-2">Out of Stock</p>
+                        <p className="text-red-600 font-bold text-base mb-2">
+                          Out of Stock
+                        </p>
                         <motion.button
                           whileTap={{ scale: 0.95 }}
                           className="bg-red-500 hover:bg-red-600 hover:shadow-md text-white px-4 py-2 rounded-md transition-all duration-200 text-sm flex items-center justify-center"
@@ -1698,16 +1910,20 @@ const CartPage: React.FC = () => {
                 <p>No addresses found.</p>
               ) : (
                 <span className="flex justify-between mb-2 text-gray-700">
-                  {selectedAddress.flatNo}, {selectedAddress.address}, {selectedAddress.landMark},{" "}
-                  {selectedAddress.pincode}
+                  {selectedAddress.flatNo}, {selectedAddress.address},{" "}
+                  {selectedAddress.landMark}, {selectedAddress.pincode}
                 </span>
               )}
               <div className="mb-4">
-                <label className="block font-bold text-gray-700  mb-1">Select Address</label>
+                <label className="block font-bold text-gray-700  mb-1">
+                  Select Address
+                </label>
                 <select
                   value={selectedAddress?.address || ""}
                   onChange={(e) => {
-                    const selected = addresses.find((addr) => addr.address === e.target.value);
+                    const selected = addresses.find(
+                      (addr) => addr.address === e.target.value
+                    );
 
                     if (selected) {
                       handleAddressChange(selected);
@@ -1718,7 +1934,8 @@ const CartPage: React.FC = () => {
                   <option value="">Choose an Address</option>
                   {addresses.map((address, index) => (
                     <option key={index} value={address.address}>
-                      {address.flatNo}, {address.address}, {address.landMark}, {address.pincode}
+                      {address.flatNo}, {address.address}, {address.landMark},{" "}
+                      {address.pincode}
                     </option>
                   ))}
                 </select>
@@ -1733,7 +1950,9 @@ const CartPage: React.FC = () => {
                         ?.filter((item) => item.status !== "FREE")
                         .reduce(
                           (acc, item) =>
-                            acc + parseFloat(item.itemPrice) * (regularCartItems[item.itemId] || 0),
+                            acc +
+                            parseFloat(item.itemPrice) *
+                              (regularCartItems[item.itemId] || 0),
                           0
                         )
                         .toFixed(2) || "0.00"}
@@ -1751,7 +1970,9 @@ const CartPage: React.FC = () => {
                         ?.filter((item) => item.status !== "FREE")
                         .reduce(
                           (acc, item) =>
-                            acc + parseFloat(item.itemPrice) * (regularCartItems[item.itemId] || 0),
+                            acc +
+                            parseFloat(item.itemPrice) *
+                              (regularCartItems[item.itemId] || 0),
                           0
                         )
                         .toFixed(2) || "0.00"}
@@ -1760,12 +1981,16 @@ const CartPage: React.FC = () => {
 
                   {cartData?.some((item) => item.quantity === 0) && (
                     <div className="mb-3 p-3 bg-red-100 text-red-700 rounded">
-                      <p className="font-semibold">Some items in your cart are out of stock:</p>
+                      <p className="font-semibold">
+                        Some items in your cart are out of stock:
+                      </p>
                       <ul className="ml-4 mt-1 list-disc">
                         {cartData
                           .filter((item) => item.quantity === 0)
                           .map((item) => (
-                            <li key={item.itemId}>{item.itemName} is out of stock</li>
+                            <li key={item.itemId}>
+                              {item.itemName} is out of stock
+                            </li>
                           ))}
                       </ul>
                       <p className="mt-2 text-sm">
@@ -1780,16 +2005,25 @@ const CartPage: React.FC = () => {
                     </div>
                   )}
 
-                  {cartData?.some((item) => item.cartQuantity > item.quantity && item.quantity > 0) && (
+                  {cartData?.some(
+                    (item) =>
+                      item.cartQuantity > item.quantity && item.quantity > 0
+                  ) && (
                     <div className="mb-3 p-3 bg-yellow-100 text-yellow-700 rounded">
-                      <p className="font-semibold">Quantity adjustments needed:</p>
+                      <p className="font-semibold">
+                        Quantity adjustments needed:
+                      </p>
                       <ul className="ml-4 mt-1 list-disc">
                         {cartData
-                          .filter((item) => item.cartQuantity > item.quantity && item.quantity > 0)
+                          .filter(
+                            (item) =>
+                              item.cartQuantity > item.quantity &&
+                              item.quantity > 0
+                          )
                           .map((item) => (
                             <li key={item.itemId}>
-                              {item.itemName} - Only {item.quantity} in stock (you have{" "}
-                              {item.cartQuantity})
+                              {item.itemName} - Only {item.quantity} in stock
+                              (you have {item.cartQuantity})
                             </li>
                           ))}
                       </ul>
@@ -1805,7 +2039,9 @@ const CartPage: React.FC = () => {
                     onClick={() => handleToProcess()}
                     disabled={isCheckoutDisabled()}
                   >
-                    {isCheckoutDisabled() ? "Cannot Checkout - Stock Issues" : "Proceed to Checkout"}
+                    {isCheckoutDisabled()
+                      ? "Cannot Checkout - Stock Issues"
+                      : "Proceed to Checkout"}
                   </button>
                 </div>
               </div>
@@ -1841,7 +2077,9 @@ const CartPage: React.FC = () => {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {addressFormErrors.flatNo && (
-                    <p className="text-red-500 text-sm">{addressFormErrors.flatNo}</p>
+                    <p className="text-red-500 text-sm">
+                      {addressFormErrors.flatNo}
+                    </p>
                   )}
 
                   <input
@@ -1857,7 +2095,9 @@ const CartPage: React.FC = () => {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {addressFormErrors.landmark && (
-                    <p className="text-red-500 text-sm">{addressFormErrors.landmark}</p>
+                    <p className="text-red-500 text-sm">
+                      {addressFormErrors.landmark}
+                    </p>
                   )}
 
                   <input
@@ -1873,7 +2113,9 @@ const CartPage: React.FC = () => {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {addressFormErrors.address && (
-                    <p className="text-red-500 text-sm">{addressFormErrors.address}</p>
+                    <p className="text-red-500 text-sm">
+                      {addressFormErrors.address}
+                    </p>
                   )}
 
                   <input
@@ -1889,7 +2131,9 @@ const CartPage: React.FC = () => {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   {addressFormErrors.pincode && (
-                    <p className="text-red-500 text-sm">{addressFormErrors.pincode}</p>
+                    <p className="text-red-500 text-sm">
+                      {addressFormErrors.pincode}
+                    </p>
                   )}
 
                   <select
@@ -1897,7 +2141,10 @@ const CartPage: React.FC = () => {
                     onChange={(e) =>
                       setAddressFormData((prev) => ({
                         ...prev,
-                        addressType: e.target.value as "Home" | "Work" | "Others",
+                        addressType: e.target.value as
+                          | "Home"
+                          | "Work"
+                          | "Others",
                       }))
                     }
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -1941,8 +2188,8 @@ const CartPage: React.FC = () => {
                 </div>
 
                 <p className="text-sm text-gray-600 mb-4">
-                  Add mobile numbers of friends you want to refer. They'll receive a special offer and
-                  you'll get rewards!
+                  Add mobile numbers of friends you want to refer. They'll
+                  receive a special offer and you'll get rewards!
                 </p>
 
                 <div className="mb-4">
@@ -1978,7 +2225,9 @@ const CartPage: React.FC = () => {
                           key={number}
                           className="flex items-center bg-purple-50 px-3 py-1 rounded-md"
                         >
-                          <span className="text-sm text-gray-700">{number}</span>
+                          <span className="text-sm text-gray-700">
+                            {number}
+                          </span>
                           <button
                             onClick={() => handleRemoveNumber(index)}
                             className="ml-2 text-red-500 hover:text-red-700"
@@ -2027,43 +2276,58 @@ const CartPage: React.FC = () => {
           style={{ maxWidth: "600px" }}
           bodyStyle={{ maxHeight: "60vh", padding: "16px" }}
         >
-          <div className="container-scroll-container" style={{ maxHeight: "50vh", overflowY: "auto" }}>
+          <div
+            className="container-scroll-container"
+            style={{ maxHeight: "50vh", overflowY: "auto" }}
+          >
             <div className="text-center text-gray-800">
               <p className="text-lg font-medium mt-1">
-                Your cart includes a rice bag that qualifies for a <strong>FREE rice container</strong>!
+                Your cart includes a rice bag that qualifies for a{" "}
+                <strong>FREE rice container</strong>!
               </p>
               <p className="text-sm text-gray-600 italic">
-                (Note: Container remains Oxy Group asset until ownership is earned.)
+                (Note: Container remains Oxy Group asset until ownership is
+                earned.)
               </p>
 
               <div className="mt-4 text-left">
-                <h3 className="text-md font-semibold mb-2">📋 How to Earn Ownership:</h3>
+                <h3 className="text-md font-semibold mb-2">
+                  📋 How to Earn Ownership:
+                </h3>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>
                     <strong>Option 1:</strong> Buy 9 bags of rice in 3 years
                   </li>
                   <li>
-                    <strong>Option 2:</strong> Refer 9 friends who make purchases
+                    <strong>Option 2:</strong> Refer 9 friends who make
+                    purchases
                   </li>
                   <li>
-                    <strong>Important:</strong> If you don't meet these conditions within 90 days, we'll
-                    collect the container back
+                    <strong>Important:</strong> If you don't meet these
+                    conditions within 90 days, we'll collect the container back
                   </li>
                 </ul>
               </div>
 
               <div className="mt-6">
-                <h3 className="text-md font-semibold mb-2">Select an option to continue:</h3>
+                <h3 className="text-md font-semibold mb-2">
+                  Select an option to continue:
+                </h3>
                 <div className="space-y-3">
                   <div
                     className={`p-4 border rounded-lg cursor-pointer ${
-                      selectedPlan.includes("planA") ? "border-purple-500 bg-purple-50" : "border-gray-300 hover:bg-gray-50"
+                      selectedPlan.includes("planA")
+                        ? "border-purple-500 bg-purple-50"
+                        : "border-gray-300 hover:bg-gray-50"
                     }`}
                     onClick={() =>
                       setSelectedPlan(
                         selectedPlan.includes("planA")
                           ? selectedPlan.filter((p) => p !== "planA")
-                          : [...selectedPlan.filter((p) => p !== "planB"), "planA"]
+                          : [
+                              ...selectedPlan.filter((p) => p !== "planB"),
+                              "planA",
+                            ]
                       )
                     }
                   >
@@ -2085,13 +2349,18 @@ const CartPage: React.FC = () => {
 
                   <div
                     className={`p-4 border rounded-lg cursor-pointer ${
-                      selectedPlan.includes("planB") ? "border-purple-500 bg-purple-50" : "border-gray-300 hover:bg-gray-50"
+                      selectedPlan.includes("planB")
+                        ? "border-purple-500 bg-purple-50"
+                        : "border-gray-300 hover:bg-gray-50"
                     }`}
                     onClick={() =>
                       setSelectedPlan(
                         selectedPlan.includes("planB")
                           ? selectedPlan.filter((p) => p !== "planB")
-                          : [...selectedPlan.filter((p) => p !== "planA"), "planB"]
+                          : [
+                              ...selectedPlan.filter((p) => p !== "planA"),
+                              "planB",
+                            ]
                       )
                     }
                   >
@@ -2105,14 +2374,15 @@ const CartPage: React.FC = () => {
                       <div>
                         <h4 className="font-medium">Referral Plan</h4>
                         <p className="text-sm text-gray-600">
-                          Refer friends to earn ownership faster + get ₹50 cashback
+                          Refer friends to earn ownership faster + get ₹50
+                          cashback
                         </p>
                       </div>
                     </div>
                   </div>
                   <p className="text-sm text-gray-500 italic mt-2">
-                    Note: If you don't select any plan and click "Decline Offer", you won't receive the
-                    free container.
+                    Note: If you don't select any plan and click "Decline
+                    Offer", you won't receive the free container.
                   </p>
                 </div>
               </div>

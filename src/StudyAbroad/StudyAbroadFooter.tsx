@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Globe, Phone, Mail, MapPin, ArrowUp, Facebook, Twitter, Linkedin, Instagram, ChevronDown } from "lucide-react";
+import { FaWhatsapp } from 'react-icons/fa';
 
 type SectionKey = 'destinations' | 'services' | 'contact';
 
@@ -172,9 +173,9 @@ const StudyAbroadFooter = () => {
               </div>
               
               <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-purple-600" />
+                <FaWhatsapp className="w-5 h-5 text-purple-600" />
                 <a
-                  href=""
+                  // href="+918919636330"
                   className="text-gray-600 hover:text-purple-600 transition-colors"
                 >
                   89196 36330
@@ -183,7 +184,7 @@ const StudyAbroadFooter = () => {
               <div className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-purple-600" />
                 <a
-                  href="mailto:info@studyabroad.com"
+                  // href="studyabroad@askoxy.ai"
                   className="text-gray-600 hover:text-purple-600 transition-colors"
                 >
                   studyabroad@askoxy.ai

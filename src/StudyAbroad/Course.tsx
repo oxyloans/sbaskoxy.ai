@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronRight, ArrowLeft, Star, Globe, Briefcase, Clock, DollarSign, GraduationCap, Loader2, AlertCircle, Filter, X, Calendar, Award, BookOpen, MapPin, University } from 'lucide-react';
+import { Search, ChevronRight, ArrowLeft, Star, Globe, Briefcase, Clock, DollarSign, GraduationCap, Loader2, AlertCircle, Filter, X, Calendar, Award, BookOpen, MapPin, University, Crown, SlidersHorizontal } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { log } from 'console';
 
 // Course Interface based on API response
 interface Course {
@@ -21,7 +20,6 @@ interface UniversityData {
   worldRanking: string;
   countryRanking: string;
   description: string;
-  // Add other university properties as needed
 }
 
 interface UniversityApiResponse {
@@ -79,7 +77,7 @@ const CoursesPage: React.FC<{
 
     try {
       const response = await axios.post(
-        'https://meta.oxyloans.com/api/student-service/student/getCountryBasedData',
+        'http://65.0.147.157:9001/api/student-service/student/getCountryBasedData',
         { countryName: state.selectedCountry }
       );
 
@@ -99,43 +97,43 @@ const CoursesPage: React.FC<{
   };
 
   // New function to fetch universities based on selected course
-const fetchUniversities = async (course: Course) => {
-  if (!course?.courseName) {
-    console.error('No course selected');
-    return;
-  }
-  console.log("course", course.courseName);
+  const fetchUniversities = async (course: Course) => {
+    if (!course?.courseName) {
+      console.error('No course selected');
+      return;
+    }
+    console.log("course", course.courseName);
 
-  try {
-    const response = await axios.get(
-      `https://meta.oxyloans.com/api/student-service/student/${encodeURIComponent(course.courseName)}/getCoursesBasedUniversities`,
-      {} // Empty body since we're sending the course name as part of the URL
-    );
-    
-    // Process the university data
-    const universityResponse: UniversityApiResponse = response.data;
-    
-    // Navigate to university list page with the fetched universities
-    navigate('/listofuniversities', { 
-      state: { 
-        course,
-        selectedCountry: state?.selectedCountry,
-        universities: universityResponse.universities || []
-      } 
-    });
-    
-  } catch (err) {
-    console.error('Error fetching universities:', err);
-    // Still navigate but without university data - the university page will handle the error
-    navigate('/listofuniversities', { 
-      state: { 
-        course,
-        selectedCountry: state?.selectedCountry,
-        universityError: 'Failed to fetch universities. Please try again.'
-      } 
-    });
-  }
-};
+    try {
+      const response = await axios.get(
+        `http://65.0.147.157:9001/api/student-service/student/${encodeURIComponent(course.courseName)}/getCoursesBasedUniversities`,
+        {} // Empty body since we're sending the course name as part of the URL
+      );
+      
+      // Process the university data
+      const universityResponse: UniversityApiResponse = response.data;
+      
+      // Navigate to university list page with the fetched universities
+      navigate('/listofuniversities', { 
+        state: { 
+          course,
+          selectedCountry: state?.selectedCountry,
+          universities: universityResponse.universities || []
+        } 
+      });
+      
+    } catch (err) {
+      console.error('Error fetching universities:', err);
+      // Still navigate but without university data - the university page will handle the error
+      navigate('/listofuniversities', { 
+        state: { 
+          course,
+          selectedCountry: state?.selectedCountry,
+          universityError: 'Failed to fetch universities. Please try again.'
+        } 
+      });
+    }
+  };
 
   useEffect(() => {
     fetchCourses();
@@ -212,20 +210,35 @@ const fetchUniversities = async (course: Course) => {
 
   if (initialLoad) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-md w-full">
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center max-w-sm w-full">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-600 to-purple-800 flex items-center justify-center shadow-xl animate-pulse">
               <GraduationCap className="h-8 w-8 text-white" />
             </div>
           </div>
-          <div className="space-y-4">
-            <div className="h-4 bg-gray-200 rounded-full w-3/4 mx-auto animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded-full w-1/2 mx-auto animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded-full w-2/3 mx-auto animate-pulse"></div>
+          <div className="space-y-4 mb-6">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">
+              Loading Elite Programs
+            </h2>
+            <p className="text-gray-600 leading-relaxed">
+              Discovering premium educational opportunities in<br />
+              <span className="font-bold text-purple-700 block mt-1">
+                {state?.selectedCountry || 'your selected destination'}
+              </span>
+            </p>
           </div>
-          <div className="mt-8">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-600" />
+          <div className="space-y-3">
+            <div className="flex space-x-1 justify-center">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 bg-gradient-to-r from-purple-500 to-purple-700 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 font-medium">Please wait...</p>
           </div>
         </div>
       </div>
@@ -234,43 +247,45 @@ const fetchUniversities = async (course: Course) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className=" bg-white">
+        <div className="px-4 sm:px-6 lg:px-8 py-6">
           {/* Skeleton Header */}
           <div className="mb-6 animate-pulse">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-full bg-gray-200 mr-4"></div>
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 rounded-full bg-purple-100 mr-3"></div>
               <div className="space-y-2">
-                <div className="h-6 bg-gray-200 rounded w-64"></div>
-                <div className="h-4 bg-gray-200 rounded w-48"></div>
+                <div className="h-6 bg-purple-100 rounded w-64"></div>
+                <div className="h-3 bg-gray-200 rounded w-32"></div>
               </div>
             </div>
           </div>
 
           {/* Skeleton Search and Filters */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 animate-pulse">
-            <div className="h-12 bg-gray-200 rounded-lg mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white border border-purple-100 rounded-xl shadow-md p-4 mb-6 animate-pulse">
+            <div className="h-8 bg-gray-200 rounded-lg mb-3"></div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-12 bg-gray-200 rounded-lg"></div>
+                <div key={i} className="h-8 bg-gray-200 rounded-md"></div>
               ))}
             </div>
           </div>
 
           {/* Skeleton Course Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-lg p-6 h-full flex flex-col space-y-4">
-                <div className="space-y-2">
-                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5 gap-4">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-64 animate-pulse">
+                <div className="space-y-3">
+                  <div className="h-4 bg-purple-100 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[...Array(2)].map((_, j) => (
+                      <div key={j} className="h-12 bg-gray-100 rounded-lg"></div>
+                    ))}
+                  </div>
+                  <div className="space-y-2 mt-auto pt-3">
+                    <div className="h-6 bg-purple-100 rounded-md"></div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {[...Array(4)].map((_, j) => (
-                    <div key={j} className="h-20 bg-gray-100 rounded-lg"></div>
-                  ))}
-                </div>
-                <div className="h-8 bg-gray-200 rounded-lg mt-auto"></div>
               </div>
             ))}
           </div>
@@ -281,93 +296,107 @@ const fetchUniversities = async (course: Course) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-md mx-auto bg-white rounded-xl p-8 shadow-lg border border-gray-200">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-            <AlertCircle className="h-6 w-6 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-3">Something went wrong</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <div className="flex justify-center space-x-4">
-            <button 
-              onClick={fetchCourses}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
-            >
-              Try Again
-            </button>
-            <button 
-              onClick={handleBackClick}
-              className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-            >
-              Go Back
-            </button>
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center max-w-sm mx-auto">
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xl">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-50 border-2 border-red-100 mb-4">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">Something went wrong</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed text-sm">{error}</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button 
+                onClick={fetchCourses}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900 transition-all duration-300 font-medium flex items-center justify-center shadow-md text-sm"
+              >
+                <Loader2 className="mr-2 h-4 w-4" />
+                Try Again
+              </button>
+              <button 
+                onClick={handleBackClick}
+                className="flex-1 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-300 font-medium shadow-sm text-sm"
+              >
+                Go Back
+              </button>
+            </div>
           </div>
         </div>
       </div>
     );
   }
-
+  
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className=" bg-white">
+      <div className="px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <div className="mb-2">
-          <div className="flex items-center mb-2">
+        <div className="mb-6">
+          <div className="flex items-center mb-4">
             <button 
               onClick={handleBackClick}
               className="flex items-center group mr-4"
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-gray-200 group-hover:bg-gray-50 transition-colors shadow-sm">
-                <ArrowLeft size={20} className="text-gray-600 group-hover:text-purple-600 transition-colors" />
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-purple-200 group-hover:border-purple-400 group-hover:shadow-md transition-all duration-300">
+                <ArrowLeft size={16} className="text-purple-600 group-hover:text-purple-800 transition-colors" />
               </div>
             </button>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
-                Study Programs in <span className="text-purple-600">{state?.selectedCountry}</span>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
+                Elite Programs in <span className="bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">{state?.selectedCountry}</span>
               </h1>
-              <p className="text-gray-600 mt-2">
-                {courses.length} programs from leading universities
-              </p>
+              <div className="flex items-center mt-2 text-sm">
+                <Crown className="h-4 w-4 text-yellow-500 mr-1" />
+                <span className="text-gray-600 font-medium">
+                  {courses.length} premium programs from leading universities
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Search and Filters Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-2">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6">
           {/* Search Bar */}
           <div className="relative mb-4">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-4 w-4 text-purple-400" />
             </div>
             <input 
               type="text" 
-              placeholder="Search courses, universities, or programs..." 
+              placeholder="Search elite courses, universities, or programs..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 shadow-sm"
+              className="block w-full pl-10 pr-10 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500 transition-all duration-300 text-sm placeholder-gray-400 font-medium"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <X className="h-4 w-4 text-gray-400 hover:text-purple-600 transition-colors" />
+              </button>
+            )}
           </div>
 
           {/* Filter Toggle for Mobile */}
-          <div className="md:hidden mb-2">
+          <div className="md:hidden mb-3">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="w-full py-2.5 bg-gray-50 text-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors border border-gray-200"
+              className="w-full py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-lg flex items-center justify-center hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 border border-yellow-300 font-bold text-xs"
             >
-              <Filter className="mr-2 h-4 w-4" />
+              <SlidersHorizontal className="mr-1 h-3 w-3" />
               {isFilterOpen ? 'Hide Filters' : 'Show Filters'} 
             </button>
           </div>
 
           {/* Filters */}
-          <div className={`${isFilterOpen ? 'block' : 'hidden'} md:block space-y-4`}>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className={`${isFilterOpen ? 'block' : 'hidden'} md:block space-y-3`}>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Degree Type</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Degree Type</label>
                 <select 
                   value={selectedDegree}
                   onChange={(e) => setSelectedDegree(e.target.value)}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm shadow-sm"
+                  className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500 text-xs shadow-sm font-medium text-purple-800"
                 >
                   {degreeTypes.map(type => (
                     <option key={type} value={type}>{type}</option>
@@ -376,11 +405,11 @@ const fetchUniversities = async (course: Course) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Duration</label>
                 <select 
                   value={selectedDuration}
                   onChange={(e) => setSelectedDuration(e.target.value)}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm shadow-sm"
+                  className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500 text-xs shadow-sm font-medium text-purple-800"
                 >
                   {durations.map(duration => (
                     <option key={duration} value={duration}>{duration}</option>
@@ -389,11 +418,11 @@ const fetchUniversities = async (course: Course) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Sort By</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Sort By</label>
                 <select 
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'name' | 'cost' | 'duration')}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm shadow-sm"
+                  className="w-full px-3 py-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500 text-xs shadow-sm font-medium text-purple-800"
                 >
                   <option value="name">Course Name</option>
                   <option value="cost">Cost (Low to High)</option>
@@ -404,21 +433,22 @@ const fetchUniversities = async (course: Course) => {
               <div className="flex items-end">
                 <button 
                   onClick={clearFilters}
-                  className="w-full p-2.5 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center border border-gray-200 shadow-sm text-sm font-medium"
+                  className="w-full px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 flex items-center justify-center border border-gray-300 shadow-sm text-xs font-bold"
                 >
-                  <X className="mr-2 h-4 w-4" />
-                  Clear Filters
+                  <X className="mr-1 h-3 w-3" />
+                  Clear
                 </button>
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
-                Showing <span className="font-semibold">{filteredCourses.length}</span> of <span className="font-semibold">{courses.length}</span> programs
+            <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+              <p className="text-sm font-bold text-gray-800 flex items-center">
+                <Crown className="h-3 w-3 text-yellow-500 mr-1" />
+                {filteredCourses.length} Premium Programs
               </p>
               {filteredCourses.length > 0 && (
-                <p className="text-sm text-gray-500">
-                  Sorted by: <span className="font-medium text-gray-700 capitalize">{sortBy}</span>
+                <p className="text-xs text-gray-500">
+                  Sorted by: <span className="font-bold text-gray-700 capitalize">{sortBy}</span>
                 </p>
               )}
             </div>
@@ -427,71 +457,71 @@ const fetchUniversities = async (course: Course) => {
 
         {/* Courses Grid */}
         {filteredCourses.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5 gap-4">
             {filteredCourses.map((course, index) => (
               <div 
                 key={index} 
-                className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all duration-300 group cursor-pointer h-full flex flex-col"
+                className="bg-white border border-gray-300 rounded-xl p-4 hover:shadow-xl transition-all duration-300 group cursor-pointer h-full flex flex-col hover:border-purple-400"
                 onClick={() => handleCourseSelect(course)}
               >
                 {/* Course Header */}
-                <div className="mb-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-xl font-bold text-gray-800 group-hover:text-purple-600 transition-colors line-clamp-2 flex-1">
+                <div className="mb-3">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-sm font-bold text-gray-800 group-hover:text-purple-600 transition-colors line-clamp-2 flex-1">
                       {getFieldOfStudy(course.courseName)}
                     </h3>
                     {getDegreeType(course.courseName) && (
-                      <span className="ml-3 px-2.5 py-0.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-full border border-purple-100">
+                      <span className="ml-2 px-2 py-1 bg-gradient-to-r from-purple-600 to-purple-800 text-white text-xs font-bold rounded-full shadow-sm">
                         {getDegreeType(course.courseName)}
                       </span>
                     )}
                   </div>
                   
-                  <div className="flex items-center text-gray-600 mb-4">
-                    <University className="mr-2 h-4 w-4 text-purple-500" />
-                    <span className="text-sm font-medium">{course.university}</span>
+                  <div className="flex items-center text-gray-600 mb-3">
+                    <University className="mr-1 h-3 w-3 text-purple-500" />
+                    <span className="text-xs font-medium truncate">{course.university}</span>
                   </div>
                 </div>
 
                 {/* Course Details Grid */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <Clock className="h-5 w-5 text-purple-500 mx-auto mb-1" />
-                    <p className="text-xs text-gray-500 mb-1">Duration</p>
-                    <p className="font-semibold text-gray-800 text-sm">{course.duration}</p>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div className="text-center p-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+                    <Clock className="h-3 w-3 text-purple-600 mx-auto mb-1" />
+                    <p className="text-xs text-purple-600 font-bold mb-0.5">DURATION</p>
+                    <p className="font-bold text-gray-800 text-xs">{course.duration}</p>
                   </div>
 
-                  <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
-                    <DollarSign className="h-5 w-5 text-purple-500 mx-auto mb-1" />
-                    <p className="text-xs text-gray-500 mb-1">Annual Cost</p>
-                    <p className="font-semibold text-gray-800 text-sm">{course.cost}</p>
+                  <div className="text-center p-2 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border border-yellow-200">
+                    <DollarSign className="h-3 w-3 text-yellow-600 mx-auto mb-1" />
+                    <p className="text-xs text-yellow-600 font-bold mb-0.5">COST</p>
+                    <p className="font-bold text-gray-800 text-xs">{course.cost}</p>
                   </div>
 
                   {course.intake && (
-                    <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100 col-span-2">
-                      <Calendar className="h-5 w-5 text-purple-500 mx-auto mb-1" />
-                      <p className="text-xs text-gray-500 mb-1">Next Intake</p>
-                      <p className="font-semibold text-gray-800 text-sm">{course.intake}</p>
+                    <div className="text-center p-2 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 col-span-2">
+                      <Calendar className="h-3 w-3 text-green-600 mx-auto mb-1" />
+                      <p className="text-xs text-green-600 font-bold mb-0.5">NEXT INTAKE</p>
+                      <p className="font-bold text-gray-800 text-xs">{course.intake}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Exam Requirements */}
                 {course.typesOfExams && (
-                  <div className="mb-6">
-                    <h4 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">Required Exams</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {formatExamRequirements(course.typesOfExams).slice(0, 4).map((exam, examIndex) => (
+                  <div className="mb-4">
+                    <h4 className="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Required Exams</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {formatExamRequirements(course.typesOfExams).slice(0, 3).map((exam, examIndex) => (
                         <span 
                           key={examIndex}
-                          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded border border-blue-100"
+                          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded border border-blue-200"
                         >
                           {exam.trim()}
                         </span>
                       ))}
-                      {formatExamRequirements(course.typesOfExams).length > 4 && (
-                        <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded border border-gray-200">
-                          +{formatExamRequirements(course.typesOfExams).length - 4} more
+                      {formatExamRequirements(course.typesOfExams).length > 3 && (
+                        <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs font-bold rounded border border-gray-200">
+                          +{formatExamRequirements(course.typesOfExams).length - 3}
                         </span>
                       )}
                     </div>
@@ -499,28 +529,29 @@ const fetchUniversities = async (course: Course) => {
                 )}
 
                 {/* Action Button - Always at bottom */}
-                <div className="mt-auto pt-4">
-                  <button className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2.5 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center font-medium text-sm shadow-sm">
-                    Explore Universities
-                    <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                <div className="mt-auto pt-3">
+                  <button className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white py-2 rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 flex items-center justify-center font-bold text-xs shadow-md">
+                    <Crown className="mr-1 h-3 w-3" />
+                    Explore Elite Universities
+                    <ChevronRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200 max-w-md mx-auto">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 mb-4">
-                <BookOpen className="h-5 w-5 text-purple-600" />
+          <div className="text-center py-12">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg max-w-md mx-auto">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 border-2 border-purple-300 mb-4">
+                <BookOpen className="h-6 w-6 text-purple-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-3">No Programs Found</h3>
-              <p className="text-gray-600 mb-6 text-sm">
-                We couldn't find any programs matching your search criteria. Try adjusting your filters.
+              <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                No programs match your search criteria. Try adjusting your filters to discover more opportunities.
               </p>
               <button 
                 onClick={clearFilters}
-                className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm shadow-sm"
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900 transition-all duration-300 font-bold text-sm shadow-md"
               >
                 Clear All Filters
               </button>
