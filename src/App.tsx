@@ -58,6 +58,7 @@ import UniversityDetailsPage from "./StudyAbroad/Univerisityhome";
 import PersonalDetailsPage from "./StudyAbroad/PersonalDetails";
 import ApplicationUpload from "./StudyAbroad/DocumentsUpload";
 import UniversityListPage from "./StudyAbroad/Universitylist";
+import AllUniversities from "./StudyAbroad/AllUniversities";
 
 
 import MyWalletPage from "./kart/Wallet";
@@ -144,6 +145,7 @@ const App: React.FC = () => {
           <Route path="/taskassigneduser" element={<TaskAssignedUser />} /> 
           <Route path="/studyabroad" element={<StudyAbroadWEB />} />
             <Route path="/studyabroad-web" element={<StudyAbroadLandingPage />} />
+            <Route path="/all-universities" element={<AllUniversities />} />
 
 
 

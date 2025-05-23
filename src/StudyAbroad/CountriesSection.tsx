@@ -6,7 +6,9 @@ import {
   Award,
   GraduationCap,
   X,
+  School,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import CanadaFlag from "../assets/img/canada.png";
 import USAFlag from "../assets/img/usa.png";
 import UKFlag from "../assets/img/uk.png";
@@ -33,7 +35,12 @@ interface Country {
   details: CountryDetails;
 }
 
-const CountriesSection = () => {
+interface CountriesSectionProps {
+  onViewAllClick?: () => void; // Add prop for navigation
+}
+
+const CountriesSection: React.FC<CountriesSectionProps> = ({ onViewAllClick }) => {
+  const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [activeCountry, setActiveCountry] = useState<Country | null>(null);
@@ -209,6 +216,14 @@ const CountriesSection = () => {
     ),
   };
 
+  const handleViewAllClick = () => {
+    if (onViewAllClick) {
+      onViewAllClick();
+    }
+    // If using React Router, you could also do:
+    navigate('/all-universities');
+  };
+
   const handleCountrySelect = (country: Country) => {
     if (activeCountry?.name === country.name && showDetails) {
       setShowDetails(false);
@@ -236,6 +251,12 @@ const CountriesSection = () => {
       setIsAnimating(false);
       setShowDetails(true);
     }, 300);
+  };
+
+  const handleExploreCountryUniversities = (countryName: string) => {
+    // Handle explore country universities click
+    console.log(`Explore ${countryName} universities`);
+    handleViewAllClick();
   };
 
   return (
@@ -392,7 +413,10 @@ const CountriesSection = () => {
                 </div>
 
                 <div className="mt-6 text-center">
-                  <button className="bg-yellow-500 hover:bg-yellow-600 text-gray-800 font-bold py-2 px-6 rounded-full shadow-md transition duration-300">
+                  <button 
+                    onClick={() => handleExploreCountryUniversities(activeCountry.name)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-gray-800 font-bold py-2 px-6 rounded-full shadow-md transition duration-300"
+                  >
                     Explore {activeCountry.name} Universities
                   </button>
                 </div>
@@ -412,9 +436,12 @@ const CountriesSection = () => {
                   600+ Courses Available
                 </p>
               </div>
-              <button className="bg-white border-2 border-yellow-500 text-purple-800 hover:bg-yellow-50 px-6 py-2 rounded-full shadow-md transition duration-300 font-semibold flex items-center">
+              <button 
+                onClick={handleViewAllClick}
+                className="bg-white border-2 border-yellow-500 text-purple-800 hover:bg-yellow-50 px-6 py-2 rounded-full shadow-md transition duration-300 font-semibold flex items-center group"
+              >
                 View all universities
-                <ChevronRight className="h-5 w-5 ml-2" />
+                <ChevronRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
 
@@ -467,9 +494,9 @@ const CountriesSection = () => {
                     </h4>
                     <p className="text-sm text-gray-600 mt-1">{uni.location}</p>
                     <div className="mt-3 flex justify-center">
-                      <button className="text-purple-700 hover:text-purple-900 text-sm font-medium inline-flex items-center">
+                      <button className="text-purple-700 hover:text-purple-900 text-sm font-medium inline-flex items-center group">
                         View Programs
-                        <ChevronRight className="h-4 w-4 ml-1" />
+                        <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
                       </button>
                     </div>
                   </div>
@@ -477,15 +504,16 @@ const CountriesSection = () => {
               ))}
             </div>
 
-            {/* View more universities link */}
-            <div className="mt-10 text-center">
-              <a
-                href="#"
-                className="inline-flex items-center text-purple-700 hover:text-purple-900 font-medium"
+            {/* Updated View more universities section to match UniversitiesSection style */}
+            <div className="mt-12 text-center">
+              <button 
+                onClick={handleViewAllClick}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center gap-2 mx-auto"
               >
-                View all available universities
-                <ChevronRight className="h-5 w-5 ml-1" />
-              </a>
+                <School className="w-5 h-5" />
+                View All Universities
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>

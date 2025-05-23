@@ -68,6 +68,7 @@ interface CartItem {
   itemId: string;
   cartQuantity: number;
   cartId: string;
+  status: string; // "ADD" or "FREE"
 }
 
 const Categories: React.FC<CategoriesProps> = ({
@@ -101,10 +102,19 @@ const Categories: React.FC<CategoriesProps> = ({
     status: {},
   });
 
-  const fetchCartData = async (itemId: string) => {
-    const Id = localStorage.getItem("userId");
+  const fetchCartData = async (itemId: string = "") => {
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
 
-    if (itemId !== "") {
+    if (!userId || !accessToken) {
+      setCartItems({});
+      setCartData([]);
+      updateCartCount(0);
+      localStorage.setItem("cartCount", "0");
+      return;
+    }
+
+    if (itemId) {
       setLoadingItems((prev) => ({
         ...prev,
         items: { ...prev.items, [itemId]: true },
@@ -113,57 +123,81 @@ const Categories: React.FC<CategoriesProps> = ({
 
     try {
       const response = await axios.get(
-        `${BASE_URL}/cart-service/cart/userCartInfo?customerId=${Id}`
+        `${BASE_URL}/cart-service/cart/userCartInfo?customerId=${userId}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
-      if (response.data.customerCartResponseList) {
-        const cartItemsMap = response.data?.customerCartResponseList.reduce(
-          (acc: Record<string, number>, item: CartItem) => {
-            acc[item.itemId] = item.cartQuantity || 0;
-            return acc;
-          },
-          {}
-        );
+      const customerCart: CartItem[] =
+        response.data?.customerCartResponseList || [];
 
-        localStorage.setItem(
-          "cartCount",
-          response.data?.customerCartResponseList.length.toString()
-        );
-        console.log({ cartItemsMap });
+      // Log raw API response for debugging
+      console.log("fetchCartData API response:", response.data);
 
-        const totalQuantity = Object.values(
-          cartItemsMap as Record<string, number>
-        ).reduce((sum, qty) => sum + qty, 0);
-        setCartItems(cartItemsMap);
-        updateCartCount(totalQuantity);
+      // Create cart items map with explicit type, summing quantities for same itemId
+      const cartItemsMap: Record<string, number> = customerCart.reduce(
+        (acc: Record<string, number>, item: CartItem) => {
+          const quantity = item.cartQuantity ?? 0;
+          acc[item.itemId] = (acc[item.itemId] ?? 0) + quantity; // Sum quantities
+          console.log(
+            `Item ${item.itemId}: quantity=${quantity}, status=${item.status}`
+          );
+          return acc;
+        },
+        {}
+      );
 
+      // Calculate total quantity directly from customerCart
+      const totalQuantity: number = customerCart.reduce(
+        (sum: number, item: CartItem) => {
+          const quantity = item.cartQuantity ?? 0;
+          return sum + quantity;
+        },
+        0
+      );
+
+      // Log for debugging
+      console.log("fetchCartData: ", {
+        cartItemsMap,
+        totalQuantity,
+        customerCart,
+      });
+
+      // Update states
+      setCartItems(cartItemsMap);
+      setCartData(customerCart);
+      updateCart(cartItemsMap);
+      updateCartCount(totalQuantity);
+      localStorage.setItem("cartCount", totalQuantity.toString());
+
+      if (itemId) {
         setLoadingItems((prev) => ({
           ...prev,
           items: { ...prev.items, [itemId]: false },
+          status: { ...prev.status, [itemId]: "" },
         }));
-      } else {
-        setCartItems({});
-        localStorage.setItem("cartCount", "0");
-        updateCartCount(0);
       }
-      setCartData(response.data.customerCartResponseList);
-      setLoadingItems((prev) => ({
-        ...prev,
-        items: { ...prev.items, [itemId]: false },
-      }));
     } catch (error) {
       console.error("Error fetching cart items:", error);
-      setLoadingItems((prev) => ({
-        ...prev,
-        items: { ...prev.items, [itemId]: false },
-      }));
+      setCartItems({});
+      setCartData([]);
+      updateCart({});
+      updateCartCount(0);
+      localStorage.setItem("cartCount", "0");
+      if (itemId) {
+        setLoadingItems((prev) => ({
+          ...prev,
+          items: { ...prev.items, [itemId]: false },
+          status: { ...prev.status, [itemId]: "" },
+        }));
+      }
+      message.error("Failed to fetch cart data.");
     }
   };
 
   // Function to normalize weight values (remove units, convert to number)
   const normalizeWeight = (value: any): number | null => {
     if (value === null || value === undefined) return null;
-    const cleanedValue = String(value).replace(/[^0-9.]/g, ""); // Remove non-numeric chars (e.g., "26kg" -> "26")
+    const cleanedValue = String(value).replace(/[^0-9.]/g, "");
     const parsed = Number(cleanedValue);
     return isNaN(parsed) ? null : parsed;
   };
@@ -176,7 +210,6 @@ const Categories: React.FC<CategoriesProps> = ({
         `${BASE_URL}/cart-service/cart/userEligibleOffer/${userId}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      console.log("User Eligible Offers Response:", response.data);
       const normalizedOffers = (response.data || []).map(
         (offer: UserEligibleOffer) => ({
           ...offer,
@@ -184,6 +217,7 @@ const Categories: React.FC<CategoriesProps> = ({
         })
       );
       setUserEligibleOffers(normalizedOffers);
+      console.log("User eligible offers:", normalizedOffers);
     } catch (error) {
       console.error("Error fetching user-eligible offers:", error);
       message.error("Failed to load user-eligible offers.");
@@ -201,60 +235,43 @@ const Categories: React.FC<CategoriesProps> = ({
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       const activeOffers = offersResponse.data || [];
-      console.log("Active Offers Response:", activeOffers);
 
-      // Log current userEligibleOffers for debugging
-      console.log("Current User Eligible Offers:", userEligibleOffers);
-
-      // Filter out availed offers
       const filteredOffers = activeOffers.filter((offer: Offer) => {
         const offerMinQtyKg = normalizeWeight(offer.minQtyKg);
         if (offerMinQtyKg === null) {
           console.warn(
             `Offer ${offer.offerName} has invalid minQtyKg: ${offer.minQtyKg}`
           );
-          return true; // Include offer if minQtyKg is invalid
+          return true;
         }
 
-        // Exclude if offer is marked as eligible or has matching weight
         const isExcluded = userEligibleOffers.some((eligibleOffer) => {
           const eligibleWeight = normalizeWeight(eligibleOffer.weight);
           if (eligibleWeight === null) {
             console.warn(
               `Invalid weight for eligible offer ${eligibleOffer.offerName}: ${eligibleOffer.weight}`
             );
-            return false; // Skip invalid weights
+            return false;
           }
 
-          // Check eligibility and weight match
           const isEligible = eligibleOffer.eligible === true;
           const isWeightMatch =
             Math.abs(eligibleWeight - offerMinQtyKg) < 0.0001;
-          const shouldExclude = isEligible && isWeightMatch;
 
-          console.log(
-            `Checking offer ${offer.offerName}: minQtyKg=${offerMinQtyKg}, ` +
-              `eligibleWeight=${eligibleWeight}, eligible=${eligibleOffer.eligible}, ` +
-              `exclude=${shouldExclude}`
-          );
-
-          return shouldExclude;
+          return isEligible && isWeightMatch;
         });
-
-        if (isExcluded) {
-          console.log(
-            `Excluding offer ${offer.offerName} due to eligibility or weight match`
-          );
-        } else {
-          console.log(`Including offer ${offer.offerName}`);
-        }
 
         return !isExcluded;
       });
 
-      console.log("Filtered Offers:", filteredOffers);
       setOffers(filteredOffers);
       setIsFetchingOffers(false);
+      console.log("Filtered offers:", filteredOffers);
+
+      // Re-fetch cart data to ensure free items from offers are included
+      if (filteredOffers.length > 0) {
+        await fetchCartData();
+      }
     } catch (error) {
       console.error("Error fetching offers:", error);
       message.error("Failed to load offers.");
@@ -269,11 +286,12 @@ const Categories: React.FC<CategoriesProps> = ({
     const userId = localStorage.getItem("userId");
     const accessToken = localStorage.getItem("accessToken");
 
-    if (userId && accessToken && !hasShownOffers) {
-      fetchUserEligibleOffers(userId);
+    if (userId && accessToken) {
+      fetchCartData();
+      if (!hasShownOffers) {
+        fetchUserEligibleOffers(userId);
+      }
     }
-
-    fetchCartData("");
   }, []);
 
   // Fetch offers only after userEligibleOffers is updated
@@ -295,7 +313,7 @@ const Categories: React.FC<CategoriesProps> = ({
         }
       });
     }
-  }, [userEligibleOffers, offers]);
+  }, [userEligibleOffers]);
 
   useEffect(() => {
     setActiveSubCategory(null);
@@ -330,18 +348,13 @@ const Categories: React.FC<CategoriesProps> = ({
         ...prev,
         items: { ...prev.items, [item.itemId]: true },
       }));
-      const response = await axios.post(
+      await axios.post(
         `${BASE_URL}/cart-service/cart/addAndIncrementCart`,
         { customerId: userId, itemId: item.itemId, quantity: 1 },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      fetchCartData("");
-
-      message.success(response.data.errorMessage);
-      setLoadingItems((prev) => ({
-        ...prev,
-        items: { ...prev.items, [item.itemId]: false },
-      }));
+      await fetchCartData(item.itemId);
+      message.success("Item added to cart successfully.");
     } catch (error) {
       console.error("Error adding to cart:", error);
       message.error("Error adding to cart.");
@@ -368,6 +381,12 @@ const Categories: React.FC<CategoriesProps> = ({
     }
 
     const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!userId || !accessToken) {
+      message.error("Please login to update cart.");
+      return;
+    }
 
     try {
       const endpoint = increment
@@ -381,13 +400,20 @@ const Categories: React.FC<CategoriesProps> = ({
       }));
 
       const payload = {
-        customerId,
+        customerId: userId,
         itemId: item.itemId,
       };
 
-      const response = increment
-        ? await axios.post(endpoint, payload)
-        : await axios.patch(endpoint, payload);
+      await axios[increment ? "post" : "patch"](endpoint, payload, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      await fetchCartData(item.itemId);
+
+      console.log(
+        `handleQuantityChange: Item ${item.itemId}, increment: ${increment}, new cartItems: `,
+        cartItems
+      );
 
       if (!increment) {
         message.success(
@@ -395,15 +421,9 @@ const Categories: React.FC<CategoriesProps> = ({
             ? "Item removed from cart successfully."
             : "Item quantity decreased"
         );
+      } else {
+        message.success("Item quantity increased");
       }
-
-      setLoadingItems((prev) => ({
-        ...prev,
-        items: { ...prev.items, [item.itemId]: false },
-        status: { ...prev.status, [item.itemId]: "" },
-      }));
-
-      fetchCartData(item.itemId);
     } catch (error) {
       console.error("Error updating quantity:", error);
       message.error("Error updating item quantity");
@@ -420,10 +440,6 @@ const Categories: React.FC<CategoriesProps> = ({
       categories.find((cat) => cat.categoryName === activeCategory) ||
       categories[0];
     if (!currentCategory) return [];
-
-    if (!activeSubCategory) {
-      return currentCategory.itemsResponseDtoList;
-    }
     return currentCategory.itemsResponseDtoList;
   };
 
@@ -441,20 +457,18 @@ const Categories: React.FC<CategoriesProps> = ({
 
   return (
     <div className="bg-white shadow-lg px-3 sm:px-6 lg:px-6 py-3">
-      {/* Custom Styles for Hidden Scrollbar */}
       <style>
         {`
           .offers-scroll-container::-webkit-scrollbar {
             display: none;
           }
           .offers-scroll-container {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
           }
         `}
       </style>
 
-      {/* Offers Modal */}
       <Modal
         title="Available Offers"
         open={isOffersModalVisible}
@@ -495,7 +509,6 @@ const Categories: React.FC<CategoriesProps> = ({
         )}
       </Modal>
 
-      {/* Category Tabs */}
       <div className="mb-4 overflow-x-auto scrollbar-hide">
         <div className="flex space-x-4 pb-4">
           {categories.map((category, index) => (
@@ -525,7 +538,6 @@ const Categories: React.FC<CategoriesProps> = ({
         </div>
       </div>
 
-      {/* Subcategories */}
       {getCurrentSubCategories().length > 0 && (
         <div className="mb-6 overflow-x-auto scrollbar whitespace-nowrap">
           <div className="flex space-x-3 pb-2 w-max">
@@ -585,16 +597,15 @@ const Categories: React.FC<CategoriesProps> = ({
               transition={{ delay: index * 0.05 }}
               className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden"
             >
-              {/* Discount Label */}
               {item.itemMrp &&
                 item.itemPrice &&
                 item.itemMrp > item.itemPrice && (
                   <div className="absolute left-0 top-0 z-10 w-auto">
                     <div
                       className="bg-purple-600 text-white text-[10px] xs:text-xs sm:text-sm font-bold 
-                      px-1.5 xs:px-2 sm:px-3 lg:px-4 
-                      py-0.5 xs:py-0.5 sm:py-1 
-                      flex items-center"
+                    px-1.5 xs:px-2 sm:px-3 lg:px-4 
+                    py-0.5 xs:py-0.5 sm:py-1 
+                    flex items-center"
                     >
                       {calculateDiscount(item.itemMrp, item.itemPrice)}%
                       <span className="ml-0.5 xs:ml-1 text-[8px] xs:text-[10px] sm:text-xs">
@@ -603,15 +614,14 @@ const Categories: React.FC<CategoriesProps> = ({
                     </div>
                     <div
                       className="absolute bottom-0 right-0 transform translate-y 
-                      border-t-4 border-r-4 
-                      xs:border-t-6 xs:border-r-6 
-                      sm:border-t-8 sm:border-r-8 
-                      border-t-purple-600 border-r-transparent"
+                    border-t-4 border-r-4 
+                    xs:border-t-6 xs:border-r-6 
+                    sm:border-t-8 sm:border-r-8 
+                    border-t-purple-600 border-r-transparent"
                     ></div>
                   </div>
                 )}
 
-              {/* Stock Status Badge */}
               {item.quantity === 0 ? (
                 <div
                   className="absolute top-0.5 xs:top-1 sm:top-2 
@@ -659,7 +669,7 @@ const Categories: React.FC<CategoriesProps> = ({
                     {item.itemName}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Weight : {item.weight}
+                    Weight: {item.weight}
                     {item.units}
                   </p>
 
@@ -692,7 +702,7 @@ const Categories: React.FC<CategoriesProps> = ({
                           <Loader2 className="animate-spin text-purple-600" />
                         ) : (
                           <span className="font-medium text-purple-700">
-                            {cartItems[item.itemId]}
+                            {cartItems[item.itemId] || 0}
                           </span>
                         )}
                         <motion.button
