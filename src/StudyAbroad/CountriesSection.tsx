@@ -96,6 +96,47 @@ const CountriesSection: React.FC<CountriesSectionProps> = ({ onViewAllClick }) =
       },
     },
     {
+      name: "Germany",
+      description: "Renowned for engineering, tuition-free public universities",
+      details: {
+        visaInfo: "German Student Visa required",
+        langRequirements:
+          "German proficiency or English for international programs",
+        avgTuition: "€0 - €3,000 per year (most public universities free)",
+        popularPrograms: ["Engineering", "Physics", "Medicine"],
+        scholarships: ["DAAD Scholarships", "Erasmus+"],
+      },
+    },
+      {
+      name: "Italy",
+      description:
+        "Rich cultural heritage and prestigious ancient universities",
+      details: {
+        visaInfo: "Student Visa type D required for non-EU students",
+        langRequirements:
+          "Italian proficiency or English for international programs",
+        avgTuition: "€1,000 - €5,000 per year at public universities",
+        popularPrograms: ["Arts", "Architecture", "Fashion Design"],
+        scholarships: [
+          "Italian Government Scholarships",
+          "Regional Scholarships",
+        ],
+      },
+    },
+
+    {
+      name: "Ireland",
+      description:
+        "Friendly atmosphere with high academic standards and rich culture",
+      details: {
+        visaInfo: "Irish Study Visa required for non-EU students",
+        langRequirements: "IELTS 6.0+ typically required",
+        avgTuition: "€10,000 - €25,000 per year",
+        popularPrograms: ["Literature", "Medicine", "Information Technology"],
+        scholarships: ["Government of Ireland Scholarship", "Walsh Fellowship"],
+      },
+    },
+    {
       name: "Australia",
       description:
         "Top-ranked universities with excellent post-study work options",
@@ -118,18 +159,7 @@ const CountriesSection: React.FC<CountriesSectionProps> = ({ onViewAllClick }) =
         scholarships: ["New Zealand Excellence Awards"],
       },
     },
-    {
-      name: "Ireland",
-      description:
-        "Friendly atmosphere with high academic standards and rich culture",
-      details: {
-        visaInfo: "Irish Study Visa required for non-EU students",
-        langRequirements: "IELTS 6.0+ typically required",
-        avgTuition: "€10,000 - €25,000 per year",
-        popularPrograms: ["Literature", "Medicine", "Information Technology"],
-        scholarships: ["Government of Ireland Scholarship", "Walsh Fellowship"],
-      },
-    },
+    
     {
       name: "France",
       description:
@@ -142,18 +172,7 @@ const CountriesSection: React.FC<CountriesSectionProps> = ({ onViewAllClick }) =
         scholarships: ["Eiffel Excellence Scholarship"],
       },
     },
-    {
-      name: "Germany",
-      description: "Renowned for engineering, tuition-free public universities",
-      details: {
-        visaInfo: "German Student Visa required",
-        langRequirements:
-          "German proficiency or English for international programs",
-        avgTuition: "€0 - €3,000 per year (most public universities free)",
-        popularPrograms: ["Engineering", "Physics", "Medicine"],
-        scholarships: ["DAAD Scholarships", "Erasmus+"],
-      },
-    },
+    
     {
       name: "Netherlands",
       description: "High-quality education with many English-taught programs",
@@ -165,22 +184,7 @@ const CountriesSection: React.FC<CountriesSectionProps> = ({ onViewAllClick }) =
         scholarships: ["Orange Knowledge Programme", "Holland Scholarship"],
       },
     },
-    {
-      name: "Italy",
-      description:
-        "Rich cultural heritage and prestigious ancient universities",
-      details: {
-        visaInfo: "Student Visa type D required for non-EU students",
-        langRequirements:
-          "Italian proficiency or English for international programs",
-        avgTuition: "€1,000 - €5,000 per year at public universities",
-        popularPrograms: ["Arts", "Architecture", "Fashion Design"],
-        scholarships: [
-          "Italian Government Scholarships",
-          "Regional Scholarships",
-        ],
-      },
-    },
+  
   ];
 
   const countryFlags = {
@@ -193,27 +197,27 @@ const CountriesSection: React.FC<CountriesSectionProps> = ({ onViewAllClick }) =
     Canada: (
       <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${CanadaFlag})` }} />
     ),
+      Germany: (
+      <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${GermanyFlag})` }} />
+    ),
+     Italy: (
+      <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${ItalyFlag})` }} />
+    ),
+     Ireland: (
+      <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${IrelandFLag})` }} />
+    ),
     Australia: (
       <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${AustraliaFlag})` }} />
     ),
     "New Zealand": (
       <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${NewZealandFlag})` }} />
     ),
-    Ireland: (
-      <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${IrelandFLag})` }} />
-    ),
-    France: (
+     France: (
       <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${FranceFlag})` }} />
-    ),
-    Germany: (
-      <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${GermanyFlag})` }} />
     ),
     Netherlands: (
       <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${NetherlandsFlag})` }} />
-    ),
-    Italy: (
-      <div className="w-full h-full bg-cover bg-center bg-no-repeat scale-110" style={{ backgroundImage: `url(${ItalyFlag})` }} />
-    ),
+    ), 
   };
 
   const handleViewAllClick = () => {
@@ -429,7 +433,7 @@ const CountriesSection: React.FC<CountriesSectionProps> = ({ onViewAllClick }) =
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
               <div>
                 <h3 className="text-3xl font-bold text-purple-900">
-                  100+ Universities
+                  1000+ Universities
                 </h3>
                 <p className="text-xl flex items-center">
                   <span className="inline-block w-8 h-1 bg-yellow-500 mr-2"></span>

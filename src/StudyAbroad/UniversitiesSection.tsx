@@ -142,24 +142,25 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
             </div>
 
             <div className="text-center flex flex-col items-center w-[140px] flex-shrink-0 hover:scale-105 transition-transform duration-300">
-              <Building size={36} className="text-purple-600 mb-2" />
-              <div className="text-3xl font-bold text-purple-600">200+</div>
-              <div className="text-gray-600 text-center text-sm">
-                Recruiters
-              </div>
-            </div>
-
-            <div className="text-center flex flex-col items-center w-[140px] flex-shrink-0 hover:scale-105 transition-transform duration-300">
               <School size={36} className="text-purple-600 mb-2" />
-              <div className="text-3xl font-bold text-purple-600">100</div>
+              <div className="text-3xl font-bold text-purple-600">1000+</div>
               <div className="text-gray-600 text-center text-sm">
                 Universities
               </div>
             </div>
 
             <div className="text-center flex flex-col items-center w-[140px] flex-shrink-0 hover:scale-105 transition-transform duration-300">
+              <Building size={36} className="text-purple-600 mb-2" />
+              <div className="text-3xl font-bold text-purple-600">600+</div>
+              <div className="text-gray-600 text-center text-sm">
+                Courses
+              </div>
+            </div>
+
+            
+            <div className="text-center flex flex-col items-center w-[140px] flex-shrink-0 hover:scale-105 transition-transform duration-300">
               <Globe size={36} className="text-purple-600 mb-2" />
-              <div className="text-3xl font-bold text-purple-600">10</div>
+              <div className="text-3xl font-bold text-purple-600">25+</div>
               <div className="text-gray-600 text-center text-sm">Countries</div>
             </div>
           </div>

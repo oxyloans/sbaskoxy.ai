@@ -1493,6 +1493,9 @@ const CartPage: React.FC = () => {
   };
 
   const isCheckoutDisabled = (): boolean => {
+    if (!selectedAddress) {
+      return true;
+    }
     if (!cartData || cartData.length === 0) {
       return true;
     }
@@ -2046,7 +2049,6 @@ const CartPage: React.FC = () => {
                       </ul>
                     </div>
                   )}
-
                   <button
                     className={`w-full py-3 px-6 rounded-lg transition ${
                       isCheckoutDisabled()
@@ -2057,7 +2059,11 @@ const CartPage: React.FC = () => {
                     disabled={isCheckoutDisabled()}
                   >
                     {isCheckoutDisabled()
-                      ? "Cannot Checkout - Stock Issues"
+                      ? !selectedAddress
+                        ? "Select an Address to Proceed"
+                        : !cartData || cartData.length === 0
+                        ? "Cart is Empty"
+                        : "Cannot Checkout - Stock Issues"
                       : "Proceed to Checkout"}
                   </button>
                 </div>
