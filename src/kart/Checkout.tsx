@@ -319,22 +319,18 @@ const CheckoutPage: React.FC = () => {
       );
 
       if (response.data.customerCartResponseList) {
-        const cartItemsMap = response.data.customerCartResponseList.reduce(
-          (acc: { [key: string]: number }, item: CartItem) => {
-            acc[item.itemId] = parseInt(item.cartQuantity);
-            return acc;
-          },
-          {}
-        );
-        const totalQuantity = Object.values(
-          cartItemsMap as Record<string, number>
-        ).reduce((sum, qty) => sum + qty, 0);
-        setCartData(response.data.customerCartResponseList || []);
+        const cartItems = response.data.customerCartResponseList;
+        setCartData(cartItems || []);
+
+        // Calculate total quantity including both regular and free items
+        const totalQuantity = cartItems.reduce((sum: number, item: CartItem) => {
+          return sum + (item.cartQuantity ? parseInt(item.cartQuantity) : 0);
+        }, 0);
         setCount(totalQuantity);
 
-        // Also update the price data when cart is refreshed
+        // Update price data
         setSubGst(parseFloat(response.data.totalGstAmountToPay || "0"));
-        const totalDeliveryFee = response.data.customerCartResponseList.reduce(
+        const totalDeliveryFee = cartItems.reduce(
           (sum: number, item: CartData) => sum + (item.deliveryBoyFee || 0),
           0
         );
@@ -342,7 +338,7 @@ const CheckoutPage: React.FC = () => {
         setTotalAmount(parseFloat(response.data.totalCartValue || "0"));
         setGrandTotal(parseFloat(response.data.amountToPay || "0"));
 
-        // Trigger total recalculation after data update
+        // Trigger total recalculation
         setTimeout(() => {
           grandTotalfunc();
         }, 100);
@@ -367,29 +363,24 @@ const CheckoutPage: React.FC = () => {
     try {
       setPricesLoading(true);
 
-      // First try to get cart data
+      // Fetch cart data
       const cartResponse = await axios.get(
         `${BASE_URL}/cart-service/cart/userCartInfo?customerId=${customerId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (cartResponse.data && cartResponse.data.customerCartResponseList) {
-        // Process cart items
-        const cartItemsMap = cartResponse.data.customerCartResponseList.reduce(
-          (acc: { [key: string]: number }, item: CartItem) => {
-            acc[item.itemId] = parseInt(item.cartQuantity);
-            return acc;
-          },
-          {}
-        );
-        const totalQuantity = Object.values(
-          cartItemsMap as Record<string, number>
-        ).reduce((sum, qty) => sum + qty, 0);
-        setCartData(cartResponse.data.customerCartResponseList || []);
+        const cartItems = cartResponse.data.customerCartResponseList;
+        setCartData(cartItems || []);
+
+        // Calculate total quantity including both regular and free items
+        const totalQuantity = cartItems.reduce((sum: number, item: CartItem) => {
+          return sum + (item.cartQuantity ? parseInt(item.cartQuantity) : 0);
+        }, 0);
         setCount(totalQuantity);
 
-        // Immediately extract and set all price data
-        const amountToPay = cartResponse.data.customerCartResponseList
+        // Calculate price data for non-free items
+        const amountToPay = cartItems
           .filter((item: CartItem) => item.status !== "FREE")
           .reduce((sum: number, item: CartItem) => {
             return (
@@ -400,7 +391,7 @@ const CheckoutPage: React.FC = () => {
         const gstAmount = parseFloat(
           cartResponse.data.totalGstAmountToPay || "0"
         );
-        const cartValue = cartResponse.data.customerCartResponseList
+        const cartValue = cartItems
           .filter((item: CartItem) => item.status !== "FREE")
           .reduce((sum: number, item: CartItem) => {
             return (
@@ -408,24 +399,23 @@ const CheckoutPage: React.FC = () => {
             );
           }, 0);
 
-        const totalDeliveryFee =
-          cartResponse.data.customerCartResponseList.reduce(
-            (sum: number, item: CartData) => sum + (item.deliveryBoyFee || 0),
-            0
-          );
+        const totalDeliveryFee = cartItems.reduce(
+          (sum: number, item: CartData) => sum + (item.deliveryBoyFee || 0),
+          0
+        );
 
-        // Set all price state variables at once to ensure consistency
+        // Set price state variables
         setGrandTotal(amountToPay);
         setSubGst(gstAmount);
         setDeliveryBoyFee(totalDeliveryFee);
         setTotalAmount(cartValue);
 
-        // Pre-calculate the grandTotalAmount before setting loading to false
+        // Calculate grand total
         const totalWithGst = amountToPay + gstAmount;
         const totalWithDelivery = totalWithGst + totalDeliveryFee;
         setGrandTotalAmount(totalWithDelivery);
 
-        // Now fetch wallet data
+        // Fetch wallet data
         try {
           const walletResponse = await axios.post(
             `${BASE_URL}/order-service/applyWalletAmountToCustomer`,
@@ -440,20 +430,17 @@ const CheckoutPage: React.FC = () => {
           setWalletMessage(walletResponse.data.message || "");
         } catch (walletError) {
           console.error("Error fetching wallet data:", walletError);
-          // Don't fail the entire process if wallet fetch fails
         }
 
-        // Fetch time slots in parallel
+        // Fetch time slots
         fetchTimeSlots();
 
-        // Important: Calculate grand total one more time after all data is loaded
-        // Use RAF to ensure this happens after React has processed all state updates
+        // Recalculate grand total after all data is loaded
         requestAnimationFrame(() => {
           grandTotalfunc();
           setPricesLoading(false);
         });
       } else {
-        // Handle empty cart
         setCartData([]);
         setCount(0);
         setPricesLoading(false);
@@ -464,6 +451,7 @@ const CheckoutPage: React.FC = () => {
       setPricesLoading(false);
     }
   };
+
   const handleInterested = async () => {
     try {
       setIsSubmitting(true);

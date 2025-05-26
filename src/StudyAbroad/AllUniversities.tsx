@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from "react";
-import { 
-  ChevronRight, 
-  Globe, 
-  Star, 
-  Users, 
-  School, 
-  Building, 
-  CheckCircle, 
+import { useNavigate } from "react-router-dom";
+import {
+  ChevronRight,
+  Globe,
+  Star,
+  Users,
+  School,
+  Building,
+  CheckCircle,
   GraduationCap,
   Filter,
   Search,
@@ -25,7 +26,7 @@ import {
   Clock,
   SlidersHorizontal,
   AlertCircle,
-  Loader2
+  Loader2,
 } from "lucide-react";
 
 // Type definitions
@@ -51,11 +52,15 @@ const AllUniversities = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedIntake, setSelectedIntake] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'name' | 'ranking' | 'programs' | 'year'>('name');
+  const [showAdvancedFilters, setShowAdvancedFilters] =
+    useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [sortBy, setSortBy] = useState<
+    "name" | "ranking" | "programs" | "year"
+  >("name");
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(false);
+  const navigate = useNavigate();
 
   const countries = [
     { code: "USA", name: "United States", flag: "🇺🇸" },
@@ -67,14 +72,14 @@ const AllUniversities = () => {
     { code: "Netherlands", name: "Netherlands", flag: "🇳🇱" },
     { code: "Sweden", name: "Sweden", flag: "🇸🇪" },
     { code: "Switzerland", name: "Switzerland", flag: "🇨🇭" },
-    { code: "Japan", name: "Japan", flag: "🇯🇵" }
+    { code: "Japan", name: "Japan", flag: "🇯🇵" },
   ];
 
   const intakeOptions = ["Fall", "Spring", "Summer", "Winter"];
 
   const countryFlags: Record<string, string> = {
     USA: "🇺🇸",
-    UK: "🇬🇧", 
+    UK: "🇬🇧",
     Germany: "🇩🇪",
     Canada: "🇨🇦",
     Australia: "🇦🇺",
@@ -82,7 +87,7 @@ const AllUniversities = () => {
     Netherlands: "🇳🇱",
     Sweden: "🇸🇪",
     Switzerland: "🇨🇭",
-    Japan: "🇯🇵"
+    Japan: "🇯🇵",
   };
 
   // Enhanced universities data with more complete information
@@ -93,7 +98,8 @@ const AllUniversities = () => {
       country: "USA",
       location: "Cambridge, Massachusetts",
       image: "/api/placeholder/400/250",
-      description: "Prestigious Ivy League institution known for excellence in all fields including medicine, law, and business",
+      description:
+        "Prestigious Ivy League institution known for excellence in all fields including medicine, law, and business",
       ranking: "#1 Global",
       programs: 180,
       intake: ["Fall", "Spring"],
@@ -101,7 +107,7 @@ const AllUniversities = () => {
       establishedYear: 1636,
       type: "Private Research",
       acceptanceRate: "3.4%",
-      internationalStudents: "25%"
+      internationalStudents: "25%",
     },
     {
       id: 2,
@@ -109,7 +115,8 @@ const AllUniversities = () => {
       country: "USA",
       location: "Stanford, California",
       image: "/api/placeholder/400/250",
-      description: "Leading research university in Silicon Valley with world-class technology and engineering programs",
+      description:
+        "Leading research university in Silicon Valley with world-class technology and engineering programs",
       ranking: "#2 USA",
       programs: 150,
       intake: ["Fall", "Spring", "Summer"],
@@ -117,7 +124,7 @@ const AllUniversities = () => {
       establishedYear: 1885,
       type: "Private Research",
       acceptanceRate: "4.3%",
-      internationalStudents: "22%"
+      internationalStudents: "22%",
     },
     {
       id: 3,
@@ -125,7 +132,8 @@ const AllUniversities = () => {
       country: "USA",
       location: "Cambridge, Massachusetts",
       image: "/api/placeholder/400/250",
-      description: "World-renowned institute for technology, engineering, and scientific research with cutting-edge facilities",
+      description:
+        "World-renowned institute for technology, engineering, and scientific research with cutting-edge facilities",
       ranking: "#3 USA",
       programs: 120,
       intake: ["Fall", "Spring"],
@@ -133,7 +141,7 @@ const AllUniversities = () => {
       establishedYear: 1861,
       type: "Private Research",
       acceptanceRate: "6.7%",
-      internationalStudents: "33%"
+      internationalStudents: "33%",
     },
     {
       id: 4,
@@ -141,7 +149,8 @@ const AllUniversities = () => {
       country: "USA",
       location: "Berkeley, California",
       image: "/api/placeholder/400/250",
-      description: "Top public research university with diverse academic programs and renowned faculty across disciplines",
+      description:
+        "Top public research university with diverse academic programs and renowned faculty across disciplines",
       ranking: "#4 USA",
       programs: 200,
       intake: ["Fall", "Spring", "Summer"],
@@ -149,7 +158,7 @@ const AllUniversities = () => {
       establishedYear: 1868,
       type: "Public Research",
       acceptanceRate: "14.5%",
-      internationalStudents: "18%"
+      internationalStudents: "18%",
     },
     {
       id: 5,
@@ -157,7 +166,8 @@ const AllUniversities = () => {
       country: "USA",
       location: "New Haven, Connecticut",
       image: "/api/placeholder/400/250",
-      description: "Historic Ivy League university with exceptional liberal arts programs and distinguished alumni network",
+      description:
+        "Historic Ivy League university with exceptional liberal arts programs and distinguished alumni network",
       ranking: "#5 USA",
       programs: 160,
       intake: ["Fall", "Spring"],
@@ -165,7 +175,7 @@ const AllUniversities = () => {
       establishedYear: 1701,
       type: "Private Research",
       acceptanceRate: "4.6%",
-      internationalStudents: "20%"
+      internationalStudents: "20%",
     },
     {
       id: 6,
@@ -173,7 +183,8 @@ const AllUniversities = () => {
       country: "UK",
       location: "Oxford, England",
       image: "/api/placeholder/400/250",
-      description: "One of the oldest and most prestigious universities globally, offering world-class education since 1096",
+      description:
+        "One of the oldest and most prestigious universities globally, offering world-class education since 1096",
       ranking: "#1 UK",
       programs: 200,
       intake: ["Fall"],
@@ -181,7 +192,7 @@ const AllUniversities = () => {
       establishedYear: 1096,
       type: "Public Research",
       acceptanceRate: "15.9%",
-      internationalStudents: "45%"
+      internationalStudents: "45%",
     },
     {
       id: 7,
@@ -189,7 +200,8 @@ const AllUniversities = () => {
       country: "UK",
       location: "Cambridge, England",
       image: "/api/placeholder/400/250",
-      description: "Historic university with outstanding academic reputation and innovative research across all disciplines",
+      description:
+        "Historic university with outstanding academic reputation and innovative research across all disciplines",
       ranking: "#2 UK",
       programs: 190,
       intake: ["Fall"],
@@ -197,7 +209,7 @@ const AllUniversities = () => {
       establishedYear: 1209,
       type: "Public Research",
       acceptanceRate: "18.8%",
-      internationalStudents: "38%"
+      internationalStudents: "38%",
     },
     {
       id: 8,
@@ -205,7 +217,8 @@ const AllUniversities = () => {
       country: "UK",
       location: "London, England",
       image: "/api/placeholder/400/250",
-      description: "Leading university specialized in science, technology, engineering and medicine with industry connections",
+      description:
+        "Leading university specialized in science, technology, engineering and medicine with industry connections",
       ranking: "#3 UK",
       programs: 120,
       intake: ["Fall", "Spring"],
@@ -213,7 +226,7 @@ const AllUniversities = () => {
       establishedYear: 1907,
       type: "Public Research",
       acceptanceRate: "14.3%",
-      internationalStudents: "59%"
+      internationalStudents: "59%",
     },
     {
       id: 9,
@@ -221,7 +234,8 @@ const AllUniversities = () => {
       country: "Germany",
       location: "Munich, Bavaria",
       image: "/api/placeholder/400/250",
-      description: "Leading technical university with strong industry partnerships and excellent engineering programs",
+      description:
+        "Leading technical university with strong industry partnerships and excellent engineering programs",
       ranking: "#1 Germany",
       programs: 145,
       intake: ["Fall", "Spring"],
@@ -229,7 +243,7 @@ const AllUniversities = () => {
       establishedYear: 1868,
       type: "Public Technical",
       acceptanceRate: "8%",
-      internationalStudents: "35%"
+      internationalStudents: "35%",
     },
     {
       id: 10,
@@ -237,7 +251,8 @@ const AllUniversities = () => {
       country: "Canada",
       location: "Toronto, Ontario",
       image: "/api/placeholder/400/250",
-      description: "Canada's top university with diverse academic programs and world-class research facilities",
+      description:
+        "Canada's top university with diverse academic programs and world-class research facilities",
       ranking: "#1 Canada",
       programs: 215,
       intake: ["Fall", "Spring", "Summer"],
@@ -245,7 +260,7 @@ const AllUniversities = () => {
       establishedYear: 1827,
       type: "Public Research",
       acceptanceRate: "43%",
-      internationalStudents: "25%"
+      internationalStudents: "25%",
     },
     {
       id: 11,
@@ -253,7 +268,8 @@ const AllUniversities = () => {
       country: "Australia",
       location: "Melbourne, Victoria",
       image: "/api/placeholder/400/250",
-      description: "Australia's leading university with excellent research facilities and diverse international community",
+      description:
+        "Australia's leading university with excellent research facilities and diverse international community",
       ranking: "#1 Australia",
       programs: 190,
       intake: ["Fall", "Spring"],
@@ -261,7 +277,7 @@ const AllUniversities = () => {
       establishedYear: 1853,
       type: "Public Research",
       acceptanceRate: "70%",
-      internationalStudents: "47%"
+      internationalStudents: "47%",
     },
     {
       id: 12,
@@ -269,7 +285,8 @@ const AllUniversities = () => {
       country: "France",
       location: "Paris, Île-de-France",
       image: "/api/placeholder/400/250",
-      description: "Historic university in the heart of Paris, renowned for humanities, sciences, and cultural programs",
+      description:
+        "Historic university in the heart of Paris, renowned for humanities, sciences, and cultural programs",
       ranking: "#1 France",
       programs: 120,
       intake: ["Fall", "Spring"],
@@ -277,7 +294,7 @@ const AllUniversities = () => {
       establishedYear: 1150,
       type: "Public Research",
       acceptanceRate: "10%",
-      internationalStudents: "21%"
+      internationalStudents: "21%",
     },
     {
       id: 13,
@@ -285,7 +302,8 @@ const AllUniversities = () => {
       country: "Netherlands",
       location: "Amsterdam, North Holland",
       image: "/api/placeholder/400/250",
-      description: "Leading research university in vibrant Amsterdam with strong international programs and partnerships",
+      description:
+        "Leading research university in vibrant Amsterdam with strong international programs and partnerships",
       ranking: "#1 Netherlands",
       programs: 180,
       intake: ["Fall", "Spring"],
@@ -293,7 +311,7 @@ const AllUniversities = () => {
       establishedYear: 1632,
       type: "Public Research",
       acceptanceRate: "25%",
-      internationalStudents: "30%"
+      internationalStudents: "30%",
     },
     {
       id: 14,
@@ -301,7 +319,8 @@ const AllUniversities = () => {
       country: "Sweden",
       location: "Stockholm",
       image: "/api/placeholder/400/250",
-      description: "World-renowned medical university known for Nobel Prize connections and cutting-edge medical research",
+      description:
+        "World-renowned medical university known for Nobel Prize connections and cutting-edge medical research",
       ranking: "#1 Sweden",
       programs: 80,
       intake: ["Fall"],
@@ -309,7 +328,7 @@ const AllUniversities = () => {
       establishedYear: 1810,
       type: "Public Medical",
       acceptanceRate: "6%",
-      internationalStudents: "15%"
+      internationalStudents: "15%",
     },
     {
       id: 15,
@@ -317,7 +336,8 @@ const AllUniversities = () => {
       country: "Switzerland",
       location: "Zurich",
       image: "/api/placeholder/400/250",
-      description: "World-leading science and technology university with exceptional engineering and research programs",
+      description:
+        "World-leading science and technology university with exceptional engineering and research programs",
       ranking: "#1 Switzerland",
       programs: 110,
       intake: ["Fall", "Spring"],
@@ -325,7 +345,7 @@ const AllUniversities = () => {
       establishedYear: 1855,
       type: "Public Technical",
       acceptanceRate: "8%",
-      internationalStudents: "40%"
+      internationalStudents: "40%",
     },
     {
       id: 16,
@@ -333,7 +353,8 @@ const AllUniversities = () => {
       country: "Japan",
       location: "Tokyo",
       image: "/api/placeholder/400/250",
-      description: "Japan's most prestigious university with comprehensive programs and strong research in technology",
+      description:
+        "Japan's most prestigious university with comprehensive programs and strong research in technology",
       ranking: "#1 Japan",
       programs: 180,
       intake: ["Fall", "Spring"],
@@ -341,35 +362,38 @@ const AllUniversities = () => {
       establishedYear: 1877,
       type: "Public Research",
       acceptanceRate: "34%",
-      internationalStudents: "12%"
-    }
+      internationalStudents: "12%",
+    },
   ];
-  
+
   // Filter universities based on selected filters
   const filteredUniversities = useMemo(() => {
-    let filtered = universities.filter(university => {
-      const countryMatch = !selectedCountry || university.country === selectedCountry;
-      const intakeMatch = !selectedIntake || university.intake.includes(selectedIntake);
-      const searchMatch = !searchTerm || 
+    let filtered = universities.filter((university) => {
+      const countryMatch =
+        !selectedCountry || university.country === selectedCountry;
+      const intakeMatch =
+        !selectedIntake || university.intake.includes(selectedIntake);
+      const searchMatch =
+        !searchTerm ||
         university.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         university.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
         university.country.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       return countryMatch && intakeMatch && searchMatch;
     });
 
     // Sort universities
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'name':
+        case "name":
           return a.name.localeCompare(b.name);
-        case 'ranking':
-          const rankA = parseInt(a.ranking?.replace(/[^\d]/g, '') || '999');
-          const rankB = parseInt(b.ranking?.replace(/[^\d]/g, '') || '999');
+        case "ranking":
+          const rankA = parseInt(a.ranking?.replace(/[^\d]/g, "") || "999");
+          const rankB = parseInt(b.ranking?.replace(/[^\d]/g, "") || "999");
           return rankA - rankB;
-        case 'programs':
+        case "programs":
           return (b.programs || 0) - (a.programs || 0);
-        case 'year':
+        case "year":
           return a.establishedYear - b.establishedYear;
         default:
           return 0;
@@ -383,7 +407,7 @@ const AllUniversities = () => {
     setSelectedCountry("");
     setSelectedIntake("");
     setSearchTerm("");
-    setSortBy('name');
+    setSortBy("name");
   };
 
   const formatEstablishedYear = (year: number) => {
@@ -400,24 +424,31 @@ const AllUniversities = () => {
       <div className="relative bg-white border-b border-purple-200 shadow-sm">
         <div className="px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-3 mb-2">
-            <button className="p-2 hover:bg-purple-100 rounded-lg transition-colors">
-              <ChevronRight className="w-5 h-5 text-purple-600 rotate-180" />
-            </button>
+           <button
+      onClick={() => navigate('/studyabroad-web')}
+      className="p-2 hover:bg-purple-100 rounded-lg transition-colors"
+    >
+      <ChevronRight className="w-5 h-5 text-purple-600 rotate-180" />
+    </button>
             <div>
               <h1 className="text-2xl font-bold text-purple-800">
                 Elite Universities Worldwide
               </h1>
               <p className="text-gray-600 text-sm flex items-center gap-2">
                 <Crown className="w-4 h-4 text-purple-600" />
-                {universities.length} premium institutions from {countries.length} destinations
+                {universities.length} premium institutions from{" "}
+                {countries.length} destinations
               </p>
             </div>
           </div>
-          
+
           {/* Compact Search Bar */}
           <div className="max-w-xl">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" size={18} />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400"
+                size={18}
+              />
               <input
                 type="text"
                 value={searchTerm}
@@ -433,10 +464,8 @@ const AllUniversities = () => {
       {/* Compact Filters Section */}
       <div className="bg-white border-b border-purple-200">
         <div className="px-4 sm:px-6 lg:px-8 py-3">
-          
           {/* Filter Controls Row */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3">
-            
             {/* Compact Country Filter */}
             <div className="md:col-span-2">
               <label className="block text-xs font-semibold text-purple-700 mb-1 flex items-center gap-1">
@@ -449,7 +478,7 @@ const AllUniversities = () => {
                 className="w-full appearance-none bg-white border border-purple-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               >
                 <option value="">🌍 All Countries ({countries.length})</option>
-                {countries.map(country => (
+                {countries.map((country) => (
                   <option key={country.code} value={country.code}>
                     {country.flag} {country.name}
                   </option>
@@ -469,7 +498,7 @@ const AllUniversities = () => {
                 className="w-full appearance-none bg-white border border-purple-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               >
                 <option value="">All Intakes</option>
-                {intakeOptions.map(intake => (
+                {intakeOptions.map((intake) => (
                   <option key={intake} value={intake}>
                     {intake} 2025
                   </option>
@@ -485,7 +514,11 @@ const AllUniversities = () => {
               </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'name' | 'ranking' | 'programs' | 'year')}
+                onChange={(e) =>
+                  setSortBy(
+                    e.target.value as "name" | "ranking" | "programs" | "year"
+                  )
+                }
                 className="w-full appearance-none bg-white border border-purple-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               >
                 <option value="name">Name</option>
@@ -515,14 +548,17 @@ const AllUniversities = () => {
                 {filteredUniversities.length} Universities
               </span>
               <span className="text-xs text-gray-600">
-                By: <span className="font-medium text-purple-700 capitalize">{sortBy}</span>
+                By:{" "}
+                <span className="font-medium text-purple-700 capitalize">
+                  {sortBy}
+                </span>
               </span>
             </div>
             {selectedCountry && (
               <div className="flex items-center gap-1 text-xs text-purple-600">
                 <span>{countryFlags[selectedCountry]}</span>
                 <span className="font-medium">
-                  {countries.find(c => c.code === selectedCountry)?.name}
+                  {countries.find((c) => c.code === selectedCountry)?.name}
                 </span>
               </div>
             )}
@@ -542,7 +578,8 @@ const AllUniversities = () => {
                 No Universities Found
               </h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                We couldn't find any universities matching your search criteria. Try adjusting your filters or search terms.
+                We couldn't find any universities matching your search criteria.
+                Try adjusting your filters or search terms.
               </p>
               <button
                 onClick={clearFilters}
@@ -575,7 +612,7 @@ const AllUniversities = () => {
                         {countryFlags[university.country]}
                       </div>
                     </div>
-                    
+
                     {/* University Name and Location */}
                     <div className="flex-1 min-w-0">
                       {/* Ranking Badge */}
@@ -585,23 +622,23 @@ const AllUniversities = () => {
                           {university.ranking}
                         </div>
                       )}
-                      
+
                       <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-2 leading-tight">
                         {university.name}
                       </h3>
-                      
+
                       <div className="flex items-center text-gray-600 text-xs mb-1">
                         <MapPin className="w-3 h-3 mr-1 text-purple-500 flex-shrink-0" />
                         <span className="truncate">{university.location}</span>
                       </div>
-                      
+
                       <div className="flex items-center text-gray-500 text-xs">
                         <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
                         {formatEstablishedYear(university.establishedYear)}
                       </div>
                     </div>
                   </div>
-                  
+
                   <p className="text-gray-600 text-xs mb-0 line-clamp-3 leading-relaxed">
                     {university.description}
                   </p>
@@ -616,16 +653,20 @@ const AllUniversities = () => {
                         <BookOpen className="w-3 h-3 mr-1" />
                         PROGRAMS
                       </div>
-                      <div className="text-purple-800 font-bold text-sm">{university.programs}+</div>
+                      <div className="text-purple-800 font-bold text-sm">
+                        {university.programs}+
+                      </div>
                     </div>
-                    
+
                     {/* Acceptance Rate */}
                     <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
                       <div className="flex items-center text-blue-600 text-xs font-semibold mb-1">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         ACCEPTANCE
                       </div>
-                      <div className="text-blue-800 font-bold text-sm">{university.acceptanceRate}</div>
+                      <div className="text-blue-800 font-bold text-sm">
+                        {university.acceptanceRate}
+                      </div>
                     </div>
                   </div>
 
@@ -636,15 +677,19 @@ const AllUniversities = () => {
                         <DollarSign className="w-3 h-3 mr-1" />
                         TUITION
                       </div>
-                      <div className="text-green-800 font-bold text-xs leading-tight">{university.tuitionFee}</div>
+                      <div className="text-green-800 font-bold text-xs leading-tight">
+                        {university.tuitionFee}
+                      </div>
                     </div>
-                    
+
                     <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
                       <div className="flex items-center text-orange-600 text-xs font-semibold mb-1">
                         <Globe className="w-3 h-3 mr-1" />
                         INTL STUDENTS
                       </div>
-                      <div className="text-orange-800 font-bold text-sm">{university.internationalStudents}</div>
+                      <div className="text-orange-800 font-bold text-sm">
+                        {university.internationalStudents}
+                      </div>
                     </div>
                   </div>
 

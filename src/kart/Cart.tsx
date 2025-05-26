@@ -790,11 +790,48 @@ const CartPage: React.FC = () => {
         setRegularCartItems(regularItemsMap);
         setFreeCartItems(freeItemsMap);
 
-        // Calculate total quantity for regular items only
-        const totalQuantity = Object.values(
-          regularItemsMap as Record<string, number>
-        ).reduce((sum, qty) => sum + qty, 0);
+        // Calculate total quantity including both regular and free items
+        const totalQuantity = cartItems.reduce((sum: number, item: CartItem) => {
+          return sum + (item.cartQuantity || 0); // Include all items (FREE and non-FREE)
+        }, 0);
         setCount(totalQuantity);
+
+        const cartWithFreeItems = response.data?.customerCartResponseList || [];
+
+        cartWithFreeItems.forEach((item: CartItem) => {
+          if (
+            item.itemName.toLowerCase().includes("rice") &&
+            item.weight &&
+            parseFloat(item.weight) >= 5
+          ) {
+            const freeItems = Math.floor(item.cartQuantity / 5) * 2;
+            item.freeQuantity = freeItems;
+          } else if (
+            item.itemName.toLowerCase().includes("rice") &&
+            item.weight &&
+            parseFloat(item.weight) === 1 &&
+            item.status === "FREE"
+          ) {
+            item.freeQuantity = 1;
+          }
+        });
+
+        const outOfStockItems = cartWithFreeItems.filter(
+          (item: CartItem) => item.cartQuantity > item.quantity
+        );
+
+        if (outOfStockItems.length > 0) {
+          setCheckoutError(true);
+          message.warning(
+            `Please decrease the quantity for: ${outOfStockItems
+              .map((item: CartItem) => item.itemName)
+              .join(", ")} before proceeding to checkout.`,
+            5
+          );
+        }
+
+        setCartData(cartWithFreeItems);
+        return cartWithFreeItems;
       } else {
         setRegularCartItems({});
         setFreeCartItems({});

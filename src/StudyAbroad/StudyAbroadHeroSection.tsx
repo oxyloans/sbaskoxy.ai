@@ -79,7 +79,7 @@ function StudyAbroadHeroSection() {
             </div>
 
             <p className="text-gray-600 text-lg">
-              To enable <strong>1 million students</strong> to fulfill their abroad dream by 2030.50
+              To enable <strong>1 million students</strong> to fulfill their abroad dream by 2030-2050
               Our vision is to connect all stakeholders seamlessly with high trust. 
               <p className="text-purple-600 text-lg mt-2"><strong>25+ countries</strong> with <strong>95% visa success rate</strong>.</p>
             </p>
