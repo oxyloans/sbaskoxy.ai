@@ -23,15 +23,26 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
   const navigate = useNavigate();
   const universities: University[] = [
     {
-      name: "Harvard University",
+      name: "Massachusetts Institute of Technology (MIT)",
       country: "USA",
       location: "Cambridge, Massachusetts",
       image: "/api/placeholder/400/250",
-      description: "Prestigious Ivy League institution known for excellence in all fields",
+      description: "World's leading institution for technology and innovation research",
       ranking: "#1 Global",
-      programs: 180,
+      programs: 220,
       intake: ["Fall", "Spring"],
-      tuitionFee: "$54,000"
+      tuitionFee: "$57,986"
+    },
+    {
+      name: "Imperial College London",
+      country: "UK",
+      location: "London, England",
+      image: "/api/placeholder/400/250",
+      description: "Premier institution for science, engineering, medicine and business",
+      ranking: "#2 Global",
+      programs: 165,
+      intake: ["Fall"],
+      tuitionFee: "£35,100"
     },
     {
       name: "University of Oxford",
@@ -39,55 +50,88 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
       location: "Oxford, England",
       image: "/api/placeholder/400/250",
       description: "One of the oldest and most prestigious universities in the world",
-      ranking: "#2 Global",
+      ranking: "#3 Global",
       programs: 200,
       intake: ["Fall"],
-      tuitionFee: "£9,250"
+      tuitionFee: "£28,950"
     },
     {
-      name: "Technical University of Munich",
-      country: "Germany",
-      location: "Munich, Bavaria",
+      name: "Harvard University",
+      country: "USA",
+      location: "Cambridge, Massachusetts",
       image: "/api/placeholder/400/250",
-      description: "Leading technical university with strong industry connections",
-      ranking: "#1 Germany",
-      programs: 145,
+      description: "Prestigious Ivy League institution known for excellence in all fields",
+      ranking: "#4 Global",
+      programs: 180,
       intake: ["Fall", "Spring"],
-      tuitionFee: "€1,500"
+      tuitionFee: "$54,269"
     },
     {
-      name: "University of Toronto",
-      country: "Canada",
-      location: "Toronto, Ontario",
+      name: "University of Cambridge",
+      country: "UK",
+      location: "Cambridge, England",
       image: "/api/placeholder/400/250",
-      description: "Top Canadian university with diverse academic programs",
-      ranking: "#1 Canada",
-      programs: 215,
-      intake: ["Fall", "Spring", "Summer"],
-      tuitionFee: "CAD $58,000"
+      description: "Historic university renowned for academic excellence and research",
+      ranking: "#5 Global",
+      programs: 195,
+      intake: ["Fall"],
+      tuitionFee: "£24,507"
     },
     {
-      name: "University of Melbourne",
-      country: "Australia",
-      location: "Melbourne, Victoria",
+      name: "Stanford University",
+      country: "USA",
+      location: "Stanford, California",
       image: "/api/placeholder/400/250",
-      description: "Australia's leading university with excellent research facilities",
-      ranking: "#1 Australia",
-      programs: 190,
+      description: "Leading research university in Silicon Valley with innovation focus",
+      ranking: "#6 Global",
+      programs: 210,
       intake: ["Fall", "Spring"],
-      tuitionFee: "AUD $45,000"
+      tuitionFee: "$56,169"
     },
     {
-      name: "Sorbonne University",
-      country: "France",
-      location: "Paris, Île-de-France",
+      name: "ETH Zurich (Swiss Federal Institute of Technology)",
+      country: "Switzerland",
+      location: "Zurich, Switzerland",
       image: "/api/placeholder/400/250",
-      description: "Historic university in the heart of Paris, renowned for humanities",
-      ranking: "#1 France",
-      programs: 120,
+      description: "Europe's leading science and technology university with cutting-edge research",
+      ranking: "#7 Global",
+      programs: 185,
       intake: ["Fall", "Spring"],
-      tuitionFee: "€2,770"
-    }
+      tuitionFee: "CHF 1,298"
+    },
+    {
+      name: "National University of Singapore (NUS)",
+      country: "Singapore",
+      location: "Singapore",
+      image: "/api/placeholder/400/250",
+      description: "Asia's top university offering comprehensive education and research excellence",
+      ranking: "#8 Global",
+      programs: 240,
+      intake: ["Fall", "Spring"],
+      tuitionFee: "S$37,550"
+    },
+    {
+      name: "University College London (UCL)",
+      country: "UK",
+      location: "London, England",
+      image: "/api/placeholder/400/250",
+      description: "Leading multidisciplinary university in the heart of London",
+      ranking: "#9 Global",
+      programs: 290,
+      intake: ["Fall"],
+      tuitionFee: "£28,500"
+    },
+    // {
+    //   name: "California Institute of Technology (Caltech)",
+    //   country: "USA",
+    //   location: "Pasadena, California",
+    //   image: "/api/placeholder/400/250",
+    //   description: "Elite science and engineering institute known for groundbreaking research",
+    //   ranking: "#10 Global",
+    //   programs: 135,
+    //   intake: ["Fall"],
+    //   tuitionFee: "$58,680"
+    // }
   ];
 
   const countryFlags: Record<string, string> = {

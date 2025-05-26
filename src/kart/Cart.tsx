@@ -1608,19 +1608,18 @@ const CartPage: React.FC = () => {
     }
 
     // Prepare success message based on selected plan(s)
-    const planDescriptions: { [key: string]: string } = {
-      planA:
-        "Standard Plan: Earn ownership by purchasing 9 bags of rice within 3 years.",
-      planB:
-        "Referral Plan: Refer friends to earn ownership faster and get ₹50 cashback per successful referral.",
-    };
-    const selectedPlanMessage = selectedPlan
-      .map((plan) => planDescriptions[plan])
-      .join(" and ");
+    let successMessage = "";
+    if (selectedPlan.includes("planA") && selectedPlan.includes("planB")) {
+      successMessage = "Both Plan A and Plan B have been selected successfully";
+    } else if (selectedPlan.includes("planA")) {
+      successMessage = "Plan A has been selected successfully";
+    } else if (selectedPlan.includes("planB")) {
+      successMessage = "Plan B has been selected successfully";
+    }
 
     // Show success alert with selected plan details
     message.success({
-      content: `Plan(s) selected successfully: ${selectedPlanMessage}`,
+      content: successMessage,
       duration: 5,
     });
 

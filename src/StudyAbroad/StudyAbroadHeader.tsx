@@ -176,7 +176,7 @@ const StudyAbroadHeader = memo(function StudyAbroadHeader({ onNavClick, activeLi
 
           {/* Right: Action buttons with enhanced design */}
           <div className="hidden md:flex items-center gap-3">
-            <button 
+            {/* <button 
               className="bg-white text-purple-700 font-medium py-2 px-4 rounded-full border border-purple-200 hover:border-purple-300 hover:shadow-md group"
               style={{ transition: 'border-color 0.2s, box-shadow 0.2s' }}
             >
@@ -188,7 +188,7 @@ const StudyAbroadHeader = memo(function StudyAbroadHeader({ onNavClick, activeLi
                   style={{ transition: 'transform 0.2s' }}
                 />
               </span>
-            </button>
+            </button> */}
              <button
         className="relative overflow-hidden bg-gradient-to-r from-purple-700 to-purple-500 text-white font-medium py-2 px-5 rounded-full hover:shadow-lg hover:shadow-purple-200 group"
         style={{ transition: 'box-shadow 0.2s' }}

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Globe, BookOpen, GraduationCap, MapPin, Briefcase, Award, DollarSign, FileText } from "lucide-react";
+import { ArrowRight, Globe, BookOpen, GraduationCap,  FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Heroimg from "../assets/img/heroimg3.png"
 
 function StudyAbroadHeroSection() {
   const [isVisible, setIsVisible] = useState(false);
   const [typedText, setTypedText] = useState("");
+  const [clicked, setClicked] = useState(false);
+     const navigate = useNavigate();
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const fullHeadingText = "Your Global Education Journey";
 
@@ -53,10 +56,9 @@ function StudyAbroadHeroSection() {
   };
 
   const handleFreeConsultation = () => {
-    const contactSection = document.getElementById("contact");
-    if (contactSection) {
-      contactSection.scrollIntoView({ behavior: "smooth" });
-    }
+   setClicked(true);
+    navigate("/student-home");
+    console.log("Navigating to /student-home");
   };
 
   return (
@@ -149,7 +151,7 @@ function StudyAbroadHeroSection() {
     onClick={handleExploreCountries}
     className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-bold py-2.5 px-5 rounded-full flex items-center justify-center gap-2 hover:from-yellow-500 hover:via-amber-500 hover:to-yellow-600 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto text-sm transform hover:scale-105"
   >
-    Explore Options
+    Explore Countries
     <Globe className="w-4 h-4" />
   </button>
   
