@@ -133,24 +133,26 @@ const Categories: React.FC<CategoriesProps> = ({
       // Log raw API response for debugging
       console.log("fetchCartData API response:", response.data);
 
-      // Create cart items map with explicit type, summing quantities for same itemId
+      // Create cart items map, summing quantities for non-free items only
       const cartItemsMap: Record<string, number> = customerCart.reduce(
         (acc: Record<string, number>, item: CartItem) => {
-          const quantity = item.cartQuantity ?? 0;
-          acc[item.itemId] = (acc[item.itemId] ?? 0) + quantity; // Sum quantities
-          console.log(
-            `Item ${item.itemId}: quantity=${quantity}, status=${item.status}`
-          );
+          if (item.status !== "FREE") {
+            const quantity = item.cartQuantity ?? 0;
+            acc[item.itemId] = (acc[item.itemId] ?? 0) + quantity;
+            console.log(
+              `Item ${item.itemId}: quantity=${quantity}, status=${item.status}`
+            );
+          }
           return acc;
         },
         {}
       );
 
-      // Calculate total quantity directly from customerCart
+      // Calculate total quantity, excluding free items
       const totalQuantity: number = customerCart.reduce(
         (sum: number, item: CartItem) => {
           const quantity = item.cartQuantity ?? 0;
-          return sum + quantity;
+          return item.status !== "FREE" ? sum + quantity : sum;
         },
         0
       );
@@ -455,6 +457,14 @@ const Categories: React.FC<CategoriesProps> = ({
     setIsOffersModalVisible(false);
   };
 
+  // Helper function to check if the item is explicitly added by the user
+  const isItemUserAdded = (itemId: string): boolean => {
+    // Check if there is at least one cart entry for this item with status "ADD"
+    return cartData.some(
+      (cartItem) => cartItem.itemId === itemId && cartItem.status === "ADD"
+    );
+  };
+
   return (
     <div className="bg-white shadow-lg px-3 sm:px-6 lg:px-6 py-3">
       <style>
@@ -685,7 +695,7 @@ const Categories: React.FC<CategoriesProps> = ({
                   </div>
 
                   {item.quantity !== 0 ? (
-                    cartItems[item.itemId] > 0 ? (
+                    isItemUserAdded(item.itemId) ? (
                       <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1 mt-2">
                         <motion.button
                           whileTap={{ scale: 0.9 }}

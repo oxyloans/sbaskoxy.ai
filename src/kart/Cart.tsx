@@ -731,7 +731,7 @@ const CartPage: React.FC = () => {
           }
         );
 
-        message.info("Free Container removed from your cart");
+        // message.info("Free Container removed from your cart");
         await fetchCartData();
         containerExistsRef.current = false;
         return true;
@@ -1692,17 +1692,29 @@ const CartPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Custom Styles for Hidden Scrollbar */}
+      {/* Custom Styles for Visible Scrollbar */}
       <style>
         {`
-          .container-scroll-container::-webkit-scrollbar {
-            display: none;
-          }
-          .container-scroll-container {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-          }
-        `}
+    .container-scroll-container {
+      max-height: 60vh;
+      overflow-y: auto;
+      scrollbar-width: auto; /* Firefox */
+      scrollbar-color: #888 #f1f1f1; /* Scrollbar thumb and track */
+    }
+    .container-scroll-container::-webkit-scrollbar {
+      width: 8px; /* Scrollbar width for Chrome, Safari, Edge */
+    }
+    .container-scroll-container::-webkit-scrollbar-track {
+      background: #f1f1f1; /* Track color */
+    }
+    .container-scroll-container::-webkit-scrollbar-thumb {
+      background: #888; /* Thumb color */
+      border-radius: 4px;
+    }
+    .container-scroll-container::-webkit-scrollbar-thumb:hover {
+      background: #555; /* Thumb hover color */
+    }
+  `}
       </style>
 
       <div className="flex-1 p-4 lg:p-6">
@@ -2292,7 +2304,7 @@ const CartPage: React.FC = () => {
           open={isPlanModalVisible}
           onOk={handlePlanOk}
           onCancel={handlePlanCancel}
-          okText={selectedPlan.length === 0 ? "Decline Offer" : "Continue"}
+          okText="Continue"
           cancelText="Cancel"
           centered
           width="90%"
@@ -2301,11 +2313,11 @@ const CartPage: React.FC = () => {
         >
           <div
             className="container-scroll-container"
-            style={{ maxHeight: "50vh", overflowY: "auto" }}
+            style={{ maxHeight: "60vh", overflowY: "auto" }}
           >
             <div className="text-center text-gray-800">
               <p className="text-lg font-medium mt-1">
-                Your cart includes a rice bag that qualifies for a{" "}
+                Buy a 26kg or 10kg rice bag and get a{" "}
                 <strong>FREE rice container</strong>!
               </p>
               <p className="text-sm text-gray-600 italic">
@@ -2319,95 +2331,67 @@ const CartPage: React.FC = () => {
                 </h3>
                 <ul className="list-disc pl-5 space-y-2">
                   <li>
-                    <strong>Option 1:</strong> Buy 9 bags of rice in 3 years
+                    <strong>Plan A:</strong> Purchase 9 bags within the next 3
+                    years and the container is yours forever.
+                  </li>
+                  <li className="list-none text-center text-gray-500">
+                    AND/OR
                   </li>
                   <li>
-                    <strong>Option 2:</strong> Refer 9 friends who make
-                    purchases
-                  </li>
-                  <li>
-                    <strong>Important:</strong> If you don't meet these
-                    conditions within 90 days, we'll collect the container back
+                    <strong>Plan B:</strong> Refer 9 people. Once each of them
+                    buys their first bag, the container is yours.
                   </li>
                 </ul>
               </div>
 
-              <div className="mt-6">
-                <h3 className="text-md font-semibold mb-2">
-                  Select an option to continue:
-                </h3>
-                <div className="space-y-3">
-                  <div
-                    className={`p-4 border rounded-lg cursor-pointer ${
-                      selectedPlan.includes("planA")
-                        ? "border-purple-500 bg-purple-50"
-                        : "border-gray-300 hover:bg-gray-50"
-                    }`}
-                    onClick={() =>
-                      setSelectedPlan((prev) =>
-                        prev.includes("planA")
-                          ? prev.filter((p) => p !== "planA")
-                          : [...prev, "planA"]
-                      )
-                    }
-                  >
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedPlan.includes("planA")}
-                        onChange={() => {}}
-                        className="mr-3"
-                      />
-                      <div>
-                        <h4 className="font-medium">Standard Plan</h4>
-                        <p className="text-sm text-gray-600">
-                          Get container now, earn ownership by purchasing 9 bags
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+              <p className="mt-4 text-sm font-semibold">
+                ⚠️ Note: If there's no purchase within 90 days or a 90+ day gap
+                between purchases, the container will be taken back.
+              </p>
 
-                  <div
-                    className={`p-4 border rounded-lg cursor-pointer ${
-                      selectedPlan.includes("planB")
-                        ? "border-purple-500 bg-purple-50"
-                        : "border-gray-300 hover:bg-gray-50"
-                    }`}
-                    onClick={() =>
-                      setSelectedPlan((prev) =>
-                        prev.includes("planB")
-                          ? prev.filter((p) => p !== "planB")
-                          : [...prev, "planB"]
-                      )
-                    }
-                  >
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedPlan.includes("planB")}
-                        onChange={() => {}}
-                        className="mr-3"
-                      />
-                      <div>
-                        <h4 className="font-medium">Referral Plan</h4>
-                        <p className="text-sm text-gray-600">
-                          Refer friends to earn ownership faster + get ₹50
-                          cashback
-                        </p>
-                      </div>
+              <div className="mt-4">
+                <h4 className="font-semibold mb-3">Choose Plan(s):</h4>
+                <div className="space-y-4">
+                  {["planA", "planB"].map((planKey) => (
+                    <div key={planKey}>
+                      <label
+                        htmlFor={planKey}
+                        className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors shadow-sm ${
+                          selectedPlan.includes(planKey)
+                            ? "bg-purple-600 text-white border-purple-600"
+                            : "bg-white text-gray-800 hover:bg-gray-100 border-gray-300"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          id={planKey}
+                          name="planSelection"
+                          checked={selectedPlan.includes(planKey)}
+                          onChange={() => {
+                            if (selectedPlan.includes(planKey)) {
+                              setSelectedPlan(
+                                selectedPlan.filter((p) => p !== planKey)
+                              );
+                            } else {
+                              setSelectedPlan([...selectedPlan, planKey]);
+                            }
+                          }}
+                          className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300"
+                        />
+                        <span className="text-sm font-medium">
+                          {planKey === "planA"
+                            ? "Plan A: Free Steel Container Policy"
+                            : "Plan B: Referral 9 members"}
+                        </span>
+                      </label>
                     </div>
-                  </div>
-                  <p className="text-sm text-gray-500 italic mt-2">
-                    Note: If you don't select any plan and click "Decline
-                    Offer", you won't receive the free container.
-                  </p>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </Modal>
       </div>
-
       <Footer />
     </div>
   );
