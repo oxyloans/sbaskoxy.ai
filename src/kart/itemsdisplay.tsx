@@ -44,6 +44,7 @@ interface CartItem {
   itemId: string;
   cartQuantity: number;
   cartId: string;
+  status: string; // "ADD" or "FREE"
 }
 
 interface Message {
@@ -142,7 +143,10 @@ const ItemDisplayPage = () => {
       if (response.data.customerCartResponseList) {
         const cartItemsMap = response.data.customerCartResponseList.reduce(
           (acc: Record<string, number>, item: CartItem) => {
-            acc[item.itemId] = item.cartQuantity || 0;
+            if (item.status !== "FREE") {
+              acc[item.itemId] =
+                (acc[item.itemId] || 0) + (item.cartQuantity || 0);
+            }
             return acc;
           },
           {}
@@ -168,6 +172,9 @@ const ItemDisplayPage = () => {
       setCartData(response.data.customerCartResponseList);
     } catch (error) {
       console.error("Error fetching cart items:", error);
+      setCartItems({});
+      setCartData([]);
+      setCount(0);
       setLoadingItems((prev) => ({
         ...prev,
         items: { ...prev.items, [itemId]: false },
@@ -237,7 +244,7 @@ const ItemDisplayPage = () => {
         { customerId, itemId: item.itemId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchCartData("");
+      await fetchCartData("");
       message.success("Item added to cart successfully.");
       setTimeout(() => {
         setLoadingItems((prev) => ({
@@ -477,6 +484,14 @@ const ItemDisplayPage = () => {
     return cartItems[item.itemId] >= item.quantity;
   };
 
+  // Helper function to check if the item is explicitly added by the user
+  const isItemUserAdded = (itemId: string): boolean => {
+    // Check if there is at least one cart entry for this item with status "ADD"
+    return cartData.some(
+      (cartItem) => cartItem.itemId === itemId && cartItem.status === "ADD"
+    );
+  };
+
   return (
     <div className="min-h-screen">
       <div className="px-4 sm:px-6 lg:px-8 py-8">
@@ -573,7 +588,7 @@ const ItemDisplayPage = () => {
                   {/* Enhanced Add to Cart Section */}
                   <div className="space-y-4">
                     {itemDetails?.quantity !== 0 ? (
-                      itemDetails && cartItems[itemDetails.itemId] ? (
+                      itemDetails && isItemUserAdded(itemDetails.itemId) ? (
                         <div className="flex flex-col gap-3">
                           <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
                             <button
@@ -795,7 +810,7 @@ const ItemDisplayPage = () => {
                         {/* Related item cart controls */}
                         <div className="mt-3">
                           {item.quantity !== 0 ? (
-                            cartItems[item.itemId] ? (
+                            isItemUserAdded(item.itemId) ? (
                               <div className="flex items-center justify-between bg-purple-50 rounded-lg p-2">
                                 <button
                                   className={`p-1.5 rounded-lg transition-all ${

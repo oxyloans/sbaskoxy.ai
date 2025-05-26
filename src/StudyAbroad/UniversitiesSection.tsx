@@ -1,5 +1,5 @@
-import React from "react";
-import { ChevronRight, Globe, Star, Users, School, Building, CheckCircle, GraduationCap } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronRight, Globe, Star, Users, School, Building, CheckCircle, GraduationCap, Award, Percent } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // Type definitions
@@ -13,15 +13,21 @@ interface University {
   programs?: number;
   intake?: string[];
   tuitionFee?: string;
+  offerRate?: string;
+  scholarships?: string[];
+  specialOffer?: string;
 }
 
 interface UniversitiesSectionProps {
-  onViewAllClick?: () => void; // Add prop for navigation
+  onViewAllClick?: () => void;
 }
 
 const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClick }) => {
   const navigate = useNavigate();
-  const universities: University[] = [
+  const [activeTab, setActiveTab] = useState<'qs-ranked' | 'offers-based'>('qs-ranked');
+
+  // QS Ranked Universities (Top 9)
+  const qsRankedUniversities: University[] = [
     {
       name: "Massachusetts Institute of Technology (MIT)",
       country: "USA",
@@ -120,18 +126,128 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
       programs: 290,
       intake: ["Fall"],
       tuitionFee: "£28,500"
+    }
+  ];
+
+  // Offers-Based Universities (High acceptance rates and special offers)
+  const offersBasedUniversities: University[] = [
+    {
+      name: "Arizona State University",
+      country: "USA",
+      location: "Tempe, Arizona",
+      image: "/api/placeholder/400/250",
+      description: "Innovation-focused university with high acceptance rate and diverse programs",
+      offerRate: "88% Acceptance",
+      programs: 350,
+      intake: ["Fall", "Spring", "Summer"],
+      tuitionFee: "$31,200",
+      scholarships: ["Merit Scholarship", "International Award"],
+      specialOffer: "Up to $15,000 Scholarship"
     },
-    // {
-    //   name: "California Institute of Technology (Caltech)",
-    //   country: "USA",
-    //   location: "Pasadena, California",
-    //   image: "/api/placeholder/400/250",
-    //   description: "Elite science and engineering institute known for groundbreaking research",
-    //   ranking: "#10 Global",
-    //   programs: 135,
-    //   intake: ["Fall"],
-    //   tuitionFee: "$58,680"
-    // }
+    {
+      name: "University of South Florida",
+      country: "USA",
+      location: "Tampa, Florida",
+      image: "/api/placeholder/400/250",
+      description: "Fast-growing research university with excellent student support and opportunities",
+      offerRate: "87% Acceptance",
+      programs: 230,
+      intake: ["Fall", "Spring", "Summer"],
+      tuitionFee: "$17,324",
+      scholarships: ["Academic Excellence", "Global Achievement"],
+      specialOffer: "First Year Free Housing"
+    },
+    {
+      name: "Coventry University",
+      country: "UK",
+      location: "Coventry, England",
+      image: "/api/placeholder/400/250",
+      description: "Modern university known for innovation, practical learning and industry connections",
+      offerRate: "85% Acceptance",
+      programs: 300,
+      intake: ["Fall", "Spring"],
+      tuitionFee: "£19,850",
+      scholarships: ["Vice-Chancellor Award", "International Scholarship"],
+      specialOffer: "25% Tuition Discount"
+    },
+    {
+      name: "Deakin University",
+      country: "Australia",
+      location: "Melbourne, Victoria",
+      image: "/api/placeholder/400/250",
+      description: "Progressive university offering flexible study options and strong industry partnerships",
+      offerRate: "83% Acceptance",
+      programs: 280,
+      intake: ["March", "July", "November"],
+      tuitionFee: "AU$37,400",
+      scholarships: ["STEM Scholarship", "Vice-Chancellor's Award"],
+      specialOffer: "20% International Scholarship"
+    },
+    {
+      name: "University of Essex",
+      country: "UK",
+      location: "Colchester, England",
+      image: "/api/placeholder/400/250",
+      description: "Research-intensive university with strong graduate employment rates",
+      offerRate: "81% Acceptance",
+      programs: 200,
+      intake: ["Fall", "Spring"],
+      tuitionFee: "£22,750",
+      scholarships: ["Academic Excellence", "International Merit"],
+      specialOffer: "£5,000 Early Bird Discount"
+    },
+    {
+      name: "Northeastern University",
+      country: "USA",
+      location: "Boston, Massachusetts",
+      image: "/api/placeholder/400/250",
+      description: "Experience-driven university with strong co-op program and industry connections",
+      offerRate: "80% Acceptance",
+      programs: 275,
+      intake: ["Fall", "Spring"],
+      tuitionFee: "$59,100",
+      scholarships: ["Dean's Scholarship", "Global Scholars"],
+      specialOffer: "Co-op Guaranteed Program"
+    },
+    {
+      name: "University of Calgary",
+      country: "Canada",
+      location: "Calgary, Alberta",
+      image: "/api/placeholder/400/250",
+      description: "Comprehensive research university with strong energy and engineering programs",
+      offerRate: "78% Acceptance",
+      programs: 250,
+      intake: ["Fall", "Winter", "Spring"],
+      tuitionFee: "CAD $26,900",
+      scholarships: ["International Entrance", "Academic Excellence"],
+      specialOffer: "CAD $10,000 Entrance Award"
+    },
+    {
+      name: "Griffith University",
+      country: "Australia",
+      location: "Brisbane, Queensland",
+      image: "/api/placeholder/400/250",
+      description: "Innovative university with strong focus on sustainability and employability",
+      offerRate: "76% Acceptance",
+      programs: 320,
+      intake: ["February", "July"],
+      tuitionFee: "AU$33,500",
+      scholarships: ["International Excellence", "Vice-Chancellor's"],
+      specialOffer: "25% First Year Discount"
+    },
+    {
+      name: "Birmingham City University",
+      country: "UK",
+      location: "Birmingham, England",
+      image: "/api/placeholder/400/250",
+      description: "Modern university with strong industry links and practical learning approach",
+      offerRate: "75% Acceptance",
+      programs: 400,
+      intake: ["Fall", "Spring"],
+      tuitionFee: "£16,300",
+      scholarships: ["International Scholarship", "Academic Merit"],
+      specialOffer: "30% Tuition Reduction"
+    }
   ];
 
   const countryFlags: Record<string, string> = {
@@ -140,26 +256,27 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
     Germany: "🇩🇪",
     Canada: "🇨🇦",
     Australia: "🇦🇺",
-    France: "🇫🇷"
+    France: "🇫🇷",
+    Switzerland: "🇨🇭",
+    Singapore: "🇸🇬"
   };
 
   const handleViewAllClick = () => {
     if (onViewAllClick) {
       onViewAllClick();
     }
-    // If using React Router, you could also do:
     navigate('/all-universities');
   };
 
   const handleViewPrograms = (universityName: string) => {
-    // Handle view programs click
     console.log(`View programs for ${universityName}`);
   };
 
   const handleApplyNow = (universityName: string) => {
-    // Handle apply now click
     console.log(`Apply to ${universityName}`);
   };
+
+  const currentUniversities = activeTab === 'qs-ranked' ? qsRankedUniversities : offersBasedUniversities;
 
   return (
     <section className="py-10 bg-white">
@@ -177,7 +294,7 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
             research opportunities
           </p>
 
-          {/* Updated Statistics to match AllUniversities data */}
+          {/* Statistics */}
           <div className="flex flex-wrap justify-center items-center gap-8 mt-6 py-6 w-full px-4">
             <div className="text-center flex flex-col items-center w-[140px] flex-shrink-0 hover:scale-105 transition-transform duration-300">
               <Users size={36} className="text-purple-600 mb-2" />
@@ -188,20 +305,15 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
             <div className="text-center flex flex-col items-center w-[140px] flex-shrink-0 hover:scale-105 transition-transform duration-300">
               <School size={36} className="text-purple-600 mb-2" />
               <div className="text-3xl font-bold text-purple-600">1000+</div>
-              <div className="text-gray-600 text-center text-sm">
-                Universities
-              </div>
+              <div className="text-gray-600 text-center text-sm">Universities</div>
             </div>
 
             <div className="text-center flex flex-col items-center w-[140px] flex-shrink-0 hover:scale-105 transition-transform duration-300">
               <Building size={36} className="text-purple-600 mb-2" />
               <div className="text-3xl font-bold text-purple-600">600+</div>
-              <div className="text-gray-600 text-center text-sm">
-                Courses
-              </div>
+              <div className="text-gray-600 text-center text-sm">Courses</div>
             </div>
 
-            
             <div className="text-center flex flex-col items-center w-[140px] flex-shrink-0 hover:scale-105 transition-transform duration-300">
               <Globe size={36} className="text-purple-600 mb-2" />
               <div className="text-3xl font-bold text-purple-600">25+</div>
@@ -210,9 +322,38 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
           </div>
         </div>
 
+        {/* Toggle Tabs */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-gray-100 p-1 rounded-lg flex">
+            <button
+              onClick={() => setActiveTab('qs-ranked')}
+              className={`px-6 py-3 rounded-md font-semibold transition-all duration-300 flex items-center gap-2 ${
+                activeTab === 'qs-ranked'
+                  ? 'bg-white text-purple-600 shadow-md'
+                  : 'text-gray-600 hover:text-purple-600'
+              }`}
+            >
+    
+              QS Ranked Universities
+            </button>
+            <button
+              onClick={() => setActiveTab('offers-based')}
+              className={`px-6 py-3 rounded-md font-semibold transition-all duration-300 flex items-center gap-2 ${
+                activeTab === 'offers-based'
+                  ? 'bg-white text-purple-600 shadow-md'
+                  : 'text-gray-600 hover:text-purple-600'
+              }`}
+            >
+              Universities with Offers
+            </button>
+          </div>
+        </div>
+
         {/* Header with View All link */}
         <div className="flex justify-between items-center mb-8">
-          <h3 className="text-2xl font-bold text-gray-900">Featured Universities</h3>
+          <h3 className="text-2xl font-bold text-gray-900">
+            {activeTab === 'qs-ranked' ? 'Top QS Ranked Universities' : 'Universities with Special Offers'}
+          </h3>
           <button
             onClick={handleViewAllClick}
             className="text-purple-600 hover:text-purple-800 font-semibold flex items-center group"
@@ -224,7 +365,7 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
 
         {/* Universities Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {universities.map((university, index) => (
+          {currentUniversities.map((university, index) => (
             <div
               key={index}
               className="group bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-purple-200"
@@ -236,7 +377,7 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
                   className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
                 />
 
-                {/* Country flag and ranking badges */}
+                {/* Country flag and ranking/offer rate badges */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2">
                   <span className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-gray-700 flex items-center gap-1">
                     <span>{countryFlags[university.country]}</span>
@@ -247,7 +388,21 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
                       {university.ranking}
                     </span>
                   )}
+                  {university.offerRate && (
+                    <span className="bg-green-600/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-white">
+                      {university.offerRate}
+                    </span>
+                  )}
                 </div>
+
+                {/* Special Offer Badge */}
+                {university.specialOffer && (
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-red-500/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-white flex items-center gap-1">
+                      🔥 {university.specialOffer}
+                    </span>
+                  </div>
+                )}
 
                 {/* Overlay gradient */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent h-20"></div>
@@ -265,7 +420,7 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
                   {university.description}
                 </p>
 
-                {/* Updated info section with intake and tuition */}
+                {/* Info section */}
                 <div className="space-y-2 mb-4">
                   {university.programs && (
                     <div className="flex items-center justify-between text-sm">
@@ -296,6 +451,20 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
                       ))}
                     </div>
                   )}
+
+                  {/* Scholarships for offers-based universities */}
+                  {university.scholarships && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {university.scholarships.map((scholarship) => (
+                        <span
+                          key={scholarship}
+                          className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full"
+                        >
+                          {scholarship}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -318,7 +487,7 @@ const UniversitiesSection: React.FC<UniversitiesSectionProps> = ({ onViewAllClic
           ))}
         </div>
 
-        {/* Updated Call to action with better styling */}
+        {/* Call to action */}
         <div className="text-center mt-12">
           <button 
             onClick={handleViewAllClick}

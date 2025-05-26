@@ -84,13 +84,9 @@ const Categories: React.FC<CategoriesProps> = ({
 }) => {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
-  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(
-    null
-  );
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [userEligibleOffers, setUserEligibleOffers] = useState<
-    UserEligibleOffer[]
-  >([]);
+  const [userEligibleOffers, setUserEligibleOffers] = useState<UserEligibleOffer[]>([]);
   const [isOffersModalVisible, setIsOffersModalVisible] = useState(false);
   const [isFetchingOffers, setIsFetchingOffers] = useState(false);
   const navigate = useNavigate();
@@ -127,16 +123,15 @@ const Categories: React.FC<CategoriesProps> = ({
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
-      const customerCart: CartItem[] =
-        response.data?.customerCartResponseList || [];
+      const customerCart: CartItem[] = response.data?.customerCartResponseList || [];
 
       // Log raw API response for debugging
       console.log("fetchCartData API response:", response.data);
 
-      // Create cart items map, summing quantities for non-free items only
+      // Create cart items map for non-free items only (for UI display)
       const cartItemsMap: Record<string, number> = customerCart.reduce(
         (acc: Record<string, number>, item: CartItem) => {
-          if (item.status !== "FREE") {
+          if (item.status === "ADD") {
             const quantity = item.cartQuantity ?? 0;
             acc[item.itemId] = (acc[item.itemId] ?? 0) + quantity;
             console.log(
@@ -148,11 +143,11 @@ const Categories: React.FC<CategoriesProps> = ({
         {}
       );
 
-      // Calculate total quantity, excluding free items
+      // Calculate total quantity, including both free and non-free items
       const totalQuantity: number = customerCart.reduce(
         (sum: number, item: CartItem) => {
           const quantity = item.cartQuantity ?? 0;
-          return item.status !== "FREE" ? sum + quantity : sum;
+          return sum + quantity; // Include all items (FREE and ADD)
         },
         0
       );
@@ -166,7 +161,7 @@ const Categories: React.FC<CategoriesProps> = ({
 
       // Update states
       setCartItems(cartItemsMap);
-      setCartData(customerCart);
+      setCartData(customerCart); // Keep all items (including FREE) in cartData
       updateCart(cartItemsMap);
       updateCartCount(totalQuantity);
       localStorage.setItem("cartCount", totalQuantity.toString());
