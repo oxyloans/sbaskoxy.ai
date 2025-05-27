@@ -137,14 +137,14 @@ const App: React.FC = () => {
               <Route path="itemsList" element={<PrtnerItemsList />} />
               <Route path="dbOrderList" element={<DbOrderDetails />} />
             </Route>
-                 <Route path="/userregister" element={<Register />} />
+           <Route path="/userregister" element={<Register />} />
           <Route path="/userlogin" element={<Login />} />   <Route path="/userPanelLayout" element={<PlanOfTheDay />} />
           <Route path="/planoftheday" element={<PlanOfTheDay />} />
           <Route path="/taskupdated" element={<TaskUpdate />} />
           <Route path="/all-statuses" element={<AllStatusPage />} />
           <Route path="/assigned-task" element={<AssignedTasksPage />} />
           <Route path="/taskassigneduser" element={<TaskAssignedUser />} /> 
-          <Route path="/studyabroad" element={<StudyAbroadWEB />} />
+          {/* <Route path="/studyabroad" element={<StudyAbroadWEB />} /> */}
             <Route path="/studyabroad-web" element={<StudyAbroadLandingPage />} />
             <Route path="/all-universities" element={<AllUniversities />} />
             <Route path="/student-dashboard" element={<StudentDashboard />} />
