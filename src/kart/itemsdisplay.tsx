@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Loader2,
   Trash2,
+  ChevronLeft,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-react";
 import Footer from "../components/Footer";
 import { CartContext } from "../until/CartContext";
@@ -40,13 +42,6 @@ interface Item {
   quantity: number;
 }
 
-// interface CartItem {
-//   itemId: string;
-//   cartQuantity: number;
-//   cartId: string;
-//   status: string; // "ADD" or "FREE"
-// }
-
 interface CartItem {
   itemId: string;
   cartQuantity: number;
@@ -62,6 +57,13 @@ interface Message {
   type: "sent" | "received" | "system";
 }
 
+interface ItemImage {
+  itemId: string;
+  itemName: string;
+  imageView: string;
+  imageUrl: string;
+}
+
 const ItemDisplayPage = () => {
   const { itemId } = useParams<{ itemId: string }>();
   const { state } = useLocation();
@@ -69,6 +71,8 @@ const ItemDisplayPage = () => {
   const [itemDetails, setItemDetails] = useState<Item | null>(
     state?.item || null
   );
+  const [itemImages, setItemImages] = useState<ItemImage[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
@@ -86,11 +90,16 @@ const ItemDisplayPage = () => {
     status: {}, // Stores status strings for each item
   });
   // Added state for Special Offers modal
-  const [offerModal, setOfferModal] = useState<{ visible: boolean; content: string }>({
+  const [offerModal, setOfferModal] = useState<{
+    visible: boolean;
+    content: string;
+  }>({
     visible: false,
     content: "",
   });
-  const [displayedOffers, setDisplayedOffers] = useState<Set<string>>(new Set());
+  const [displayedOffers, setDisplayedOffers] = useState<Set<string>>(
+    new Set()
+  );
 
   const context = useContext(CartContext);
 
@@ -110,6 +119,21 @@ const ItemDisplayPage = () => {
     return isNaN(parsed) ? null : parsed;
   };
 
+  // New function to fetch item images
+  const fetchItemImages = async (id: string) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/product-service/ImagesViewBasedOnItemId?itemId=${id}`
+      );
+      console.log("Item images response:", response.data);
+      setItemImages(response.data || []);
+      setCurrentImageIndex(0); // Reset to first image when new images are loaded
+    } catch (error) {
+      console.error("Error fetching item images:", error);
+      setItemImages([]);
+    }
+  };
+
   const fetchItemDetails = async (id: string) => {
     try {
       const response = await axios.get(
@@ -121,6 +145,8 @@ const ItemDisplayPage = () => {
       const item = allItems.find((item: Item) => item.itemId === id);
       if (item) {
         setItemDetails(item);
+        // Fetch images for this item
+        await fetchItemImages(id);
       }
     } catch (error) {
       console.error("Error fetching item details:", error);
@@ -130,13 +156,18 @@ const ItemDisplayPage = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
   };
-
+  
+  // Also update the main useEffect to ensure related items are fetched
   useEffect(() => {
     if (itemId) {
       if (!state?.item) {
         fetchItemDetails(itemId);
       } else {
         setItemDetails(state.item);
+        // Fetch images for the item
+        fetchItemImages(itemId);
+        // Fetch related items
+        fetchRelatedItems();
       }
       fetchCartData("");
     }
@@ -145,10 +176,70 @@ const ItemDisplayPage = () => {
   // Updated navigation handler for related items
   const handleRelatedItemClick = (item: Item) => {
     setItemDetails(item); // Update item details immediately
+    // Fetch images for the new item
+    fetchItemImages(item.itemId);
     navigate(`/main/itemsdisplay/${item.itemId}`, {
       state: { item },
       replace: true,
     });
+  };
+
+  // Image navigation functions
+  const handlePreviousImage = () => {
+    const totalImages = getAllImages().length;
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? totalImages - 1 : prev - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    const totalImages = getAllImages().length;
+    setCurrentImageIndex((prev) =>
+      prev === totalImages - 1 ? 0 : prev + 1
+    );
+  };
+
+  // Helper function to combine main image with additional images
+  const getAllImages = () => {
+    const allImages = [];
+    
+    // Add main item image first
+    if (itemDetails?.itemImage || itemDetails?.image) {
+      allImages.push({
+        imageUrl: itemDetails.itemImage || itemDetails.image,
+        imageView: "",
+        isMainImage: true
+      });
+    }
+    
+    // Add additional images
+    itemImages.forEach(img => {
+      allImages.push({
+        imageUrl: img.imageUrl,
+        imageView: img.imageView,
+        isMainImage: false
+      });
+    });
+    
+    return allImages;
+  };
+
+  // Get current image URL with proper fallback
+  const getCurrentImageUrl = () => {
+    const allImages = getAllImages();
+    if (allImages.length > 0 && allImages[currentImageIndex]) {
+      return allImages[currentImageIndex].imageUrl;
+    }
+    // return itemDetails?.itemImage || itemDetails?.image;
+  };
+
+  // Get current image view label
+  const getCurrentImageView = () => {
+    const allImages = getAllImages();
+    if (allImages.length > 0 && allImages[currentImageIndex]) {
+      return allImages[currentImageIndex].imageView;
+    }
+    // return "Main View";
   };
 
   // Updated fetchCartData function from categories.tsx to include Special Offers modal logic
@@ -177,7 +268,8 @@ const ItemDisplayPage = () => {
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
-      const customerCart: CartItem[] = response.data?.customerCartResponseList || [];
+      const customerCart: CartItem[] =
+        response.data?.customerCartResponseList || [];
 
       console.log("fetchCartData API response:", response.data);
 
@@ -230,7 +322,13 @@ const ItemDisplayPage = () => {
         ) {
           setOfferModal({
             visible: true,
-            content: `<b>2+1 Offer Is Active.</b><br><br>Buy 2 Bags of ${addItem.itemName} of ${normalizeWeight(addItem.weight)} Kg and get 1 Bag of ${freeItem.itemName} of ${normalizeWeight(freeItem.weight)} Kg for free offer has been applied.<br><br><i style="color: grey;"><strong>Note: </strong>This offer is only applicable once.</i>`,
+            content: `<b>2+1 Offer Is Active.</b><br><br>Buy 2 Bags of ${
+              addItem.itemName
+            } of ${normalizeWeight(addItem.weight)} Kg and get 1 Bag of ${
+              freeItem.itemName
+            } of ${normalizeWeight(
+              freeItem.weight
+            )} Kg for free offer has been applied.<br><br><i style="color: grey;"><strong>Note: </strong>This offer is only applicable once.</i>`,
           });
           newDisplayedOffers.add(`2+1_${addItem.itemId}`);
         }
@@ -250,13 +348,16 @@ const ItemDisplayPage = () => {
             normalizeWeight(item.weight) === 1.0 &&
             item.cartQuantity === 2
         );
-        if (
-          freeItems &&
-          !newDisplayedOffers.has(`5+2_${addItem.itemId}`)
-        ) {
+        if (freeItems && !newDisplayedOffers.has(`5+2_${addItem.itemId}`)) {
           setOfferModal({
             visible: true,
-            content: `<b>5+2 Offer Is Active.</b><br><br>Buy 1 Bag of ${addItem.itemName} of ${normalizeWeight(addItem.weight)} Kg and get 2 Bags of ${freeItems.itemName} of ${normalizeWeight(freeItems.weight)} Kg for free offer has been applied.<br><br><i style="color: grey;"><strong>Note: </strong>This offer is only applicable once.</i>`,
+            content: `<b>5+2 Offer Is Active.</b><br><br>Buy 1 Bag of ${
+              addItem.itemName
+            } of ${normalizeWeight(addItem.weight)} Kg and get 2 Bags of ${
+              freeItems.itemName
+            } of ${normalizeWeight(
+              freeItems.weight
+            )} Kg for free offer has been applied.<br><br><i style="color: grey;"><strong>Note: </strong>This offer is only applicable once.</i>`,
           });
           newDisplayedOffers.add(`5+2_${addItem.itemId}`);
         }
@@ -266,7 +367,8 @@ const ItemDisplayPage = () => {
       const containerOfferItems = customerCart.filter(
         (item) =>
           item.status === "ADD" &&
-          (normalizeWeight(item.weight) === 10.0 || normalizeWeight(item.weight) === 26.0) &&
+          (normalizeWeight(item.weight) === 10.0 ||
+            normalizeWeight(item.weight) === 26.0) &&
           item.cartQuantity >= 1
       );
       for (const addItem of containerOfferItems) {
@@ -318,6 +420,7 @@ const ItemDisplayPage = () => {
     }
   };
 
+  // Fixed fetchRelatedItems function
   const fetchRelatedItems = async () => {
     try {
       const response = await axios.get(
@@ -332,9 +435,7 @@ const ItemDisplayPage = () => {
           category.itemsResponseDtoList &&
           Array.isArray(category.itemsResponseDtoList) && // Ensure it's an array
           category.itemsResponseDtoList.some(
-            (item: any) =>
-              item.itemId === itemDetails?.itemId ||
-              item.itemId === itemDetails?.itemId
+            (item: any) => item.itemId === itemDetails?.itemId
           )
       );
 
@@ -345,9 +446,7 @@ const ItemDisplayPage = () => {
         // Extract related items, excluding the selected one
         const categoryItems = matchingCategory.itemsResponseDtoList
           .filter(
-            (item: any) =>
-              item.itemId !== itemDetails?.itemId &&
-              item.itemId !== itemDetails?.itemId // Corrected logical condition
+            (item: any) => item.itemId !== itemDetails?.itemId // Fixed: removed duplicate condition
           )
           .slice(0, 4); // Limit to 4 items
 
@@ -359,6 +458,7 @@ const ItemDisplayPage = () => {
       }
     } catch (error) {
       console.error("Error fetching related items:", error);
+      setRelatedItems([]); // Set empty array on error
     }
   };
 
@@ -397,6 +497,13 @@ const ItemDisplayPage = () => {
       }));
     }
   };
+  
+  // Add this useEffect to trigger related items fetch when itemDetails changes
+  useEffect(() => {
+    if (itemDetails) {
+      fetchRelatedItems();
+    }
+  }, [itemDetails]);
 
   // Function to handle removing an item completely from the cart
   const handleRemoveItem = async (itemId: string) => {
@@ -633,6 +740,13 @@ const ItemDisplayPage = () => {
     setOfferModal({ visible: false, content: "" });
   };
 
+  // Fetch related items when itemDetails changes
+  useEffect(() => {
+    if (itemDetails) {
+      fetchRelatedItems();
+    }
+  }, [itemDetails]);
+
   return (
     <div className="min-h-screen">
       {/* Added Special Offers Modal from categories.tsx */}
@@ -683,20 +797,69 @@ const ItemDisplayPage = () => {
           <div className="lg:col-span-8 space-y-6">
             <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                {/* Product Image Section */}
+                {/* Enhanced Product Image Section with Carousel */}
                 <div className="relative">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 relative">
                     <img
-                      src={itemDetails?.itemImage || itemDetails?.image}
+                      src={getCurrentImageUrl()}
                       alt={itemDetails?.itemName}
                       className="w-full h-full object-contain transform transition-transform hover:scale-105"
                     />
+
+                    {/* Navigation arrows for multiple images */}
+                    {getAllImages().length > 1 && (
+                      <>
+                        <button
+                          onClick={handlePreviousImage}
+                          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                        >
+                          <ChevronLeft className="w-5 h-5 text-gray-700" />
+                        </button>
+                        <button
+                          onClick={handleNextImage}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                        >
+                          <ChevronRightIcon className="w-5 h-5 text-gray-700" />
+                        </button>
+                      </>
+                    )}
                   </div>
+
+                  {/* Image indicators/thumbnails */}
+                  {getAllImages().length > 1 && (
+                    <div className="flex justify-center mt-4 space-x-2">
+                      {getAllImages().map((image, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                            currentImageIndex === index
+                              ? "border-purple-600 ring-2 ring-purple-200"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <img
+                            src={image.imageUrl}
+                            alt={`${itemDetails?.itemName} - ${image.imageView}`}
+                            className="w-full h-full object-contain bg-gray-50"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Image view label */}
+                  {/* {getAllImages().length > 0 && (
+                    <div className="absolute bottom-4 left-4">
+                      <span className="bg-black/60 text-white px-2 py-1 rounded text-sm">
+                        {getCurrentImageView()}
+                      </span>
+                    </div>
+                  )} */}
 
                   {/* Enhanced Discount Badge */}
                   {itemDetails && (
-                    <div className="absolute top-4 Hackett
-                    right-4 flex items-center">
+                    <div className="absolute top-4 right-4 flex items-center">
                       <span className="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-lg">
                         {calculateDiscount(
                           Number(itemDetails.itemMrp) ||
@@ -707,377 +870,397 @@ const ItemDisplayPage = () => {
                       </span>
                     </div>
                   )}
-
-                  {/* Stock Status Badge */}
+{/* Stock Status Badge */}
                   {itemDetails && (
                     <div className="absolute top-4 left-4">
-                      <div
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 ${
+                      <span
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium shadow-lg ${
                           getStockStatus(itemDetails.quantity).color
                         }`}
                       >
-                        {itemDetails.quantity <= 5 && (
-                          <AlertCircle className="w-4 h-4" />
-                        )}
                         {getStockStatus(itemDetails.quantity).text}
-                      </div>
+                      </span>
                     </div>
                   )}
                 </div>
 
-                {/* Product Info Section */}
-                <div className="space-y-6">
+                {/* Enhanced Product Information */}
+                <div className="space-y-4">
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                       {itemDetails?.itemName}
                     </h1>
-                    <div className="flex items-center gap-2">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                        />
-                      ))}
-                      <span className="text-sm text-gray-600">(4.8/5)</span>
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                          />
+                        ))}
+                        <span className="ml-2 text-sm text-gray-600">
+                          (4.5) 128 reviews
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Price Section */}
-                  <div className="flex items-baseline gap-4">
-                    <span className="text-3xl font-bold text-purple-600">
-                      ₹{itemDetails?.itemPrice}
-                    </span>
-                    <span className="text-lg text-gray-500 line-through">
-                      ₹{itemDetails?.itemMrp || itemDetails?.priceMrp}
-                    </span>
+                  {/* Enhanced Pricing */}
+                  <div className="space-y-2">
+                    <div className="flex items-baseline space-x-3">
+                      <span className="text-3xl font-bold text-gray-900">
+                        ₹{Number(itemDetails?.itemPrice).toLocaleString()}
+                      </span>
+                      <span className="text-lg text-gray-500 line-through">
+                        ₹
+                        {Number(
+                          itemDetails?.itemMrp || itemDetails?.priceMrp
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                    {/* <div className="text-sm text-gray-600">
+                      Price per {itemDetails?.weightUnit || "unit"}: ₹
+                      {(
+                        Number(itemDetails?.itemPrice)
+                      ).toFixed(2)}
+                      /{itemDetails?.weightUnit}
+                    </div> */}
+                  </div>
+
+                  {/* Product Specifications */}
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <h3 className="font-semibold text-gray-900">
+                      Product Details
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-600">Weight:</span>
+                        <span className="ml-2 font-medium">
+                          {itemDetails?.weight}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Unit:</span>
+                        <span className="ml-2 font-medium">
+                          {itemDetails?.units}
+                        </span>
+                      </div>
+                      {/* <div>
+                        <span className="text-gray-600">Category:</span>
+                        <span className="ml-2 font-medium">
+                          {itemDetails?.category}
+                        </span>
+                      </div> */}
+                      <div>
+                        <span className="text-gray-600">Stock:</span>
+                        <span className="ml-2 font-medium">
+                          {itemDetails?.quantity} available
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Enhanced Add to Cart Section */}
                   <div className="space-y-4">
-                    {itemDetails?.quantity !== 0 ? (
-                      itemDetails && isItemUserAdded(itemDetails.itemId) ? (
-                        <div className="flex flex-col gap-3">
-                          <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3">
-                            <button
-                              className={`p-2 rounded-lg transition-all ${
-                                cartItems[itemDetails.itemId] <= 1
-                                  ? "bg-red-100 text-red-600 hover:bg-red-200"
-                                  : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                              }`}
-                              onClick={() =>
-                                itemDetails &&
-                                handleQuantityChange(itemDetails, false)
-                              }
-                              disabled={loadingItems.items[itemDetails.itemId]}
-                            >
-                              <Minus className="w-5 h-5" />
-                            </button>
+                    {itemDetails && cartItems[itemDetails.itemId] > 0 ? (
+                      <div className="flex items-center justify-between bg-purple-50 rounded-lg p-4">
+                        <div className="flex items-center space-x-4">
+                          <button
+                            onClick={() =>
+                              handleQuantityChange(itemDetails, false)
+                            }
+                            disabled={
+                              loadingItems.items[itemDetails.itemId] ||
+                              cartItems[itemDetails.itemId] <= 0
+                            }
+                            className="w-10 h-10 rounded-full bg-white border border-purple-300 flex items-center justify-center hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
                             {loadingItems.items[itemDetails.itemId] ? (
-                              <Loader2 className="animate-spin text-purple-600" />
+                              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
                             ) : (
-                              <span className="font-medium text-purple-700">
-                                {cartItems[itemDetails.itemId]}
-                              </span>
+                              <Minus className="w-4 h-4 text-purple-600" />
                             )}
-                            <button
-                              className={`p-2 rounded-lg transition-all ${
-                                isMaxStockReached(itemDetails)
-                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                  : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                              }`}
-                              onClick={() =>
-                                !isMaxStockReached(itemDetails) &&
-                                handleQuantityChange(itemDetails, true)
-                              }
-                              disabled={
-                                cartItems[itemDetails.itemId] >=
-                                  itemDetails.quantity ||
-                                loadingItems.items[itemDetails.itemId] ||
-                                (itemDetails.itemPrice === 1 &&
-                                  cartItems[itemDetails.itemId] >= 1)
-                              }
-                            >
-                              <Plus className="w-5 h-5" />
-                            </button>
-                            {/* Delete Button */}
-                            <button
-                              className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all ml-2"
-                              onClick={() => {
-                                if (itemDetails) {
-                                  handleRemoveItem(itemDetails.itemId);
-                                }
-                              }}
-                              disabled={loadingItems.items[itemDetails.itemId]}
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </div>
-                          {isMaxStockReached(itemDetails) && (
-                            <p className="text-yellow-600 text-sm flex items-center gap-1.5">
-                              <AlertCircle className="w-4 h-4" />
-                              Maximum available quantity reached
-                            </p>
-                          )}
+                          </button>
+                          <span className="text-xl font-semibold text-purple-900 min-w-[3rem] text-center">
+                            {cartItems[itemDetails.itemId]}
+                          </span>
+                          <button
+                            onClick={() =>
+                              handleQuantityChange(itemDetails, true)
+                            }
+                            disabled={
+                              loadingItems.items[itemDetails.itemId] ||
+                              isMaxStockReached(itemDetails)
+                            }
+                            className="w-10 h-10 rounded-full bg-white border border-purple-300 flex items-center justify-center hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {loadingItems.items[itemDetails.itemId] ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                            ) : (
+                              <Plus className="w-4 h-4 text-purple-600" />
+                            )}
+                          </button>
                         </div>
-                      ) : (
                         <button
-                          onClick={() =>
-                            itemDetails &&
-                            !loadingItems.items[itemDetails.itemId] &&
-                            handleAddToCart(itemDetails)
-                          }
-                          className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 
-          transform transition-all hover:scale-105 flex items-center justify-center gap-2"
+                          onClick={() => handleRemoveItem(itemDetails.itemId)}
+                          disabled={loadingItems.items[itemDetails.itemId]}
+                          className="flex items-center space-x-2 text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {itemDetails &&
-                          loadingItems.items[itemDetails.itemId] ? (
-                            <Loader2 className="mr-2 animate-spin inline-block" />
-                          ) : (
-                            <>
-                              <ShoppingCart className="w-5 h-5" />
-                              Add to Cart
-                            </>
-                          )}
+                          <Trash2 className="w-4 h-4" />
+                          <span className="text-sm">Remove</span>
                         </button>
-                      )
+                      </div>
                     ) : (
                       <button
-                        disabled
-                        className="w-full py-3 bg-gray-200 text-gray-600 rounded-lg 
-        flex items-center justify-center gap-2 cursor-not-allowed"
+                        onClick={() => itemDetails && handleAddToCart(itemDetails)}
+                        disabled={
+                          !itemDetails ||
+                          itemDetails.quantity === 0 ||
+                          loadingItems.items[itemDetails?.itemId || ""]
+                        }
+                        className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg"
                       >
-                        <ShoppingCart className="w-5 h-5" />
-                        Out of Stock
+                        {loadingItems.items[itemDetails?.itemId || ""] ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Adding...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingCart className="w-5 h-5" />
+                            <span>Add to Cart</span>
+                          </>
+                        )}
                       </button>
                     )}
+
+                    {/* Max stock warning */}
+                    {itemDetails && isMaxStockReached(itemDetails) && (
+                      <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="text-sm">
+                          Maximum available quantity reached
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Product Details Section - Enhanced */}
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h2 className="text-xl font-bold mb-4">Product Details</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center gap-3 bg-purple-50 p-3 rounded-lg">
-                  <Package2 className="w-5 h-5 text-purple-600" />
-                  <span className="font-medium">
-                    {itemDetails?.itemWeight || itemDetails?.weight}
-                    {itemDetails?.weightUnit || itemDetails?.units}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 bg-purple-50 p-3 rounded-lg">
-                  <span className="font-medium">
-                    {itemDetails?.itemDescription}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Chat/Related Items */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-8 space-y-8">
-              {/* Chat Section Toggle */}
-              <div className="bg-white rounded-xl p-6 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">
-                    {showChatSection ? "Product Assistant" : "Need Help?"}
-                  </h2>
+                  {/* AI Chat Button */}
                   <button
                     onClick={() => handleChatView(itemDetails?.itemName)}
-                    className="p-2 bg-purple-100 text-purple-600 rounded-full hover:bg-purple-200"
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center space-x-2"
                   >
-                    {showChatSection ? (
-                      <X className="w-5 h-5" />
-                    ) : (
-                      <MessageCircle className="w-5 h-5" />
-                    )}
+                    <Bot className="w-5 h-5" />
+                    <span>Ask AI about this product</span>
                   </button>
                 </div>
+              </div>
+            </div>
 
-                {showChatSection && (
-                  <div className="h-[400px] flex flex-col">
-                    <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-                      {messages.map((msg, idx) => (
+            {/* Product Description */}
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Product Description
+              </h2>
+              <p className="text-gray-700 leading-relaxed">
+                {itemDetails?.itemDescription ||
+                  "High-quality product with excellent features and benefits. Perfect for your needs with great value for money."}
+              </p>
+            </div>
+
+            {/* AI Chat Section */}
+            {showChatSection && (
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Bot className="w-5 h-5 text-white" />
+                      <h3 className="text-lg font-semibold text-white">
+                        AI Assistant
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setShowChatSection(false)}
+                      className="text-white hover:text-gray-200 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="h-96 flex flex-col">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${
+                          message.type === "sent" ? "justify-end" : "justify-start"
+                        }`}
+                      >
                         <div
-                          key={idx}
-                          className={`flex ${
-                            msg.type === "sent"
-                              ? "justify-end"
-                              : "justify-start"
+                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            message.type === "sent"
+                              ? "bg-blue-600 text-white"
+                              : message.type === "system"
+                              ? "bg-gray-100 text-gray-800"
+                              : "bg-gray-200 text-gray-800"
                           }`}
                         >
-                          <div
-                            className={`max-w-[75%] p-3 rounded-lg ${
-                              msg.type === "sent"
-                                ? "bg-purple-600 text-white"
-                                : "bg-purple-50 border border-purple-100"
-                            }`}
-                          >
-                            {msg.type === "system" && (
-                              <Bot className="w-4 h-4 text-purple-600 mb-1" />
-                            )}
-                            <span className="text-sm">{msg.text}</span>
-                          </div>
+                          <p className="text-sm">{message.text}</p>
                         </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="border-t p-4">
+                    <div className="flex space-x-2">
                       <input
                         type="text"
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyPress={(e) =>
-                          e.key === "Enter" && handleSendMessage()
-                        }
-                        className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600"
+                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                         placeholder="Ask about this product..."
+                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <button
                         onClick={handleSendMessage}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                        disabled={!inputMessage.trim()}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        Send
+                        <MessageCircle className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
-              {/* Related Items */}
-              <div
-              className="bg-white rounded-xl p-6 shadow-sm">
-                <h2 className="text-xl font-bold mb-4">Related Items</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {relatedItems.map((item, index) => (
+            )}
+          </div>
+
+          {/* Right Column - Related Products */}
+          <div className="lg:col-span-4">
+            <div className="bg-white rounded-xl p-6 shadow-sm sticky top-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Package2 className="w-5 h-5 mr-2 text-purple-600" />
+                Related Products
+              </h2>
+              
+              {relatedItems.length > 0 ? (
+                <div className="space-y-4">
+                  {relatedItems.map((item) => (
                     <div
-                      key={index}
-                      className="relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all"
+                      key={item.itemId}
+                      className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                       onClick={() => handleRelatedItemClick(item)}
                     >
-                      {/* Discount badge */}
-                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                        {calculateDiscount(item.itemMrp, item.itemPrice)}% OFF
-                      </div>
-
-                      {/* Item image and details */}
-                      <div className="p-3">
-                        <div className="h-32 bg-gray-100 rounded-md mb-3"></div>
-                        <h3 className="font-medium text-gray-800 line-clamp-2 mb-1">
-                          {item.itemName}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">
-                            ₹{item.itemPrice}
-                          </span>
-                          <span className="text-gray-500 text-sm line-through">
-                            ₹{item.itemMrp}
-                          </span>
-                        </div>
-
-                        {/* Related item cart controls */}
-                        <div className="mt-3">
-                          {item.quantity !== 0 ? (
-                            isItemUserAdded(item.itemId) ? (
-                              <div className="flex items-center justify-between bg-purple-50 rounded-lg p-2">
-                                <button
-                                  className={`p-1.5 rounded-lg transition-all ${
-                                    cartItems[item.itemId] <= 1
-                                      ? "bg-red-100 text-red-600 hover:bg-red-200"
-                                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                                  }`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleQuantityChange(item, false);
-                                  }}
-                                  disabled={loadingItems.items[item.itemId]}
-                                >
-                                  <Minus className="w-4 h-4" />
-                                </button>
-
-                                {loadingItems.items[item.itemId] ? (
-                                  <Loader2 className="animate-spin text-purple-600 w-4 h-4" />
-                                ) : (
-                                  <span className="font-medium text-purple-700">
+                      <div className="flex space-x-3">
+                        <img
+                          src={item.itemImage || item.image}
+                          alt={item.itemName}
+                          className="w-16 h-16 object-contain rounded-lg bg-gray-50"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-900 truncate">
+                            {item.itemName}
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {item.weight}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg font-semibold text-gray-900">
+                                ₹{Number(item.itemPrice).toLocaleString()}
+                              </span>
+                              {item.itemMrp && (
+                                <span className="text-sm text-gray-500 line-through">
+                                  ₹{Number(item.itemMrp).toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Add to Cart for Related Items */}
+                          <div className="mt-2">
+                            {cartItems[item.itemId] > 0 ? (
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleQuantityChange(item, false);
+                                    }}
+                                    disabled={loadingItems.items[item.itemId]}
+                                    className="w-6 h-6 rounded-full bg-purple-100 border border-purple-300 flex items-center justify-center hover:bg-purple-200 disabled:opacity-50 transition-colors"
+                                  >
+                                    {loadingItems.items[item.itemId] ? (
+                                      <Loader2 className="w-3 h-3 animate-spin text-purple-600" />
+                                    ) : (
+                                      <Minus className="w-3 h-3 text-purple-600" />
+                                    )}
+                                  </button>
+                                  <span className="text-sm font-medium text-purple-900 min-w-[1.5rem] text-center">
                                     {cartItems[item.itemId]}
                                   </span>
-                                )}
-
-                                <button
-                                  className={`p-1.5 rounded-lg transition-all ${
-                                    cartItems[item.itemId] >= item.quantity
-                                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                                  }`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (
-                                      cartItems[item.itemId] < item.quantity
-                                    ) {
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       handleQuantityChange(item, true);
+                                    }}
+                                    disabled={
+                                      loadingItems.items[item.itemId] ||
+                                      isMaxStockReached(item)
                                     }
-                                  }}
-                                  disabled={
-                                    cartItems[item.itemId] >= item.quantity ||
-                                    loadingItems.items[item.itemId]
-                                  }
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
-
-                                {/* Delete Button for related items */}
-                                <button
-                                  className="p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all ml-1"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveItem(item.itemId);
-                                  }}
-                                  disabled={loadingItems.items[item.itemId]}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                    className="w-6 h-6 rounded-full bg-purple-100 border border-purple-300 flex items-center justify-center hover:bg-purple-200 disabled:opacity-50 transition-colors"
+                                  >
+                                    {loadingItems.items[item.itemId] ? (
+                                      <Loader2 className="w-3 h-3 animate-spin text-purple-600" />
+                                    ) : (
+                                      <Plus className="w-3 h-3 text-purple-600" />
+                                    )}
+                                  </button>
+                                </div>
                               </div>
                             ) : (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (!loadingItems.items[item.itemId]) {
-                                    handleAddToCart(item);
-                                  }
+                                  handleAddToCart(item);
                                 }}
-                                className="w-full py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 
-transform transition-all flex items-center justify-center gap-1.5"
+                                disabled={
+                                  item.quantity === 0 ||
+                                  loadingItems.items[item.itemId]
+                                }
+                                className="w-full bg-purple-600 text-white py-1.5 px-3 rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-1"
                               >
                                 {loadingItems.items[item.itemId] ? (
-                                  <Loader2 className="animate-spin w-4 h-4" />
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    <span>Adding...</span>
+                                  </>
                                 ) : (
                                   <>
-                                    <ShoppingCart className="w-4 h-4" />
-                                    Add to Cart
+                                    <ShoppingCart className="w-3 h-3" />
+                                    <span>Add</span>
                                   </>
                                 )}
                               </button>
-                            )
-                          ) : (
-                            <button
-                              disabled
-                              className="w-full py-2 bg-gray-200 text-gray-600 text-sm rounded-lg 
-flex items-center justify-center gap-1.5 cursor-not-allowed"
-                            >
-                              <ShoppingCart className="w-4 h-4" />
-                              Out of Stock
-                            </button>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Package2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No related products found</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
       <Footer />
     </div>
   );
