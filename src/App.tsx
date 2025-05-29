@@ -87,6 +87,7 @@ import { SearchProvider } from "./until/SearchContext";
 import SearchMain from "./Dashboard/SearchMain";
 import StudyAbroadWEB from "./StudyAbroad/abroadmain";
 import StudyAbroadLandingPage from "./StudyAbroad/StudyAbroadLandingPage";
+import StudentMainDashboard from "./StudyAbroad/StudentMainDashboard";
 
 
 import Register from "./Pages/Auth/UserRegister";
@@ -147,7 +148,8 @@ const App: React.FC = () => {
           {/* <Route path="/studyabroad" element={<StudyAbroadWEB />} /> */}
             <Route path="/studyabroad-web" element={<StudyAbroadLandingPage />} />
             <Route path="/all-universities" element={<AllUniversities />} />
-            <Route path="/student-dashboard" element={<StudentDashboard />} />
+            <Route path="/studentdashboardPre" element={<StudentDashboard />} />
+            <Route path="/student-dashboard" element={<StudentMainDashboard />} />
 
 
 
