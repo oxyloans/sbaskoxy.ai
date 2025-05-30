@@ -42,12 +42,12 @@ const StudentSidebar: React.FC<SidebarProps> = ({
             onClick={() => setSidebarOpen(false)}
           />
           <div className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl border-r border-gray-200">
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white mb-15">
               <div>
-                <h2 className="text-lg font-bold">StudyAbroad Pro</h2>
-                <p className="text-violet-100 text-xs mt-0.5">
+                <h2 className="text-lg font-bold">StudyAbroad</h2>
+                {/* <p className="text-violet-100 text-xs mt-0.5">
                   Your Study Journey
-                </p>
+                </p> */}
               </div>
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -82,9 +82,9 @@ const StudentSidebar: React.FC<SidebarProps> = ({
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white shadow-lg border-r border-gray-200">
-          <div className="px-6 py-5 bg-gradient-to-r from-violet-600 to-purple-600 text-white">
-            <h2 className="text-xl font-bold">StudyAbroad Pro</h2>
-            <p className="text-violet-100 text-sm mt-1">Your Study Journey</p>
+          <div className="px-6 py-6 mb-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white">
+            <h2 className="text-xl font-bold">StudyAbroad</h2>
+            {/* <p className="text-violet-100 text-sm mt-1">Your Study Journey</p> */}
           </div>
           <nav className="flex-1 px-4 py-5 space-y-2 overflow-y-auto">
             {sidebarItems.map((item) => (

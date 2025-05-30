@@ -14,7 +14,7 @@ const StudentHeader: React.FC<StudyAbroadHeaderProps> = ({
 }) => {
   return (
     <header className="bg-white/90 backdrop-blur-lg shadow-sm sticky top-0 z-30 border-b border-gray-200">
-      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-6 py-3">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-6 py-2">
         <div className="flex items-center">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -22,14 +22,6 @@ const StudentHeader: React.FC<StudyAbroadHeaderProps> = ({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="ml-3 lg:ml-0">
-            <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-purple-600">
-              Welcome back, Alex!
-            </h1>
-            <p className="text-gray-600 mt-0.5 text-sm">
-              You have 8 deadlines approaching this month
-            </p>
-          </div>
         </div>
         <div className="flex items-center space-x-3">
           <button className="relative p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200">
@@ -56,10 +48,6 @@ const StudentHeader: React.FC<StudyAbroadHeaderProps> = ({
             </button>
             {profileDropdownOpen && (
               <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                <button className="w-full flex items-center space-x-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors text-sm">
-                  <Settings className="w-4 h-4 text-gray-500" />
-                  <span className="text-gray-700">Settings</span>
-                </button>
                 <button className="w-full flex items-center space-x-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors text-sm">
                   <LogOut className="w-4 h-4 text-gray-500" />
                   <span className="text-gray-700">Logout</span>

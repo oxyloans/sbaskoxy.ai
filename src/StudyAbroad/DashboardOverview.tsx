@@ -36,12 +36,15 @@ import {
   List,
   Grid3X3,
   Share2,
+  CalendarDays,
+  Target,
+  Zap,
+  BookOpen,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
-const DashboardOverview: React.FC = () => {
-  const [viewMode, setViewMode] = useState<"cards" | "list">("cards");
-  const navigate = useNavigate();
+const DashboardOverview = () => {
+  const [viewMode, setViewMode] = useState("cards");
+  const [deadlineFilter, setDeadlineFilter] = useState("all");
   const progress = 82;
   const circumference = 2 * Math.PI * 15.9155;
   const dashoffset = circumference * (1 - progress / 100);
@@ -184,6 +187,10 @@ const DashboardOverview: React.FC = () => {
       date: "Dec 15, 2024",
       daysLeft: 8,
       priority: "high",
+      status: "In Progress",
+      completedDocs: 4,
+      totalDocs: 6,
+      category: "Dream School",
     },
     {
       university: "MIT",
@@ -191,6 +198,10 @@ const DashboardOverview: React.FC = () => {
       date: "Dec 20, 2024",
       daysLeft: 13,
       priority: "high",
+      status: "Draft",
+      completedDocs: 2,
+      totalDocs: 5,
+      category: "Dream School",
     },
     {
       university: "Carnegie Mellon",
@@ -198,6 +209,10 @@ const DashboardOverview: React.FC = () => {
       date: "Jan 5, 2025",
       daysLeft: 29,
       priority: "medium",
+      status: "Not Started",
+      completedDocs: 1,
+      totalDocs: 6,
+      category: "Target School",
     },
     {
       university: "University of Washington",
@@ -205,6 +220,10 @@ const DashboardOverview: React.FC = () => {
       date: "Jan 15, 2025",
       daysLeft: 39,
       priority: "medium",
+      status: "In Progress",
+      completedDocs: 3,
+      totalDocs: 5,
+      category: "Target School",
     },
     {
       university: "Georgia Tech",
@@ -212,11 +231,77 @@ const DashboardOverview: React.FC = () => {
       date: "Feb 1, 2025",
       daysLeft: 56,
       priority: "low",
+      status: "Planning",
+      completedDocs: 0,
+      totalDocs: 6,
+      category: "Safety School",
     },
   ];
 
+  const filteredDeadlines = deadlineFilter === "all" 
+    ? upcomingDeadlines 
+    : upcomingDeadlines.filter(deadline => deadline.priority === deadlineFilter);
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return <Zap className="w-5 h-5" />;
+      case "medium":
+        return <Target className="w-5 h-5" />;
+      default:
+        return <BookOpen className="w-5 h-5" />;
+    }
+  };
+
+  const getPriorityColors = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return {
+          bg: "bg-gradient-to-r from-red-50 to-pink-50",
+          border: "border-l-red-500",
+          iconBg: "bg-red-100",
+          iconColor: "text-red-600",
+          textColor: "text-red-600",
+          badge: "bg-red-100 text-red-800",
+        };
+      case "medium":
+        return {
+          bg: "bg-gradient-to-r from-amber-50 to-orange-50",
+          border: "border-l-amber-500",
+          iconBg: "bg-amber-100",
+          iconColor: "text-amber-600",
+          textColor: "text-amber-600",
+          badge: "bg-amber-100 text-amber-800",
+        };
+      default:
+        return {
+          bg: "bg-gradient-to-r from-green-50 to-emerald-50",
+          border: "border-l-green-500",
+          iconBg: "bg-green-100",
+          iconColor: "text-green-600",
+          textColor: "text-green-600",
+          badge: "bg-green-100 text-green-800",
+        };
+    }
+  };
+
+  const getStatusColors = (status: string) => {
+    switch (status) {
+      case "In Progress":
+        return "bg-blue-100 text-blue-800";
+      case "Draft":
+        return "bg-purple-100 text-purple-800";
+      case "Not Started":
+        return "bg-gray-100 text-gray-800";
+      case "Planning":
+        return "bg-indigo-100 text-indigo-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8 p-6">
+    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-6">
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         {/* Profile Strength Card - First column */}
         <div className="xl:col-span-1">
@@ -299,7 +384,7 @@ const DashboardOverview: React.FC = () => {
                   className={`flex items-center justify-between p-3 rounded-lg transition ${
                     step.done
                       ? "bg-green-50"
-                      : step.progress! > 0
+                      : (step.progress || 0) > 0
                       ? "bg-orange-50"
                       : "bg-gray-50"
                   }`}
@@ -307,7 +392,7 @@ const DashboardOverview: React.FC = () => {
                   <div className="flex items-center min-w-0">
                     {step.done ? (
                       <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mr-3" />
-                    ) : step.progress! > 0 ? (
+                    ) : (step.progress || 0) > 0 ? (
                       <Clock className="w-5 h-5 text-orange-500 flex-shrink-0 mr-3" />
                     ) : (
                       <Clock className="w-5 h-5 text-gray-400 flex-shrink-0 mr-3" />
@@ -324,7 +409,7 @@ const DashboardOverview: React.FC = () => {
                     <span className="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-bold">
                       Done
                     </span>
-                  ) : step.progress! > 0 ? (
+                  ) : (step.progress || 0) > 0 ? (
                     <span className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold">
                       +{step.progress}%
                     </span>
@@ -467,7 +552,7 @@ const DashboardOverview: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="flex space-x-6">
+          <div className="flex flex-wrap gap-4 lg:gap-6">
             <div className="text-center bg-white/10 rounded-xl p-4 backdrop-blur-sm">
               <Clock className="w-6 h-6 mx-auto mb-2" />
               <div className="text-xs font-medium opacity-80">
@@ -504,10 +589,7 @@ const DashboardOverview: React.FC = () => {
               Top matches based on your profile and preferences
             </p>
           </div>
-          <button
-            onClick={() => navigate("/all-universities")}
-            className="text-violet-600 hover:text-violet-700 font-medium flex items-center space-x-1 transition-colors"
-          >
+          <button className="text-violet-600 hover:text-violet-700 font-medium flex items-center space-x-1 transition-colors">
             <span>View All Universities</span>
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -696,80 +778,209 @@ const DashboardOverview: React.FC = () => {
         )}
       </div>
 
-      {/* Upcoming Deadlines */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="flex items-center justify-between mb-6">
+      {/* Enhanced Upcoming Deadlines */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
           <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-1">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
               Upcoming Deadlines
             </h3>
             <p className="text-gray-600 text-sm">
               Don't miss these important application dates
             </p>
           </div>
-          <button className="text-violet-600 hover:text-violet-700 font-medium flex items-center space-x-1 transition-colors">
-            <span>View Calendar</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-4 sm:mt-0">
+            {/* Priority Filter */}
+            <div className="flex items-center bg-gray-100 rounded-xl p-1">
+              <button
+                onClick={() => setDeadlineFilter("all")}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  deadlineFilter === "all"
+                    ? "bg-violet-500 text-white"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setDeadlineFilter("high")}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  deadlineFilter === "high"
+                    ? "bg-red-500 text-white"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Urgent
+              </button>
+              <button
+                onClick={() => setDeadlineFilter("medium")}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  deadlineFilter === "medium"
+                    ? "bg-amber-500 text-white"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Medium
+              </button>
+              <button
+                onClick={() => setDeadlineFilter("low")}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  deadlineFilter === "low"
+                    ? "bg-green-500 text-white"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Low
+              </button>
+            </div>
+            <button className="text-violet-600 hover:text-violet-700 font-medium flex items-center space-x-1 transition-colors">
+              <CalendarDays className="w-4 h-4" />
+              <span>View Calendar</span>
+            </button>
+          </div>
         </div>
 
         <div className="space-y-4">
-          {upcomingDeadlines.map((deadline, index) => (
-            <div
-              key={index}
-              className={`flex items-center justify-between p-5 rounded-xl border-l-4 ${
-                deadline.priority === "high"
-                  ? "bg-red-50 border-red-500"
-                  : deadline.priority === "medium"
-                  ? "bg-amber-50 border-amber-500"
-                  : "bg-green-50 border-green-500"
-              }`}
-            >
-              <div className="flex items-center space-x-4">
-                <div
-                  className={`p-3 rounded-xl ${
-                    deadline.priority === "high"
-                      ? "bg-red-100"
-                      : deadline.priority === "medium"
-                      ? "bg-amber-100"
-                      : "bg-green-100"
-                  }`}
-                >
-                  {deadline.priority === "high" ? (
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                  ) : deadline.priority === "medium" ? (
-                    <Timer className="w-5 h-5 text-amber-600" />
-                  ) : (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  )}
+          {filteredDeadlines.map((deadline, index) => {
+            const colors = getPriorityColors(deadline.priority);
+            const progressPercentage = (deadline.completedDocs / deadline.totalDocs) * 100;
+            
+            return (
+              <div
+                key={index}
+                className={`${colors.bg} ${colors.border} border-l-4 rounded-xl p-4 md:p-6 hover:shadow-md transition-all duration-300`}
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  {/* Left Section - University Info */}
+                  <div className="flex items-start space-x-4 flex-1">
+                    <div className={`${colors.iconBg} p-3 rounded-xl flex-shrink-0`}>
+                      <div className={colors.iconColor}>
+                        {getPriorityIcon(deadline.priority)}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                        <h4 className="font-bold text-gray-900 text-lg truncate">
+                          {deadline.university}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors.badge}`}>
+                            {deadline.priority.toUpperCase()}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColors(deadline.status)}`}>
+                            {deadline.status}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <p className="text-sm text-gray-700 font-medium mb-2">
+                        {deadline.program}
+                      </p>
+                      
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{deadline.date}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Building2 className="w-4 h-4" />
+                          <span>{deadline.category}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Section - Progress and Actions */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:gap-6">
+                    {/* Document Progress */}
+                    <div className="w-full sm:w-auto">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-600">
+                          Documents Progress
+                        </span>
+                        <span className="text-xs font-bold text-gray-900">
+                          {deadline.completedDocs}/{deadline.totalDocs}
+                        </span>
+                      </div>
+                      <div className="w-full sm:w-24 bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            progressPercentage === 100 
+                              ? "bg-green-500" 
+                              : progressPercentage >= 50 
+                              ? "bg-blue-500" 
+                              : "bg-amber-500"
+                          }`}
+                          style={{ width: `${progressPercentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Days Left */}
+                    <div className="text-center">
+                      <div className={`font-bold text-2xl ${colors.textColor}`}>
+                        {deadline.daysLeft}
+                      </div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        days left
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center space-x-2">
+                      <button className="p-2 text-gray-400 hover:text-violet-600 transition-colors">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className="bg-gradient-to-r from-violet-500 to-purple-500 text-white px-4 py-2 rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all duration-300 font-medium text-sm">
+                        Continue
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 text-lg">
-                    {deadline.university}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    {deadline.program}
-                  </p>
+
+                {/* Mobile-optimized bottom section for small screens */}
+                <div className="lg:hidden mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Progress: {Math.round(progressPercentage)}% complete
+                  </div>
+                  <div className={`text-sm font-bold ${colors.textColor}`}>
+                    {deadline.daysLeft} days remaining
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div
-                  className={`font-bold text-lg ${
-                    deadline.priority === "high"
-                      ? "text-red-600"
-                      : deadline.priority === "medium"
-                      ? "text-amber-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  {deadline.daysLeft} days left
-                </div>
-                <div className="text-sm text-gray-600">
-                  {deadline.date}
-                </div>
-              </div>
+            );
+          })}
+        </div>
+
+        {/* Quick Stats */}
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-red-50 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">
+              {upcomingDeadlines.filter(d => d.priority === "high").length}
             </div>
-          ))}
+            <div className="text-sm text-gray-600">Urgent Deadlines</div>
+          </div>
+          <div className="bg-amber-50 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-amber-600">
+              {upcomingDeadlines.filter(d => d.priority === "medium").length}
+            </div>
+            <div className="text-sm text-gray-600">Medium Priority</div>
+          </div>
+          <div className="bg-green-50 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {upcomingDeadlines.filter(d => d.status === "In Progress").length}
+            </div>
+            <div className="text-sm text-gray-600">In Progress</div>
+          </div>
+          <div className="bg-blue-50 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">
+              {Math.round(
+                upcomingDeadlines.reduce((acc, d) => acc + (d.completedDocs / d.totalDocs), 0) / 
+                upcomingDeadlines.length * 100
+              )}%
+            </div>
+            <div className="text-sm text-gray-600">Avg. Progress</div>
+          </div>
         </div>
       </div>
     </div>

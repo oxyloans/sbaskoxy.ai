@@ -11,6 +11,40 @@ interface Country {
   // Add other properties if needed
 }
 
+// Utility function to get access token from localStorage
+const getAccessToken = (): string | null => {
+  try {
+    return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+  } catch (error) {
+    console.error('Error accessing token from storage:', error);
+    return null;
+  }
+};
+
+// Utility function to create axios config with auth headers
+const createAuthConfig = () => {
+  const token = getAccessToken();
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
+  };
+};
+
+// Utility function to handle auth errors
+const handleAuthError = (error: any, navigate: any) => {
+  if (error.response?.status === 401 || error.response?.status === 403) {
+    // Clear invalid tokens
+    localStorage.removeItem('accessToken');
+    sessionStorage.removeItem('accessToken');
+    // Redirect to login or home page
+    navigate('/login', { state: { message: 'Session expired. Please log in again.' } });
+    return true;
+  }
+  return false;
+};
+
 const UserSelectionPage = () => {
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<'student' | 'counselor' | null>(null);
@@ -22,22 +56,61 @@ const UserSelectionPage = () => {
   const [loading, setLoading] = useState(false);
   const [showCountrySelection, setShowCountrySelection] = useState(false);
   const [hoveredCountry, setHoveredCountry] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  
-  // Fetch countries from API
+  // Check if user is authenticated on component mount
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) {
+      setAuthRequired(true);
+      // Optionally redirect to login immediately
+      // navigate('/login');
+    }
+  }, [navigate]);
+
+  // Fetch countries from API with authentication
   const fetchCountries = async () => {
+    const token = getAccessToken();
+    if (!token) {
+      setError('Authentication required. Please log in to continue.');
+      setAuthRequired(true);
+      return;
+    }
+
     setLoading(true);
+    setError(null);
+    
     try {
-      const response = await axios.get('http://65.0.147.157:9001/api/student-service/student/getAll-countries');
+      const response = await axios.get(
+        'https://meta.oxyloans.com/api/student-service/student/getAll-countries',
+        createAuthConfig()
+      );
+      
       const countriesData = response.data.countries || [];
       const sortedCountries = [...countriesData].sort((a: Country, b: Country) => 
         a.countryName.localeCompare(b.countryName)
       );
       setCountries(sortedCountries);
       setFilteredCountries(sortedCountries);
-    } catch (error) {
+      setAuthRequired(false);
+    } catch (error: any) {
       console.error('Error fetching countries:', error);
+      
+      // Handle authentication errors
+      if (handleAuthError(error, navigate)) {
+        return;
+      }
+      
+      // Handle other errors
+      if (error.response?.status === 404) {
+        setError('Countries data not found.');
+      } else if (error.response?.status === 500) {
+        setError('Server error. Please try again later.');
+      } else {
+        setError('Failed to load countries. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -51,6 +124,15 @@ const UserSelectionPage = () => {
   }, [searchQuery, countries]);
 
   const handleStudentClick = () => {
+    const token = getAccessToken();
+    if (!token) {
+      setError('Please log in to continue as a student.');
+      setAuthRequired(true);
+      // Optionally redirect to login
+      // navigate('/login');
+      return;
+    }
+
     setUserRole('student');
     fetchCountries();
     // Delay showing country selection for smooth transition
@@ -67,6 +149,13 @@ const UserSelectionPage = () => {
 
   const handleContinue = () => {
     if (selectedCountry) {
+      const token = getAccessToken();
+      if (!token) {
+        setError('Authentication expired. Please log in again.');
+        setAuthRequired(true);
+        return;
+      }
+
       navigate('/course', { 
         state: { 
           userRole, 
@@ -74,6 +163,20 @@ const UserSelectionPage = () => {
         } 
       });
     }
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleRetry = () => {
+    const token = getAccessToken();
+    if (!token) {
+      setError('Please log in to continue.');
+      setAuthRequired(true);
+      return;
+    }
+    fetchCountries();
   };
 
   useEffect(() => {
@@ -88,6 +191,49 @@ const UserSelectionPage = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Show authentication required message
+  if (authRequired) {
+    return (
+      <div className="min-h-screen bg-white p-6 font-sans">
+        <div className="w-full max-w-6xl mx-auto h-screen max-h-screen bg-gradient-to-br from-purple-300 via-purple-400 to-purple-500 rounded-3xl relative overflow-hidden shadow-2xl">
+          <div 
+            className="absolute inset-0 opacity-15 bg-no-repeat bg-center bg-cover"
+            style={{
+              backgroundImage: `url(${mapbw})`,
+            }}
+          />
+          <div className="relative z-10 h-full flex items-center justify-center">
+            <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+              <div className="p-8 text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 border-2 border-yellow-300 mb-4">
+                  <GraduationCap className="h-6 w-6 text-yellow-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 mb-3">Authentication Required</h2>
+                <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                  Please log in to access study abroad opportunities and explore premium programs.
+                </p>
+                <div className="space-y-3">
+                  <button 
+                    onClick={handleLogin}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900 transition-all duration-300 font-medium shadow-md"
+                  >
+                    Log In to Continue
+                  </button>
+                  <button 
+                    onClick={() => setAuthRequired(false)}
+                    className="w-full px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-300 font-medium shadow-sm text-sm"
+                  >
+                    Back to Home
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-white p-6 font-sans">
@@ -185,6 +331,7 @@ const UserSelectionPage = () => {
                           setShowCountrySelection(false);
                           setSelectedCountry('');
                           setSearchQuery('');
+                          setError(null);
                         }} 
                         className="flex items-center group text-gray-600 hover:text-purple-600 transition-colors"
                       >
@@ -200,6 +347,19 @@ const UserSelectionPage = () => {
                       <h2 className="text-xl font-semibold text-gray-800 mb-2">What's your dream destination? 🌍</h2>
                       <p className="text-gray-600 text-sm">Select the country where you want to study</p>
                     </div>
+                    
+                    {/* Error Display */}
+                    {error && (
+                      <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                        <p className="text-red-700 text-sm font-medium">{error}</p>
+                        <button 
+                          onClick={handleRetry}
+                          className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-xs font-medium"
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                    )}
                     
                     {/* Selected Country Display */}
                     {selectedCountry && (
@@ -219,8 +379,6 @@ const UserSelectionPage = () => {
                       </div>
                     ) : (
                       <>
-
-                        
                         {/* Search All Countries */}
                         <div className="mb-6">
                           <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -281,7 +439,9 @@ const UserSelectionPage = () => {
                             ) : (
                               <div className="px-4 py-6 text-center">
                                 <Globe className="h-6 w-6 text-gray-300 mx-auto mb-2" />
-                                <p className="text-gray-500 text-xs">No countries found</p>
+                                <p className="text-gray-500 text-xs">
+                                  {countries.length === 0 ? 'No countries available' : 'No countries found'}
+                                </p>
                               </div>
                             )}
                           </div>
@@ -292,14 +452,23 @@ const UserSelectionPage = () => {
                     {/* Continue Button */}
                     <button 
                       onClick={handleContinue}
-                      disabled={!selectedCountry}
+                      disabled={!selectedCountry || loading}
                       className={`w-full rounded-xl py-3 font-medium text-sm transition-all duration-300 ${
-                        selectedCountry 
+                        selectedCountry && !loading
                           ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg hover:shadow-xl' 
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
                     >
-                      {selectedCountry ? 'Continue Your Journey →' : 'Select a Country First'}
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Loading...
+                        </div>
+                      ) : selectedCountry ? (
+                        'Continue Your Journey →'
+                      ) : (
+                        'Select a Country First'
+                      )}
                     </button>
                   </div>
                 ) : userRole === 'student' && !showCountrySelection ? (

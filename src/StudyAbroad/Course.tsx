@@ -37,6 +37,40 @@ interface LocationState {
   userRole?: string;
 }
 
+// Utility function to get access token from localStorage
+const getAccessToken = (): string | null => {
+  try {
+    return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+  } catch (error) {
+    console.error('Error accessing token from storage:', error);
+    return null;
+  }
+};
+
+// Utility function to create axios config with auth headers
+const createAuthConfig = () => {
+  const token = getAccessToken();
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
+  };
+};
+
+// Utility function to handle auth errors
+const handleAuthError = (error: any, navigate: any) => {
+  if (error.response?.status === 401 || error.response?.status === 403) {
+    // Clear invalid tokens
+    localStorage.removeItem('accessToken');
+    sessionStorage.removeItem('accessToken');
+    // Redirect to login or home page
+    navigate('/login', { state: { message: 'Session expired. Please log in again.' } });
+    return true;
+  }
+  return false;
+};
+
 const CoursesPage: React.FC<{ 
   onCourseSelect?: (course: Course) => void 
 }> = ({ onCourseSelect }) => {
@@ -55,6 +89,19 @@ const CoursesPage: React.FC<{
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'cost' | 'duration'>('name');
 
+  // Check if user is authenticated on component mount
+  useEffect(() => {
+    const token = getAccessToken();
+    if (!token) {
+      setError('Authentication required. Please log in.');
+      setLoading(false);
+      setInitialLoad(false);
+      // Optionally redirect to login
+      // navigate('/login');
+      return;
+    }
+  }, [navigate]);
+
   // Extract unique degree types and durations
   const degreeTypes = ['All', ...Array.from(new Set(courses.map(course => {
     const match = course.courseName.match(/\[(.*?)\]/);
@@ -72,13 +119,22 @@ const CoursesPage: React.FC<{
       return;
     }
 
+    const token = getAccessToken();
+    if (!token) {
+      setError('Authentication required. Please log in.');
+      setLoading(false);
+      setInitialLoad(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       const response = await axios.post(
-        'http://65.0.147.157:9001/api/student-service/student/getCountryBasedData',
-        { countryName: state.selectedCountry }
+        'https://meta.oxyloans.com/api/student-service/student/getCountryBasedData',
+        { countryName: state.selectedCountry },
+        createAuthConfig()
       );
 
       // Simulate network delay for demo purposes
@@ -87,9 +143,22 @@ const CoursesPage: React.FC<{
       const apiResponse: ApiResponse = response.data;
       setCourses(apiResponse.data || []);
       setFilteredCourses(apiResponse.data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching courses:', err);
-      setError('Failed to fetch courses. Please try again later.');
+      
+      // Handle authentication errors
+      if (handleAuthError(err, navigate)) {
+        return;
+      }
+      
+      // Handle other errors
+      if (err.response?.status === 404) {
+        setError('No courses found for the selected country.');
+      } else if (err.response?.status === 500) {
+        setError('Server error. Please try again later.');
+      } else {
+        setError('Failed to fetch courses. Please try again later.');
+      }
     } finally {
       setLoading(false);
       setInitialLoad(false);
@@ -102,12 +171,19 @@ const CoursesPage: React.FC<{
       console.error('No course selected');
       return;
     }
+
+    const token = getAccessToken();
+    if (!token) {
+      setError('Authentication required. Please log in.');
+      return;
+    }
+
     console.log("course", course.courseName);
 
     try {
       const response = await axios.get(
-        `http://65.0.147.157:9001/api/student-service/student/${encodeURIComponent(course.courseName)}/getCoursesBasedUniversities`,
-        {} // Empty body since we're sending the course name as part of the URL
+        `https://meta.oxyloans.com/api/student-service/student/${encodeURIComponent(course.courseName)}/getCoursesBasedUniversities`,
+        createAuthConfig()
       );
       
       // Process the university data
@@ -122,14 +198,27 @@ const CoursesPage: React.FC<{
         } 
       });
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching universities:', err);
+      
+      // Handle authentication errors
+      if (handleAuthError(err, navigate)) {
+        return;
+      }
+      
       // Still navigate but without university data - the university page will handle the error
+      let errorMessage = 'Failed to fetch universities. Please try again.';
+      if (err.response?.status === 404) {
+        errorMessage = 'No universities found for this course.';
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error while fetching universities.';
+      }
+      
       navigate('/listofuniversities', { 
         state: { 
           course,
           selectedCountry: state?.selectedCountry,
-          universityError: 'Failed to fetch universities. Please try again.'
+          universityError: errorMessage
         } 
       });
     }
@@ -206,6 +295,16 @@ const CoursesPage: React.FC<{
 
   const getFieldOfStudy = (courseName: string) => {
     return courseName.replace(/\[.*?\]/, '').trim();
+  };
+
+  // Handle retry with authentication check
+  const handleRetry = () => {
+    const token = getAccessToken();
+    if (!token) {
+      navigate('/login', { state: { message: 'Please log in to continue.' } });
+      return;
+    }
+    fetchCourses();
   };
 
   if (initialLoad) {
@@ -306,7 +405,7 @@ const CoursesPage: React.FC<{
             <p className="text-gray-600 mb-6 leading-relaxed text-sm">{error}</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button 
-                onClick={fetchCourses}
+                onClick={handleRetry}
                 className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900 transition-all duration-300 font-medium flex items-center justify-center shadow-md text-sm"
               >
                 <Loader2 className="mr-2 h-4 w-4" />

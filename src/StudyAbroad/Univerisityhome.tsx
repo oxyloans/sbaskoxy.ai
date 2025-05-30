@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   FileText,
   Image,
@@ -15,7 +15,8 @@ import {
   ArrowLeft,
   ChevronRight,
   ChevronLeft,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 
 // University Interface
@@ -62,80 +63,142 @@ interface UniversityDetails {
   }[];
 }
 
+// API Configuration
+const BASE_URL = 'https://meta.oxyloans.com/api';
+
+// API Service
+const apiService = {
+  async getUniversityBasedCourses(university: string, accessToken: string) {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/student-service/student/getUniversityBasedCourses/${encodeURIComponent(university)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching university courses:', error);
+      throw error;
+    }
+  }
+};
+
 const UniversityDetailsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'admission' | 'similar'>('overview');
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [universityData, setUniversityData] = useState<UniversityDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const navigate = useNavigate();
+  const { university } = useParams<{ university: string }>();
 
-  const universityData: UniversityDetails = {
-    name: 'St. Clair College',
-    campus: 'Downtown Campus',
-    program: 'College Diploma - Hospitality - Hotel and Restaurant (B940)',
-    programCode: 'B940',
-    location: 'Windsor, Ontario, CA',
-    tags: ['Popular'],
-    photos: [
-      'campus-exterior-1.jpg',
-      'campus-exterior-2.jpg',
-      'classroom.jpg',
-      'college-sign.jpg'
-    ],
-    programSummary: 'This Hospitality - Hotel and Restaurant program will prepare graduates for leadership positions in the growing hospitality industry in venues that include hotels, resorts, restaurants, bars, catering and conference centers, and in additional industries such as sporting arenas, recreational facilities, and independent and assisted living facilities.',
-    programHighlights: [
-      'Students have the opportunity to gain valuable experience and school credits while living, working, and attending classes at Walt Disney World in Orlando, Florida.',
-      'Accelerated pathways to degree programs in Canada, Australia, and Ireland.',
-      'Paid employment opportunities in Fairmont resort properties in Western Canada.',
-    ],
-    programDetails: {
-      programLevel: '2-Year Undergraduate Diploma',
-      programLength: '2 year college diploma including an internship'
-    },
-    financialInfo: {
-      costOfLiving: '$20,635.00 CAD / Year',
-      grossTuition: '$20,726.00 CAD / First Year',
-      applicationFee: '$125.00 CAD',
-      otherFees: '$2,098.00 CAD / Year'
-    },
-    admissionRequirements: {
-      minimumEducation: 'Grade 12 / High School',
-      minimumGPA: '50.0%',
-      languageTests: {
-        IELTS: '6.0',
-        TOEFL: '83.0',
-        PTE: '60.0',
-        Duolingo: '110'
+  // Get access token from localStorage, sessionStorage, or context
+  const getAccessToken = (): string | null => {
+    // You can modify this based on where you store your access token
+    return localStorage.getItem('accessToken') || 
+           sessionStorage.getItem('accessToken') || 
+           null;
+  };
+
+  // Fetch university data on component mount
+  useEffect(() => {
+    const fetchUniversityData = async () => {
+      if (!university) {
+        setError('University parameter is required');
+        setLoading(false);
+        return;
       }
-    },
-    programIntakes: ['May 2026', 'Sep 2026', 'Jan 2027', 'May 2027', 'Sep 2027'],
-    postGraduationWorkPermit: {
-      eligible: false,
-      details: 'This program is NOT eligible for Post Graduation Work Permit. The Post-Graduation Work Permit Program (PGWP) enables students who have graduated from participating Canadian post-secondary institutions to gain valuable Canadian work experience.'
-    },
-    similarPrograms: [
-      {
-        name: 'College Diploma - General Arts and Science (0090)',
-        college: 'Conestoga College - Doon',
-        earliestIntake: 'Sep 2026',
-        deadline: 'Sep 2026',
-        grossTuition: '$14,588.00 CAD',
-        applicationFee: '$100.00 CAD',
-        commission: 'Up to $2,042.32 CAD'
+
+      const accessToken = getAccessToken();
+      if (!accessToken) {
+        setError('Access token not found. Please login again.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await apiService.getUniversityBasedCourses(university, accessToken);
+        
+        // Transform API response to match your UniversityDetails interface
+        // You'll need to adjust this mapping based on your actual API response structure
+        const transformedData: UniversityDetails = transformApiResponse(response);
+        
+        setUniversityData(transformedData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch university data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUniversityData();
+  }, [university]);
+
+  // Transform API response to match your interface
+  const transformApiResponse = (apiResponse: any): UniversityDetails => {
+    // Adjust this transformation based on your actual API response structure
+    return {
+      name: apiResponse.universityName || 'St. Clair College',
+      campus: apiResponse.campusName || 'Downtown Campus',
+      program: apiResponse.programName || 'College Diploma - Hospitality - Hotel and Restaurant (B940)',
+      programCode: apiResponse.programCode || 'B940',
+      location: apiResponse.location || 'Windsor, Ontario, CA',
+      tags: apiResponse.tags || ['Popular'],
+      photos: apiResponse.photos || [
+        'campus-exterior-1.jpg',
+        'campus-exterior-2.jpg',
+        'classroom.jpg',
+        'college-sign.jpg'
+      ],
+      programSummary: apiResponse.programSummary || 'Program summary from API',
+      programHighlights: apiResponse.programHighlights || [],
+      programDetails: {
+        programLevel: apiResponse.programLevel || '2-Year Undergraduate Diploma',
+        programLength: apiResponse.programLength || '2 year college diploma including an internship'
       },
-      {
-        name: 'College Diploma - Tourism and Hospitality Management (H130)',
-        college: 'George Brown College - St. James',
-        earliestIntake: 'Sep 2025',
-        deadline: 'Sep 2025',
-        grossTuition: '$16,274.00 CAD',
-        applicationFee: '$110.00 CAD',
-        commission: 'Up to $1,708.77 CAD'
-      }
-    ]
+      financialInfo: {
+        costOfLiving: apiResponse.costOfLiving || '$20,635.00 CAD / Year',
+        grossTuition: apiResponse.grossTuition || '$20,726.00 CAD / First Year',
+        applicationFee: apiResponse.applicationFee || '$125.00 CAD',
+        otherFees: apiResponse.otherFees || '$2,098.00 CAD / Year'
+      },
+      admissionRequirements: {
+        minimumEducation: apiResponse.minimumEducation || 'Grade 12 / High School',
+        minimumGPA: apiResponse.minimumGPA || '50.0%',
+        languageTests: apiResponse.languageTests || {
+          IELTS: '6.0',
+          TOEFL: '83.0',
+          PTE: '60.0',
+          Duolingo: '110'
+        }
+      },
+      programIntakes: apiResponse.programIntakes || ['May 2026', 'Sep 2026', 'Jan 2027'],
+      postGraduationWorkPermit: {
+        eligible: apiResponse.workPermitEligible || false,
+        details: apiResponse.workPermitDetails || 'Work permit information'
+      },
+      similarPrograms: apiResponse.similarPrograms || []
+    };
   };
 
   const navigatePhoto = (direction: 'next' | 'prev') => {
-    if (selectedPhoto === null) return;
+    if (selectedPhoto === null || !universityData) return;
     
     if (direction === 'next') {
       setSelectedPhoto((selectedPhoto + 1) % universityData.photos.length);
@@ -155,10 +218,54 @@ const UniversityDetailsPage: React.FC = () => {
       setSelectedPhoto(null);
     }
   };
+
   const handleStartApplication = () => {
     navigate('/studentdetails');
   };
-  
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-purple-50 to-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Loading university details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="bg-gradient-to-br from-purple-50 to-white min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="bg-red-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <X className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Data</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!universityData) {
+    return (
+      <div className="bg-gradient-to-br from-purple-50 to-white min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 text-lg">No university data found</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-purple-50 to-white min-h-screen">
@@ -176,7 +283,7 @@ const UniversityDetailsPage: React.FC = () => {
           <h3 className="text-xl mt-2 font-semibold text-gray-800">Universities List</h3>
         </div>
 
-        { }
+        {/* University Header */}
         <div className="py-4 md:py-6">
           <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
             <div className="bg-gradient-to-r from-purple-500 to-purple-700 h-6"></div>
@@ -235,7 +342,7 @@ const UniversityDetailsPage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end">
                 <div className="p-4 text-white">
                   <p className="font-semibold">Campus Main Building</p>
-                  <p className="text-sm">St. Clair College, Windsor</p>
+                  <p className="text-sm">{universityData.name}, {universityData.location}</p>
                 </div>
               </div>
             </div>
