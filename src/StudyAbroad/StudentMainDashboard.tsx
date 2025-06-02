@@ -8,6 +8,7 @@ import Documents from "./Documents";
 import Profile from "./Profile";
 import StudentHeader from "./Header";
 import Support from "./Support";
+import TestScores from "./TestScore";
 
 const StudentMainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,10 +25,12 @@ const StudentMainDashboard = () => {
         return <UniversitySearch />;
       case "scholarships":
         return <Scholarships />;
-      case "documents":
-        return <Documents />;
-      case "profile":
+         case "profile":
         return <Profile />;
+      case "TestScores":
+        return <TestScores />;
+         case "documents":
+        return <Documents />;
       case "support":
         return <Support />;
       default:

@@ -56,7 +56,6 @@ import CoursesPage from "./StudyAbroad/Course";
 import UserSelectionPage from "./StudyAbroad/Homepage";
 import UniversityDetailsPage from "./StudyAbroad/Univerisityhome";
 import PersonalDetailsPage from "./StudyAbroad/PersonalDetails";
-import ApplicationUpload from "./StudyAbroad/DocumentsUpload";
 import UniversityListPage from "./StudyAbroad/Universitylist";
 import AllUniversities from "./StudyAbroad/AllUniversities";
 import StudentDashboard from "./StudyAbroad/StudentDashboard";
@@ -167,7 +166,7 @@ const App: React.FC = () => {
                                   <Route path="/listofuniversities" element={<UniversityListPage />} />
                                   <Route path="/course" element={<CoursesPage />} />
                                   <Route path="/studentdetails" element={<PersonalDetailsPage />} />
-                                  <Route path="/applicationsupload" element={<ApplicationUpload />} />
+                                  
 
           {/* Landing Page (First Page) */}
           <Route path="/" element={<Landingpage />} />

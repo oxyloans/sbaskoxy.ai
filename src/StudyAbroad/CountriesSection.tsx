@@ -61,131 +61,117 @@ const CountriesSection: React.FC<CountriesSectionProps> = ({ onViewAllClick }) =
   };
 
   const countries: Country[] = [
-    {
-      name: "USA",
-      description:
-        "Home to Ivy League schools and cutting-edge research institutions",
-      details: {
-        visaInfo: "F-1 Student Visa required",
-        langRequirements: "TOEFL 80+ or IELTS 6.5+",
-        avgTuition: "$20,000 - $60,000 per year",
-        popularPrograms: ["Business", "Computer Science", "Engineering"],
-        scholarships: ["Fulbright Program", "Merit Scholarships"],
-      },
-    },
-    {
-      name: "UK",
-      description: "Centuries of academic excellence and diverse opportunities",
-      details: {
-        visaInfo: "Student Visa required",
-        langRequirements: "IELTS 6.0+ typically required",
-        avgTuition: "£12,000 - £35,000 per year",
-        popularPrograms: ["Business", "Law", "Arts"],
-        scholarships: ["Chevening Scholarships", "Commonwealth Scholarships"],
-      },
-    },
-    {
-      name: "Canada",
-      description: "Quality education with welcoming immigration policies",
-      details: {
-        visaInfo: "Study Permit required",
-        langRequirements: "IELTS 6.0+ or TOEFL equivalent",
-        avgTuition: "CAD $15,000 - $40,000 per year",
-        popularPrograms: ["Business", "Healthcare", "Technology"],
-        scholarships: ["Vanier Canada Graduate Scholarships"],
-      },
-    },
-    {
-      name: "Germany",
-      description: "Renowned for engineering, tuition-free public universities",
-      details: {
-        visaInfo: "German Student Visa required",
-        langRequirements:
-          "German proficiency or English for international programs",
-        avgTuition: "€0 - €3,000 per year (most public universities free)",
-        popularPrograms: ["Engineering", "Physics", "Medicine"],
-        scholarships: ["DAAD Scholarships", "Erasmus+"],
-      },
-    },
-      {
-      name: "Italy",
-      description:
-        "Rich cultural heritage and prestigious ancient universities",
-      details: {
-        visaInfo: "Student Visa type D required for non-EU students",
-        langRequirements:
-          "Italian proficiency or English for international programs",
-        avgTuition: "€1,000 - €5,000 per year at public universities",
-        popularPrograms: ["Arts", "Architecture", "Fashion Design"],
-        scholarships: [
-          "Italian Government Scholarships",
-          "Regional Scholarships",
-        ],
-      },
-    },
-
-    {
-      name: "Ireland",
-      description:
-        "Friendly atmosphere with high academic standards and rich culture",
-      details: {
-        visaInfo: "Irish Study Visa required for non-EU students",
-        langRequirements: "IELTS 6.0+ typically required",
-        avgTuition: "€10,000 - €25,000 per year",
-        popularPrograms: ["Literature", "Medicine", "Information Technology"],
-        scholarships: ["Government of Ireland Scholarship", "Walsh Fellowship"],
-      },
-    },
-    {
-      name: "Australia",
-      description:
-        "Top-ranked universities with excellent post-study work options",
-      details: {
-        visaInfo: "Student Visa (subclass 500) required",
-        langRequirements: "IELTS 6.0+ typically required",
-        avgTuition: "AUD $20,000 - $50,000 per year",
-        popularPrograms: ["Engineering", "Business", "Medicine"],
-        scholarships: ["Australia Awards", "Endeavour Scholarships"],
-      },
-    },
-    {
-      name: "New Zealand",
-      description: "Quality education with breathtaking natural landscapes",
-      details: {
-        visaInfo: "Student Visa required",
-        langRequirements: "IELTS 6.0+ typically required",
-        avgTuition: "NZ$22,000 - $35,000 per year",
-        popularPrograms: ["Agriculture", "Environmental Sciences", "Tourism"],
-        scholarships: ["New Zealand Excellence Awards"],
-      },
-    },
-    
-    {
-      name: "France",
-      description:
-        "World-class education in arts, sciences, and culinary studies",
-      details: {
-        visaInfo: "VLS-TS Student Visa required",
-        langRequirements: "French or English depending on program",
-        avgTuition: "€3,000 - €10,000 per year",
-        popularPrograms: ["Business", "Arts", "Culinary"],
-        scholarships: ["Eiffel Excellence Scholarship"],
-      },
-    },
-    
-    {
-      name: "Netherlands",
-      description: "High-quality education with many English-taught programs",
-      details: {
-        visaInfo: "Residence Permit required for non-EU students",
-        langRequirements: "IELTS 6.0+ or TOEFL equivalent for English programs",
-        avgTuition: "€8,000 - €20,000 per year",
-        popularPrograms: ["Business", "Engineering", "Social Sciences"],
-        scholarships: ["Orange Knowledge Programme", "Holland Scholarship"],
-      },
-    },
-  
-  ];
+  {
+    "name": "USA",
+    "description": "Home to Ivy League schools and cutting-edge research institutions",
+    "details": {
+      "visaInfo": "F-1 Student Visa required",
+      "langRequirements": "TOEFL 80–100+ or IELTS 6.5–7.5+",
+      "avgTuition": "$20,000 – $60,000 per year",
+      "popularPrograms": ["Business", "Computer Science", "Engineering"],
+      "scholarships": ["Fulbright Program", "Merit-based scholarships"]
+    }
+  },
+  {
+    "name": "UK",
+    "description": "Centuries of academic excellence and diverse opportunities",
+    "details": {
+      "visaInfo": "Student Visa required",
+      "langRequirements": "IELTS 6.0+ typically required",
+      "avgTuition": "£12,000 – £35,000 per year",
+      "popularPrograms": ["Business", "Law", "Arts"],
+      "scholarships": ["Chevening Scholarships", "Commonwealth Scholarships"]
+    }
+  },
+  {
+    "name": "Canada",
+    "description": "Quality education with welcoming immigration policies",
+    "details": {
+      "visaInfo": "Study Permit required",
+      "langRequirements": "IELTS 6.0+ or TOEFL equivalent",
+      "avgTuition": "CAD $15,000 – $40,000 per year",
+      "popularPrograms": ["Business", "Healthcare", "Technology"],
+      "scholarships": ["Vanier Canada Graduate Scholarships"]
+    }
+  },
+  {
+    "name": "Germany",
+    "description": "Renowned for engineering, tuition-free public universities",
+    "details": {
+      "visaInfo": "German Student Visa required",
+      "langRequirements": "German proficiency or English for international programs",
+      "avgTuition": "€0 – €3,000 per year",
+      "popularPrograms": ["Engineering", "Physics", "Medicine"],
+      "scholarships": ["DAAD Scholarships", "Erasmus+"]
+    }
+  },
+  {
+    "name": "Italy",
+    "description": "Rich cultural heritage and prestigious ancient universities",
+    "details": {
+      "visaInfo": "Student Visa type D required for non-EU students",
+      "langRequirements": "Italian proficiency or English for international programs",
+      "avgTuition": "€1,000 – €5,000 per year",
+      "popularPrograms": ["Arts", "Architecture", "Fashion Design"],
+      "scholarships": ["Italian Government Scholarships", "Regional Scholarships"]
+    }
+  },
+  {
+    "name": "Ireland",
+    "description": "Friendly atmosphere with high academic standards and rich culture",
+    "details": {
+      "visaInfo": "Irish Study Visa required for non-EU students",
+      "langRequirements": "IELTS 6.0+ typically required",
+      "avgTuition": "€10,000 – €25,000 per year",
+      "popularPrograms": ["Literature", "Medicine", "Information Technology"],
+      "scholarships": ["Government of Ireland Scholarship", "Walsh Fellowship"]
+    }
+  },
+  {
+    "name": "Australia",
+    "description": "Top-ranked universities with excellent post-study work options",
+    "details": {
+      "visaInfo": "Student Visa (subclass 500) required",
+      "langRequirements": "IELTS 6.0+ typically required",
+      "avgTuition": "AUD $20,000 – $50,000 per year",
+      "popularPrograms": ["Engineering", "Business", "Medicine"],
+      "scholarships": ["Australia Awards", "Endeavour Scholarships"]
+    }
+  },
+  {
+    "name": "New Zealand",
+    "description": "Quality education with breathtaking natural landscapes",
+    "details": {
+      "visaInfo": "Student Visa required",
+      "langRequirements": "IELTS 6.0+ typically required",
+      "avgTuition": "NZ$22,000 – $35,000 per year",
+      "popularPrograms": ["Agriculture", "Environmental Sciences", "Tourism"],
+      "scholarships": ["New Zealand Excellence Awards"]
+    }
+  },
+  {
+    "name": "France",
+    "description": "World-class education in arts, sciences, and culinary studies",
+    "details": {
+      "visaInfo": "VLS-TS Student Visa required",
+      "langRequirements": "French or English depending on program",
+      "avgTuition": "€3,000 – €10,000 per year",
+      "popularPrograms": ["Business", "Arts", "Culinary"],
+      "scholarships": ["Eiffel Excellence Scholarship"]
+    }
+  },
+  {
+    "name": "Netherlands",
+    "description": "High-quality education with many English-taught programs",
+    "details": {
+      "visaInfo": "Residence Permit required for non-EU students",
+      "langRequirements": "IELTS 6.0+ or TOEFL equivalent for English programs",
+      "avgTuition": "€8,000 – €20,000 per year",
+      "popularPrograms": ["Business", "Engineering", "Social Sciences"],
+      "scholarships": ["Orange Knowledge Programme", "Holland Scholarship"]
+    }
+  }
+];
 
   const countryFlags = {
     USA: (
