@@ -1,9 +1,10 @@
 {
   "files": {
-    "main.css": "/static/css/main.6331545b.css",
-    "main.js": "/static/js/main.7f62d1e8.js",
+    "main.css": "/static/css/main.fed09512.css",
+    "main.js": "/static/js/main.b2df713c.js",
     "static/js/453.dbef4809.chunk.js": "/static/js/453.dbef4809.chunk.js",
     "static/media/WEBSITE (1).png": "/static/media/WEBSITE (1).08fd6c066321613c5c2e.png",
+    "static/media/page1.png": "/static/media/page1.377acc651cd141d1516d.png",
     "static/media/1.3.png": "/static/media/1.3.b07ed907b217a6c9cb49.png",
     "static/media/1.4.png": "/static/media/1.4.166de0a0764cb3c15d6e.png",
     "static/media/legail.jpg": "/static/media/legail.a81c29ec774c5ce846e7.jpg",
@@ -15,7 +16,6 @@
     "static/media/R1.png": "/static/media/R1.c5abc3bb1aa03be79519.png",
     "static/media/R2.png": "/static/media/R2.3cd78d49f9e9f3813127.png",
     "static/media/heroimg3.png": "/static/media/heroimg3.9e623f6b9910c2a08a0d.png",
-    "static/media/page1.png": "/static/media/page1.2c41e84b8fa5c1ce54ec.png",
     "static/media/ricecard4.png": "/static/media/ricecard4.5fe58c9f9262e0a2fc77.png",
     "static/media/legal.png": "/static/media/legal.dd57ac21e6673f622ae7.png",
     "static/media/genai.png": "/static/media/genai.f75b009be753986cc852.png",
@@ -143,12 +143,12 @@
     "static/media/slick.ttf": "/static/media/slick.c94f7671dcc99dce43e2.ttf",
     "index.html": "/index.html",
     "static/media/slick.woff": "/static/media/slick.295183786cd8a1389865.woff",
-    "main.6331545b.css.map": "/static/css/main.6331545b.css.map",
-    "main.7f62d1e8.js.map": "/static/js/main.7f62d1e8.js.map",
+    "main.fed09512.css.map": "/static/css/main.fed09512.css.map",
+    "main.b2df713c.js.map": "/static/js/main.b2df713c.js.map",
     "453.dbef4809.chunk.js.map": "/static/js/453.dbef4809.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.6331545b.css",
-    "static/js/main.7f62d1e8.js"
+    "static/css/main.fed09512.css",
+    "static/js/main.b2df713c.js"
   ]
 }

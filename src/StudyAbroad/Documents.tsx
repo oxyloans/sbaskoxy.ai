@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Eye, Download, Search, Filter, Upload, Calendar, CheckCircle, Clock, AlertCircle, X } from 'lucide-react';
 
 interface Document {
@@ -31,6 +31,19 @@ interface UploadResponse {
   userId: string;
 }
 
+interface ApiDocument {
+  documentName: string;
+  id: string;
+  propertyId: string | null;
+  documentPath: string;
+  uploadStatus: string | null;
+  projectType: string | null;
+  userId: string;
+  uploadedAt: string;
+  message: string | null;
+  documentType: string;
+}
+
 interface UploadData {
   documentType: string;
   fileType: string;
@@ -45,6 +58,8 @@ const Documents = () => {
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadSuccess, setUploadSuccess] = useState<UploadResponse | null>(null);
   const [uploadError, setUploadError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [fetchError, setFetchError] = useState<string>('');
 
   // Upload form state
   const [uploadData, setUploadData] = useState<UploadData>({
@@ -53,7 +68,7 @@ const Documents = () => {
     file: null
   });
 
-  // Documents data - initially empty, will be populated from API
+  // Documents data - will be populated from API
   const [documents, setDocuments] = useState<Document[]>([]);
 
   const documentTypeOptions = [
@@ -70,33 +85,131 @@ const Documents = () => {
     { value: 'TRANSCRIPTS', label: 'Academic Transcripts' }
   ];
 
-  // FileType is always 'KYC' or null
+  // Get user ID helper function
+  const getUserId = () => {
+    console.log('Checking localStorage for Customer ID or User ID...');
+    
+    // Check for Customer ID or User ID directly
+    const customerId = localStorage.getItem('customerId') || localStorage.getItem('Customer_ID');
+    if (customerId) {
+      console.log('Found Customer ID:', customerId);
+      return customerId;
+    }
+
+    const userId = localStorage.getItem('userId') || localStorage.getItem('USER_ID') || localStorage.getItem('user_id');
+    if (userId) {
+      console.log('Found User ID:', userId);
+      return userId;
+    }
+    
+    console.log('No Customer ID or User ID found in localStorage');
+    return null;
+  };
+
+  // Convert API document to internal document format
+  const convertApiDocumentToDocument = (apiDoc: ApiDocument): Document => {
+    // Extract file extension from document path for format
+    const getFileFormat = (path: string, name: string): string => {
+      const extension = path.split('.').pop() || name.split('.').pop() || 'unknown';
+      return extension.toUpperCase();
+    };
+
+    // Determine status based on uploadStatus
+    const getStatus = (uploadStatus: string | null): string => {
+      if (!uploadStatus) return 'pending';
+      
+      switch (uploadStatus.toLowerCase()) {
+        case 'success':
+        case 'completed':
+          return 'completed';
+        case 'in-progress':
+        case 'processing':
+          return 'in-progress';
+        default:
+          return 'pending';
+      }
+    };
+
+    // Calculate approximate file size (we don't have this from API, so we'll estimate or mark as unknown)
+    const getApproximateFileSize = (documentPath: string): string => {
+      // Since we don't have file size from API, we'll just return "Unknown"
+      // In a real scenario, you might want to make a HEAD request to get file size
+      return 'Unknown';
+    };
+
+    return {
+      id: Date.now() + Math.random(), // Generate unique ID for React key
+      name: apiDoc.documentName || apiDoc.documentType,
+      type: apiDoc.documentType,
+      status: getStatus(apiDoc.uploadStatus),
+      uploadDate: apiDoc.uploadedAt ? new Date(apiDoc.uploadedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      fileSize: getApproximateFileSize(apiDoc.documentPath),
+      format: getFileFormat(apiDoc.documentPath, apiDoc.documentName),
+      apiId: apiDoc.id,
+      documentPath: apiDoc.documentPath
+    };
+  };
+
+  // Fetch documents from API
+  const fetchDocuments = async () => {
+    const userId = getUserId();
+    
+    if (!userId) {
+      setFetchError('Please login first to view documents.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setFetchError('');
+
+      console.log('Fetching documents for user:', userId);
+
+      const response = await fetch('https://meta.oxyloans.com/api/common-upload-service/getStudentDocuments', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        // For GET request with body (though uncommon), some implementations expect this
+        body: JSON.stringify(userId)
+      });
+
+      console.log('Fetch response status:', response.status);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch documents: ${response.status} ${response.statusText}`);
+      }
+
+      const apiDocuments: ApiDocument[] = await response.json();
+      console.log('Fetched documents:', apiDocuments);
+
+      // Convert API documents to internal format
+      const convertedDocuments = apiDocuments.map(convertApiDocumentToDocument);
+      
+      // Sort by upload date (newest first)
+      convertedDocuments.sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
+
+      setDocuments(convertedDocuments);
+
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      setFetchError('Failed to load documents. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch documents on component mount
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
 
   const handleUpload = async () => {
     // Clear previous errors
     setUploadError('');
     
-    // Get userId from localStorage with better error handling
-    const getUserId = () => {
-      console.log('Checking localStorage for Customer ID or User ID...');
-      
-      // Check for Customer ID or User ID directly
-      const customerId = localStorage.getItem('customerId') || localStorage.getItem('Customer_ID');
-      if (customerId) {
-        console.log('Found Customer ID:', customerId);
-        return customerId;
-      }
-
-      const userId = localStorage.getItem('userId') || localStorage.getItem('USER_ID') || localStorage.getItem('user_id');
-      if (userId) {
-        console.log('Found User ID:', userId);
-        return userId;
-      }
-      
-      console.log('No Customer ID or User ID found in localStorage');
-      return null;
-    };
-
     const userId = getUserId();
     console.log('Final ID for upload:', userId);
 
@@ -258,6 +371,38 @@ const Documents = () => {
 
   const stats = getDocumentStats();
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-6 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <Clock className="w-16 h-16 text-gray-300 mx-auto mb-4 animate-spin" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Loading documents...</h3>
+          <p className="text-gray-600">Please wait while we fetch your documents.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (fetchError) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-6 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <AlertCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Error loading documents</h3>
+          <p className="text-gray-600 mb-6">{fetchError}</p>
+          <button
+            onClick={fetchDocuments}
+            className="bg-gradient-to-r from-violet-500 to-purple-500 text-white px-6 py-3 rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all duration-300 font-medium"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
       {/* Header */}
@@ -271,13 +416,22 @@ const Documents = () => {
               Manage and track your application documents
             </p>
           </div>
-          <button 
-            onClick={() => setShowUploadModal(true)}
-            className="flex items-center space-x-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white px-6 py-2 rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all duration-300 font-medium"
-          >
-            <Upload className="w-4 h-4" />
-            <span>Upload Document</span>
-          </button>
+          <div className="flex space-x-3">
+            <button 
+              onClick={fetchDocuments}
+              className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+            >
+              <Search className="w-4 h-4" />
+              <span>Refresh</span>
+            </button>
+            <button 
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center space-x-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white px-6 py-2 rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all duration-300 font-medium"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Upload Document</span>
+            </button>
+          </div>
         </div>
 
         {/* Statistics */}
@@ -520,11 +674,24 @@ const Documents = () => {
 
               {/* Action Buttons */}
               <div className="flex space-x-2">
-                <button className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white px-4 py-2 rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all duration-300 font-medium">
+                <button 
+                  onClick={() => doc.documentPath && window.open(doc.documentPath, '_blank')}
+                  className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white px-4 py-2 rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all duration-300 font-medium"
+                >
                   <Eye className="w-4 h-4" />
                   <span>View</span>
                 </button>
-                <button className="flex-1 flex items-center justify-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-xl hover:bg-blue-200 transition-colors font-medium">
+                <button 
+                  onClick={() => {
+                    if (doc.documentPath) {
+                      const link = document.createElement('a');
+                      link.href = doc.documentPath;
+                      link.download = doc.name;
+                      link.click();
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-xl hover:bg-blue-200 transition-colors font-medium"
+                >
                   <Download className="w-4 h-4" />
                   <span>Download</span>
                 </button>
