@@ -1,16 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, ChevronRight, ArrowLeft, Clock, DollarSign, GraduationCap, Loader2, AlertCircle, X, Calendar, Award, BookOpen, University, Crown, SlidersHorizontal, Filter } from 'lucide-react';
+import { 
+  Search, ChevronRight, ArrowLeft, Clock, DollarSign, GraduationCap, 
+  Loader2, AlertCircle, X, Calendar, Award, BookOpen, University, 
+  Crown, SlidersHorizontal, Filter, MapPin, ExternalLink, CreditCard, 
+  ChevronLeft, Sparkles, Globe, Users, Target, TrendingUp, Info
+} from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
-// Course Interface based on API response
+// Course Interface based on updated API response
 interface Course {
   courseName: string;
   duration: string;
-  cost: string;
-  typesOfExams: string;
+  cost: string | null;
+  typesOfExams: string | null;
   intake: string | null;
   university: string;
+  degree?: string;
+  tutionFee1styr?: string | null;
+  applicationFee?: string | null;
+  courseUrl?: string;
+  intake2?: string | null;
+  intake3?: string | null;
+  universityCampusCity?: string;
+  address?: string;
 }
 
 // Updated University Interface based on new API response (filtered fields)
@@ -64,18 +77,16 @@ const createAuthConfig = () => {
 // Utility function to handle auth errors
 const handleAuthError = (error: any, navigate: any) => {
   if (error.response?.status === 401 || error.response?.status === 403) {
-    // Clear invalid tokens
     localStorage.removeItem('accessToken');
     sessionStorage.removeItem('accessToken');
-    // Redirect to login or home page
     navigate('/login', { state: { message: 'Session expired. Please log in again.' } });
     return true;
   }
   return false;
 };
 
-const CoursesPage: React.FC<{ 
-  onCourseSelect?: (course: Course) => void 
+const CoursesPage: React.FC<{
+  onCourseSelect?: (course: Course) => void
 }> = ({ onCourseSelect }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -84,6 +95,7 @@ const CoursesPage: React.FC<{
   const [searchTerm, setSearchTerm] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [displayedCourses, setDisplayedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,41 +104,50 @@ const CoursesPage: React.FC<{
   const [selectedUniversity, setSelectedUniversity] = useState<string>('All');
   const [selectedCostRange, setSelectedCostRange] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'name' | 'cost' | 'duration' | 'university'>('name');
+  const [showFilters, setShowFilters] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(30);
+  const [totalCourses, setTotalCourses] = useState(0);
 
-  // Helper function to get country name safely
   const getCountryName = (country: string | { countryName: string; countryCode: string; name: string; id: string } | undefined): string => {
     if (!country) return 'Unknown Country';
     if (typeof country === 'string') return country;
     return country.countryName || country.name || 'Unknown Country';
   };
 
-  // Helper function to get country for API calls
   const getCountryForAPI = (country: string | { countryName: string; countryCode: string; name: string; id: string } | undefined): string => {
     if (!country) return '';
     if (typeof country === 'string') return country;
     return country.countryName || country.name || '';
   };
 
-  // Helper function to format cost display
   const formatCost = (cost: string | null | undefined): string => {
     if (!cost || cost === 'null' || cost === 'undefined' || cost.trim() === '') {
       return 'Contact for Price';
     }
+    // Add currency formatting
+    const numericCost = getNumericCost(cost);
+    if (numericCost > 0) {
+      return `$${numericCost.toLocaleString()}`;
+    }
     return cost;
   };
 
-  useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setError('Authentication required. Please log in to continue.');
-      setLoading(false);
-      setInitialLoad(false);
-      return;
-    }
-  }, [navigate]);
+  const shouldDisplayField = (field: string | null | undefined): boolean => {
+    return field !== null && field !== undefined && field !== 'null' && field.trim() !== '' && field !== 'undefined';
+  };
 
-  // Extract unique values for filters
+  const getAllIntakes = (course: Course): string[] => {
+    const intakes: string[] = [];
+    if (shouldDisplayField(course.intake)) intakes.push(course.intake!);
+    if (shouldDisplayField(course.intake2)) intakes.push(course.intake2!);
+    if (shouldDisplayField(course.intake3)) intakes.push(course.intake3!);
+    return intakes;
+  };
+
   const degreeTypes = ['All', ...Array.from(new Set(courses.map(course => {
+    if (course.degree) return course.degree;
     const match = course.courseName.match(/\[(.*?)\]/);
     return match ? match[1] : 'Other';
   })))];
@@ -145,15 +166,13 @@ const CoursesPage: React.FC<{
     'Contact for Price'
   ];
 
-  // Helper function to get numeric cost value
   const getNumericCost = (costString: string): number => {
     if (!costString || costString === 'Contact for Price' || costString === 'null') return 0;
     const match = costString.match(/[\d,]+/);
     return match ? parseInt(match[0].replace(/,/g, ''), 10) : 0;
   };
 
-  // Helper function to check if cost falls within range
-  const costInRange = (cost: string, range: string): boolean => {
+  const costInRange = (cost: string | null, range: string): boolean => {
     const formattedCost = formatCost(cost);
     if (formattedCost === 'Contact for Price') {
       return range === 'All' || range === 'Contact for Price';
@@ -179,8 +198,7 @@ const CoursesPage: React.FC<{
     }
   };
 
-  // Fetch courses based on selected country
-  const fetchCourses = async () => {
+  const fetchCourses = async (page: number = 1) => {
     const countryName = getCountryForAPI(state?.selectedCountry);
     
     if (!countryName) {
@@ -203,7 +221,7 @@ const CoursesPage: React.FC<{
 
     try {
       const response = await axios.post(
-        'https://meta.oxyloans.com/api/student-service/student/getCountryBasedData',
+        `https://meta.oxyloans.com/api/student-service/student/getCountryBasedData?pageIndex=${page}&pageSize=${pageSize}`,
         { countryName: countryName },
         createAuthConfig()
       );
@@ -213,6 +231,8 @@ const CoursesPage: React.FC<{
       const apiResponse: ApiResponse = response.data;
       setCourses(apiResponse.data || []);
       setFilteredCourses(apiResponse.data || []);
+      setTotalCourses(apiResponse.count || 0);
+      setCurrentPage(page);
     } catch (err: any) {
       console.error('Error fetching courses:', err);
       
@@ -235,7 +255,6 @@ const CoursesPage: React.FC<{
     }
   };
 
-  // Updated function to fetch universities based on selected course
   const fetchUniversities = async (course: Course) => {
     if (!course?.courseName) {
       console.error('No course selected');
@@ -248,9 +267,8 @@ const CoursesPage: React.FC<{
       return;
     }
 
-    // Show loading state while fetching universities
     const loadingToast = document.createElement('div');
-    loadingToast.className = 'fixed top-4 right-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg shadow-xl z-50 flex items-center border border-purple-300';
+    loadingToast.className = 'fixed top-4 right-4 bg-gradient-to-r from-purple-600 to-amber-600 text-white px-6 py-3 rounded-lg shadow-xl z-50 flex items-center border border-purple-300';
     loadingToast.innerHTML = `
       <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
       <span class="font-medium">🔍 Finding universities for you...</span>
@@ -258,9 +276,9 @@ const CoursesPage: React.FC<{
     document.body.appendChild(loadingToast);
 
     try {
-      // Updated API call using the new endpoint structure
+      const encodedCourseName = encodeURIComponent(course.courseName);
       const response = await axios.get(
-        `https://meta.oxyloans.com/api/student-service/student/${encodeURIComponent(course.courseName)}/getCoursesBasedUniversities`,
+        `https://meta.oxyloans.com/api/student-service/student/${encodedCourseName}/getCoursesBasedUniversities`,
         createAuthConfig()
       );
       
@@ -277,14 +295,12 @@ const CoursesPage: React.FC<{
         universityLogo: university.universityLogo
       })) || [];
       
-      // Remove loading toast
       if (loadingToast.parentNode) {
         document.body.removeChild(loadingToast);
       }
       
-      // Show user-friendly success message
       const successToast = document.createElement('div');
-      successToast.className = 'fixed top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg shadow-xl z-50 border border-green-300';
+      successToast.className = 'fixed top-4 right-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-3 rounded-lg shadow-xl z-50 border border-green-300';
       const universityCount = universityResponse.totalUniversities || cleanedUniversities.length;
       const universityText = universityCount === 1 ? 'university' : 'universities';
       successToast.innerHTML = `
@@ -300,7 +316,6 @@ const CoursesPage: React.FC<{
         }
       }, 3000);
       
-      // Navigate to university list page with the cleaned universities data
       navigate('/listofuniversities', { 
         state: { 
           course,
@@ -369,26 +384,22 @@ const CoursesPage: React.FC<{
   };
 
   useEffect(() => {
-    fetchCourses();
-  }, [state?.selectedCountry]);
+    fetchCourses(currentPage);
+  }, [state?.selectedCountry, currentPage]);
 
   useEffect(() => {
     let filtered = courses.filter(course => {
-      // Search filter
       const matchesSearch = course.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            course.university.toLowerCase().includes(searchTerm.toLowerCase());
       
-      // Degree type filter
-      const courseType = course.courseName.match(/\[(.*?)\]/) ? course.courseName.match(/\[(.*?)\]/)![1] : 'Other';
+      const courseType = course.degree || 
+                        (course.courseName.match(/\[(.*?)\]/) ? course.courseName.match(/\[(.*?)\]/)![1] : 'Other');
       const matchesDegree = selectedDegree === 'All' || courseType === selectedDegree;
       
-      // Duration filter
       const matchesDuration = selectedDuration === 'All' || course.duration === selectedDuration;
       
-      // University filter
       const matchesUniversity = selectedUniversity === 'All' || course.university === selectedUniversity;
       
-      // Cost range filter
       const matchesCostRange = selectedCostRange === 'All' || costInRange(course.cost, selectedCostRange);
       
       return matchesSearch && matchesDegree && matchesDuration && matchesUniversity && matchesCostRange;
@@ -412,7 +423,18 @@ const CoursesPage: React.FC<{
     });
 
     setFilteredCourses(filtered);
+    setDisplayedCourses(filtered);
   }, [searchTerm, selectedDegree, selectedDuration, selectedUniversity, selectedCostRange, courses, sortBy]);
+
+  const totalPages = Math.ceil(totalCourses / pageSize);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      fetchCourses(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const handleBackClick = () => {
     navigate(-1);
@@ -433,15 +455,20 @@ const CoursesPage: React.FC<{
     setSelectedUniversity('All');
     setSelectedCostRange('All');
     setSortBy('name');
+    setCurrentPage(1);
+    fetchCourses(1);
   };
 
-  const formatExamRequirements = (exams: string) => {
-    if (!exams) return [];
+  const formatExamRequirements = (exams: string | null) => {
+    if (!exams || !shouldDisplayField(exams)) return [];
     return exams.split('|').filter(exam => exam.trim());
   };
 
-  const getDegreeType = (courseName: string) => {
-    const match = courseName.match(/\[(.*?)\]/);
+  const getDegreeType = (course: Course) => {
+    if (course.degree) {
+      return course.degree;
+    }
+    const match = course.courseName.match(/\[(.*?)\]/);
     return match ? match[1] : '';
   };
 
@@ -455,20 +482,122 @@ const CoursesPage: React.FC<{
       navigate('/login', { state: { message: 'Please log in to continue.' } });
       return;
     }
-    fetchCourses();
+    fetchCourses(currentPage);
   };
 
+  const handleCourseUrlClick = (url: string | undefined, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (url && shouldDisplayField(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const activeFiltersCount = [
+    searchTerm !== '',
+    selectedDegree !== 'All',
+    selectedDuration !== 'All',
+    selectedUniversity !== 'All',
+    selectedCostRange !== 'All'
+  ].filter(Boolean).length;
+
+  const PaginationComponent = () => {
+    if (totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+      const pages = [];
+      const maxVisiblePages = 5;
+      
+      if (totalPages <= maxVisiblePages) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (currentPage <= 3) {
+          for (let i = 1; i <= 4; i++) {
+            pages.push(i);
+          }
+          pages.push('...');
+          pages.push(totalPages);
+        } else if (currentPage >= totalPages - 2) {
+          pages.push(1);
+          pages.push('...');
+          for (let i = totalPages - 3; i <= totalPages; i++) {
+            pages.push(i);
+          }
+        } else {
+          pages.push(1);
+          pages.push('...');
+          for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+            pages.push(i);
+          }
+          pages.push('...');
+          pages.push(totalPages);
+        }
+      }
+      
+      return pages;
+    };
+
+    return (
+      <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl shadow-sm p-4">
+        <div className="text-sm text-gray-600">
+          Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * pageSize + 1}-
+          {Math.min(currentPage * pageSize, totalCourses)}</span> of <span className="font-semibold text-gray-900">{totalCourses.toLocaleString()}</span> results
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-2 text-xs font-bold border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          >
+            <ChevronLeft className="h-3 w-3" />
+          </button>
+          
+          <div className="flex gap-1">
+            {getPageNumbers().map((page, index) => (
+              <React.Fragment key={index}>
+                {page === '...' ? (
+                  <span className="px-3 py-2 text-gray-500">...</span>
+                ) : (
+                  <button
+                    onClick={() => handlePageChange(page as number)}
+                    className={`px-3 py-2 text-xs font-bold rounded-lg transition-all duration-300 ${
+                      currentPage === page
+                        ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+          
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-2 text-xs font-bold border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          >
+            <ChevronRight className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+  
   if (initialLoad) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-gray-50 flex items-center justify-center p-4">
         <div className="text-center max-w-sm w-full">
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center shadow-2xl animate-pulse">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-600 to-purple-800 flex items-center justify-center shadow-2xl animate-pulse">
               <GraduationCap className="h-10 w-10 text-white" />
             </div>
           </div>
           <div className="space-y-4 mb-6">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">
               Discovering Your Future
             </h2>
             <p className="text-gray-600 leading-relaxed">
@@ -483,7 +612,7 @@ const CoursesPage: React.FC<{
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-3 h-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full animate-bounce"
+                  className="w-3 h-3 bg-gradient-to-r from-purple-500 to-purple-700 rounded-full animate-bounce"
                   style={{ animationDelay: `${i * 0.3}s` }}
                 />
               ))}
@@ -497,9 +626,8 @@ const CoursesPage: React.FC<{
 
   if (loading) {
     return (
-      <div className="bg-white min-h-screen">
+      <div className="bg-gray-50 min-h-screen">
         <div className="px-4 sm:px-6 lg:px-8 py-6">
-          {/* Skeleton Header */}
           <div className="mb-6 animate-pulse">
             <div className="flex items-center mb-4">
               <div className="w-8 h-8 rounded-full bg-purple-100 mr-3"></div>
@@ -509,29 +637,23 @@ const CoursesPage: React.FC<{
               </div>
             </div>
           </div>
-
-          {/* Skeleton Search and Filters */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6 animate-pulse">
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
-              {/* Search skeleton - 2 columns */}
-              <div className="md:col-span-2 h-10 bg-gray-200 rounded-lg"></div>
-              {/* Filter skeletons - 1 column each */}
+            <div className="flex flex-wrap gap-3">
+              <div className="w-64 h-10 bg-gray-200 rounded-lg"></div>
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-10 bg-gray-200 rounded-lg"></div>
+                <div key={i} className="w-32 h-10 bg-gray-200 rounded-lg"></div>
               ))}
             </div>
           </div>
-
-          {/* Skeleton Course Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 h-80 animate-pulse">
-                <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 h-64 animate-pulse">
+                <div className="space-y-3">
                   <div className="h-5 bg-purple-100 rounded w-3/4"></div>
                   <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     {[...Array(2)].map((_, j) => (
-                      <div key={j} className="h-16 bg-gray-100 rounded-lg"></div>
+                      <div key={j} className="h-12 bg-gray-100 rounded-lg"></div>
                     ))}
                   </div>
                   <div className="space-y-2 mt-auto pt-4">
@@ -556,18 +678,19 @@ const CoursesPage: React.FC<{
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Oops! Something went wrong</h2>
             <p className="text-gray-600 mb-8 leading-relaxed">{error}</p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button 
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
                 onClick={handleRetry}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-lg hover:from-purple-700 hover:to-purple-900 transition-all duration-300 font-medium flex items-center justify-center shadow-md"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 <Loader2 className="mr-2 h-4 w-4" />
                 Try Again
               </button>
-              <button 
+              <button
                 onClick={handleBackClick}
-                className="flex-1 px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-300 font-medium shadow-sm"
+                className="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-300"
               >
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Go Back
               </button>
             </div>
@@ -576,241 +699,276 @@ const CoursesPage: React.FC<{
       </div>
     );
   }
-  
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="px-4 sm:px-6 lg:px-8 py-6">
-        {/* Simplified Header */}
+        {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-center mb-4">
-            <button 
+            <button
               onClick={handleBackClick}
-              className="flex items-center group mr-4"
+              className="mr-3 p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border-2 border-purple-200 group-hover:border-purple-400 group-hover:shadow-lg transition-all duration-300">
-                <ArrowLeft size={18} className="text-purple-600 group-hover:text-purple-800 transition-colors" />
-              </div>
+              <ArrowLeft className="h-5 w-5 text-gray-600" />
             </button>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-                Study Programs in <span className="bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent">{getCountryName(state?.selectedCountry)}</span>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">
+                Study Programs in {getCountryName(state?.selectedCountry)}
               </h1>
-              <div className="flex items-center mt-2 text-sm">
-                <Crown className="h-4 w-4 text-yellow-500 mr-2" />
-                <span className="text-gray-600 font-medium">
-                  {filteredCourses.length} of {courses.length} programs
-                </span>
-              </div>
+              <p className="text-gray-600 mt-1">
+                Discover {totalCourses.toLocaleString()} amazing educational opportunities
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Single Row Search and Filters */}
+        {/* Pagination Top */}
+        <PaginationComponent />
+
+        {/* Search and Filter Section - All in one row */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
-            {/* Search Input */}
-            <div className="relative md:col-span-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[250px]">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-gray-400" />
               </div>
-              <input 
-                type="text" 
-                placeholder="Search programs..." 
+              <input
+                type="text"
+                placeholder="Search programs or universities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute inset-y-0 right-0 pr-2 flex items-center"
-                >
-                  <X className="h-3 w-3 text-gray-400 hover:text-gray-600" />
-                </button>
-              )}
             </div>
-
-            {/* Degree Filter */}
-            <select 
+            <select
               value={selectedDegree}
               onChange={(e) => setSelectedDegree(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[120px]"
             >
-              <option value="All">All Degrees</option>
-              {degreeTypes.slice(1).map(type => (
-                <option key={type} value={type}>{type}</option>
+              {degreeTypes.map(degree => (
+                <option key={degree} value={degree}>{degree}</option>
               ))}
             </select>
-
-            {/* Duration Filter */}
-            <select 
+            <select
               value={selectedDuration}
               onChange={(e) => setSelectedDuration(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[120px]"
             >
-              <option value="All">Duration</option>
-              {durations.slice(1).map(duration => (
+              {durations.map(duration => (
                 <option key={duration} value={duration}>{duration}</option>
               ))}
             </select>
-
-            {/* University Filter */}
-            <select 
+            <select
               value={selectedUniversity}
               onChange={(e) => setSelectedUniversity(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[120px]"
             >
-              <option value="All">Universities</option>
-              {universities.slice(1).map(university => (
-                <option key={university} value={university}>
-                  {university.length > 25 ? `${university.substring(0, 25)}...` : university}
-                </option>
+              {universities.map(university => (
+                <option key={university} value={university}>{university}</option>
               ))}
             </select>
-
-            {/* Cost Filter */}
-            <select 
+            <select
               value={selectedCostRange}
               onChange={(e) => setSelectedCostRange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[120px]"
             >
-              <option value="All">Price Range</option>
-              {costRanges.slice(1).map(range => (
+              {costRanges.map(range => (
                 <option key={range} value={range}>{range}</option>
               ))}
             </select>
-
-            {/* Sort and Clear */}
-            <div className="flex gap-2">
-              <select 
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'name' | 'cost' | 'duration' | 'university')}
-                className="flex-1 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-              >
-                <option value="name">Name</option>
-                <option value="cost">Cost</option>
-                <option value="duration">Duration</option>
-                <option value="university">University</option>
-              </select>
-              
-              <button 
-                onClick={clearFilters}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-center flex-shrink-0"
-                title="Clear all filters"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'name' | 'cost' | 'duration' | 'university')}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[120px]"
+            >
+              <option value="name">Sort by Name</option>
+              <option value="cost">Sort by Cost</option>
+              <option value="duration">Sort by Duration</option>
+              <option value="university">Sort by University</option>
+            </select>
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Clear
+            </button>
           </div>
         </div>
 
-        {/* Improved Course Grid */}
-        {filteredCourses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCourses.map((course, index) => (
-              <div 
-                key={`${course.university}-${course.courseName}-${index}`} 
-                className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-purple-300"
+        {/* Results Info Bar */}
+        <div className="mb-4">
+          <p className="text-gray-600 text-sm">
+            {filteredCourses.length === totalCourses
+              ? `Showing all ${filteredCourses.length.toLocaleString()} programs`
+              : `Showing ${filteredCourses.length.toLocaleString()} of ${totalCourses.toLocaleString()} programs`
+            }
+          </p>
+        </div>
+
+        {/* Course Cards Grid */}
+        {displayedCourses.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
+              <Search className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No programs found</h3>
+            <p className="text-gray-500 mb-4">Try adjusting your search criteria or filters</p>
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200"
+            >
+              Clear All Filters
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {displayedCourses.map((course, index) => (
+              <div
+                key={index}
                 onClick={() => handleCourseSelect(course)}
+                className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-purple-300 p-4"
               >
-                {/* Course Header */}
-                <div className="mb-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-sm font-bold text-gray-800 group-hover:text-purple-600 transition-colors line-clamp-2 flex-1 leading-tight">
-                      {getFieldOfStudy(course.courseName)}
-                    </h3>
-                    {getDegreeType(course.courseName) && (
-                      <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                        {getDegreeType(course.courseName)}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center text-gray-600 mb-3 text-xs">
-                    <University className="mr-1 h-3 w-3 text-purple-500 flex-shrink-0" />
-                    <span className="truncate">{course.university || 'Unknown University'}</span>
-                  </div>
-                </div>
-
-                {/* Key Points - Simplified Grid */}
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <div className="flex items-center">
-                      <Clock className="h-4 w-4 text-purple-500 mr-2" />
-                      <span className="text-xs text-gray-600">Duration</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-800">{course.duration || 'Not specified'}</span>
-                  </div>
-
-                  {/* <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <div className="flex items-center">
-                      <DollarSign className="h-4 w-4 text-green-500 mr-2" />
-                      <span className="text-xs text-gray-600">Cost</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-800">{formatCost(course.cost)}</span>
-                  </div> */}
-
-                  {course.intake && (
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 text-blue-500 mr-2" />
-                        <span className="text-xs text-gray-600">Next Intake</span>
-                      </div>
-                      <span className="text-sm font-medium text-gray-800">{course.intake}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Exam Requirements - Simplified */}
-                {course.typesOfExams && (
-                  <div className="mb-4">
-                    <div className="flex items-center mb-2">
-                      <Award className="h-3 w-3 mr-1 text-orange-500" />
-                      <span className="text-xs font-medium text-gray-700">Required Exams</span>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {formatExamRequirements(course.typesOfExams).slice(0, 2).map((exam, examIndex) => (
-                        <span 
-                          key={examIndex}
-                          className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded"
-                        >
-                          {exam.trim()}
-                        </span>
-                      ))}
-                      {formatExamRequirements(course.typesOfExams).length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                          +{formatExamRequirements(course.typesOfExams).length - 2}
+                <div className="flex flex-col h-full">
+                  <div className="mb-3">
+                    <div className="flex items-start justify-between mb-2">
+                      {getDegreeType(course) && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mb-2">
+                          <Award className="mr-1 h-3 w-3" />
+                          {getDegreeType(course)}
                         </span>
                       )}
+                      {shouldDisplayField(course.courseUrl) && (
+                        <button
+                          onClick={(e) => handleCourseUrlClick(course.courseUrl, e)}
+                          className="p-1 text-gray-400 hover:text-purple-600 transition-colors duration-200"
+                          title="View course details"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-gray-800 text-sm leading-tight group-hover:text-purple-700 transition-colors duration-200 line-clamp-2">
+                      {getFieldOfStudy(course.courseName)}
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-1 flex items-center">
+                      <University className="mr-1 h-3 w-3" />
+                      {course.university}
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 mb-3 flex-1">
+                    {shouldDisplayField(course.duration) && (
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="flex items-center text-xs text-gray-600 mb-1">
+                          <Clock className="mr-1 h-3 w-3" />
+                          Duration
+                        </div>
+                        <div className="text-xs font-semibold text-gray-800">{course.duration}</div>
+                      </div>
+                    )}
+                    
+                    {shouldDisplayField(course.universityCampusCity) && (
+                      <div className="bg-gray-50 rounded-lg p-2 col-span-2">
+                        <div className="flex items-center text-xs text-gray-600 mb-1">
+                          <MapPin className="mr-1 h-3 w-3" />
+                          Campus Location
+                        </div>
+                        <div className="text-xs font-semibold text-gray-800">{course.universityCampusCity}</div>
+                      </div>
+                    )}
+                    
+                    {getAllIntakes(course).length > 0 && (
+                      <div className="bg-gray-50 rounded-lg p-2 col-span-2">
+                        <div className="flex items-center text-xs text-gray-600 mb-1">
+                          <Calendar className="mr-1 h-3 w-3" />
+                          Intakes
+                        </div>
+                        <div className="text-xs font-semibold text-gray-800">
+                          {getAllIntakes(course).join(', ')}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {formatExamRequirements(course.typesOfExams).length > 0 && (
+                      <div className="bg-gray-50 rounded-lg p-2 col-span-2">
+                        <div className="flex items-center text-xs text-gray-600 mb-1">
+                          <BookOpen className="mr-1 h-3 w-3" />
+                          Exams Required
+                        </div>
+                        <div className="text-xs font-semibold text-gray-800">
+                          {formatExamRequirements(course.typesOfExams).join(', ')}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {shouldDisplayField(course.applicationFee) && (
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="flex items-center text-xs text-gray-600 mb-1">
+                          <CreditCard className="mr-1 h-3 w-3" />
+                          Application Fee
+                        </div>
+                        <div className="text-xs font-semibold text-gray-800">
+                          {formatCost(course.applicationFee)}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {shouldDisplayField(course.tutionFee1styr) && course.tutionFee1styr !== course.cost && (
+                      <div className="bg-gray-50 rounded-lg p-2">
+                        <div className="flex items-center text-xs text-gray-600 mb-1">
+                          <DollarSign className="mr-1 h-3 w-3" />
+                          1st Year
+                        </div>
+                        <div className="text-xs font-semibold text-gray-800">
+                          {formatCost(course.tutionFee1styr)}
+                                                  </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-auto pt-2">
+                    <div className="flex items-center justify-between">
+                      {shouldDisplayField(course.cost) && (
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 text-gray-500 mr-1" />
+                          <span className="text-sm font-bold text-gray-800">
+                            {formatCost(course.cost)}
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        className="ml-auto inline-flex items-center px-3 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-2.5 rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 shadow-sm hover:shadow-md"
+                      >
+                        View Universities
+                        <ChevronRight className="ml-1 h-3 w-3" />
+                      </button>
                     </div>
                   </div>
-                )}
-
-                {/* Action Button */}
-                <button className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold py-2.5 rounded-lg hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 flex items-center justify-center text-sm group-hover:shadow-md">
-                  <span>View Universities</span>
-                  <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </div>
               </div>
             ))}
           </div>
-        ) : (
+        )}
+
+        {/* Pagination Bottom */}
+        <PaginationComponent />
+
+        {/* Empty State for No Results */}
+        {filteredCourses.length === 0 && (
           <div className="text-center py-12">
-            <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm max-w-md mx-auto">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-purple-100 mb-4">
-                <BookOpen className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-3">No Programs Found</h3>
-              <p className="text-gray-600 mb-6 text-sm">
-                Try adjusting your filters to find more opportunities.
-              </p>
-              <button 
-                onClick={clearFilters}
-                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-300 font-medium text-sm"
-              >
-                Clear Filters
-              </button>
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-100 mb-4">
+              <Search className="h-8 w-8 text-gray-400" />
             </div>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No programs match your search</h3>
+            <p className="text-gray-500 mb-4">Try adjusting your filters or search term</p>
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200"
+            >
+              Clear All Filters
+            </button>
           </div>
         )}
       </div>
