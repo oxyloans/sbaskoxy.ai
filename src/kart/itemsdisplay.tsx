@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { message, Modal } from "antd"; // Added Modal import for Special Offers modal
+import { message, Modal } from "antd";
 import {
   ShoppingCart,
   Home,
@@ -64,6 +64,12 @@ interface ItemImage {
   imageUrl: string;
 }
 
+interface GoldPriceUrl {
+  id: string;
+  goLdUrls: string | null;
+  description: string;
+}
+
 const ItemDisplayPage = () => {
   const { itemId } = useParams<{ itemId: string }>();
   const { state } = useLocation();
@@ -86,10 +92,9 @@ const ItemDisplayPage = () => {
     items: { [key: string]: boolean };
     status: { [key: string]: string };
   }>({
-    items: {}, // Stores boolean values for each item
-    status: {}, // Stores status strings for each item
+    items: {},
+    status: {},
   });
-  // Added state for Special Offers modal
   const [offerModal, setOfferModal] = useState<{
     visible: boolean;
     content: string;
@@ -100,6 +105,9 @@ const ItemDisplayPage = () => {
   const [displayedOffers, setDisplayedOffers] = useState<Set<string>>(
     new Set()
   );
+  const [goldPriceUrls, setGoldPriceUrls] = useState<
+    GoldPriceUrl | undefined
+  >();
 
   const context = useContext(CartContext);
 
@@ -111,7 +119,19 @@ const ItemDisplayPage = () => {
 
   const apiKey = "";
 
-  // Added normalizeWeight function from categories.tsx
+  const fetchGoldPriceUrls = async (id: string) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/product-service/goldUrsBasedOnItemId?itemId=${id}`
+      );
+      console.log("Gold price URLs response:", response.data);
+      setGoldPriceUrls(response.data || null);
+    } catch (error) {
+      console.error("Error fetching gold price URLs:", error);
+      // setGoldPriceUrls();
+    }
+  };
+
   const normalizeWeight = (value: any): number | null => {
     if (value === null || value === undefined) return null;
     const cleanedValue = String(value).replace(/[^0-9.]/g, "");
@@ -119,7 +139,6 @@ const ItemDisplayPage = () => {
     return isNaN(parsed) ? null : parsed;
   };
 
-  // New function to fetch item images
   const fetchItemImages = async (id: string) => {
     try {
       const response = await axios.get(
@@ -127,7 +146,7 @@ const ItemDisplayPage = () => {
       );
       console.log("Item images response:", response.data);
       setItemImages(response.data || []);
-      setCurrentImageIndex(0); // Reset to first image when new images are loaded
+      setCurrentImageIndex(0);
     } catch (error) {
       console.error("Error fetching item images:", error);
       setItemImages([]);
@@ -145,8 +164,10 @@ const ItemDisplayPage = () => {
       const item = allItems.find((item: Item) => item.itemId === id);
       if (item) {
         setItemDetails(item);
-        // Fetch images for this item
         await fetchItemImages(id);
+        if (id === "f2138ee5-21b2-4ece-894f-3ebb84d768a6") {
+          await fetchGoldPriceUrls(id);
+        }
       }
     } catch (error) {
       console.error("Error fetching item details:", error);
@@ -156,93 +177,80 @@ const ItemDisplayPage = () => {
   const handleNavigation = (path: string) => {
     navigate(path);
   };
-  
-  // Also update the main useEffect to ensure related items are fetched
+
   useEffect(() => {
     if (itemId) {
       if (!state?.item) {
         fetchItemDetails(itemId);
       } else {
         setItemDetails(state.item);
-        // Fetch images for the item
         fetchItemImages(itemId);
-        // Fetch related items
         fetchRelatedItems();
+        if (itemId === "f2138ee5-21b2-4ece-894f-3ebb84d768a6") {
+          fetchGoldPriceUrls(itemId);
+        }
       }
       fetchCartData("");
     }
   }, [itemId, state]);
 
-  // Updated navigation handler for related items
   const handleRelatedItemClick = (item: Item) => {
-    setItemDetails(item); // Update item details immediately
-    // Fetch images for the new item
+    setItemDetails(item);
     fetchItemImages(item.itemId);
+    if (item.itemId !== "f2138ee5-21b2-4ece-894f-3ebb84d768a6") {
+      // setGoldPriceUrls([]);
+    } else {
+      fetchGoldPriceUrls(item.itemId);
+    }
     navigate(`/main/itemsdisplay/${item.itemId}`, {
       state: { item },
       replace: true,
     });
   };
 
-  // Image navigation functions
   const handlePreviousImage = () => {
     const totalImages = getAllImages().length;
-    setCurrentImageIndex((prev) =>
-      prev === 0 ? totalImages - 1 : prev - 1
-    );
+    setCurrentImageIndex((prev) => (prev === 0 ? totalImages - 1 : prev - 1));
   };
 
   const handleNextImage = () => {
     const totalImages = getAllImages().length;
-    setCurrentImageIndex((prev) =>
-      prev === totalImages - 1 ? 0 : prev + 1
-    );
+    setCurrentImageIndex((prev) => (prev === totalImages - 1 ? 0 : prev + 1));
   };
 
-  // Helper function to combine main image with additional images
   const getAllImages = () => {
     const allImages = [];
-    
-    // Add main item image first
     if (itemDetails?.itemImage || itemDetails?.image) {
       allImages.push({
         imageUrl: itemDetails.itemImage || itemDetails.image,
         imageView: "",
-        isMainImage: true
+        isMainImage: true,
       });
     }
-    
-    // Add additional images
-    itemImages.forEach(img => {
+    itemImages.forEach((img) => {
       allImages.push({
         imageUrl: img.imageUrl,
         imageView: img.imageView,
-        isMainImage: false
+        isMainImage: false,
       });
     });
-    
     return allImages;
   };
 
-  // Get current image URL with proper fallback
   const getCurrentImageUrl = () => {
     const allImages = getAllImages();
     if (allImages.length > 0 && allImages[currentImageIndex]) {
       return allImages[currentImageIndex].imageUrl;
     }
-    // return itemDetails?.itemImage || itemDetails?.image;
   };
 
-  // Get current image view label
   const getCurrentImageView = () => {
     const allImages = getAllImages();
     if (allImages.length > 0 && allImages[currentImageIndex]) {
       return allImages[currentImageIndex].imageView;
     }
-    // return "Main View";
   };
 
-  // Updated fetchCartData function from categories.tsx to include Special Offers modal logic
   const fetchCartData = async (itemId: string) => {
     const userId = localStorage.getItem("userId");
     const accessToken = localStorage.getItem("accessToken");
@@ -303,7 +311,6 @@ const ItemDisplayPage = () => {
 
       const newDisplayedOffers = new Set(displayedOffers);
 
-      // Check for 2+1 Offer
       const twoPlusOneItems = customerCart.filter(
         (item) => item.status === "ADD" && item.cartQuantity >= 2
       );
@@ -322,7 +329,7 @@ const ItemDisplayPage = () => {
         ) {
           setOfferModal({
             visible: true,
-            content: `<b>2+1 Offer Is Active.</b><br><br>Buy 2 Bags of ${
+            content: `<b>2+1 Offer Is Active.</b><br><br>Buy  frequent Bags of ${
               addItem.itemName
             } of ${normalizeWeight(addItem.weight)} Kg and get 1 Bag of ${
               freeItem.itemName
@@ -334,7 +341,6 @@ const ItemDisplayPage = () => {
         }
       }
 
-      // Check for 5+2 Offer
       const fivePlusTwoItems = customerCart.filter(
         (item) =>
           item.status === "ADD" &&
@@ -363,7 +369,6 @@ const ItemDisplayPage = () => {
         }
       }
 
-      // Free Container Offer
       const containerOfferItems = customerCart.filter(
         (item) =>
           item.status === "ADD" &&
@@ -420,7 +425,6 @@ const ItemDisplayPage = () => {
     }
   };
 
-  // Fixed fetchRelatedItems function
   const fetchRelatedItems = async () => {
     try {
       const response = await axios.get(
@@ -429,11 +433,10 @@ const ItemDisplayPage = () => {
 
       console.log("Fetched Categories:", response.data);
 
-      // Find the category that contains the selected item
       const matchingCategory = response.data.find(
         (category: any) =>
           category.itemsResponseDtoList &&
-          Array.isArray(category.itemsResponseDtoList) && // Ensure it's an array
+          Array.isArray(category.itemsResponseDtoList) &&
           category.itemsResponseDtoList.some(
             (item: any) => item.itemId === itemDetails?.itemId
           )
@@ -443,12 +446,9 @@ const ItemDisplayPage = () => {
         matchingCategory &&
         Array.isArray(matchingCategory.itemsResponseDtoList)
       ) {
-        // Extract related items, excluding the selected one
         const categoryItems = matchingCategory.itemsResponseDtoList
-          .filter(
-            (item: any) => item.itemId !== itemDetails?.itemId // Fixed: removed duplicate condition
-          )
-          .slice(0, 4); // Limit to 4 items
+          .filter((item: any) => item.itemId !== itemDetails?.itemId)
+          .slice(0, 4);
 
         console.log("Related Items:", categoryItems);
         setRelatedItems(categoryItems);
@@ -458,7 +458,7 @@ const ItemDisplayPage = () => {
       }
     } catch (error) {
       console.error("Error fetching related items:", error);
-      setRelatedItems([]); // Set empty array on error
+      setRelatedItems([]);
     }
   };
 
@@ -497,15 +497,13 @@ const ItemDisplayPage = () => {
       }));
     }
   };
-  
-  // Add this useEffect to trigger related items fetch when itemDetails changes
+
   useEffect(() => {
     if (itemDetails) {
       fetchRelatedItems();
     }
   }, [itemDetails]);
 
-  // Function to handle removing an item completely from the cart
   const handleRemoveItem = async (itemId: string) => {
     setLoadingItems((prev) => ({
       ...prev,
@@ -513,7 +511,6 @@ const ItemDisplayPage = () => {
     }));
 
     try {
-      // Use the minusCartItem endpoint with PATCH
       await axios.patch(
         `${BASE_URL}/cart-service/cart/minusCartItem`,
         { customerId, itemId },
@@ -533,7 +530,6 @@ const ItemDisplayPage = () => {
     }
   };
 
-  // Modified handleQuantityChange function
   const handleQuantityChange = async (item: Item, increment: boolean) => {
     const endpoint = increment
       ? `${BASE_URL}/cart-service/cart/addAndIncrementCart`
@@ -551,8 +547,6 @@ const ItemDisplayPage = () => {
 
     try {
       if (!increment && cartItems[item.itemId] <= 1) {
-        // Instead of using the DELETE endpoint, use minusCartItem
-        // to remove the last item
         await axios.patch(
           `${BASE_URL}/cart-service/cart/minusCartItem`,
           { customerId, itemId: item.itemId },
@@ -576,18 +570,17 @@ const ItemDisplayPage = () => {
             );
             console.log("PATCH success:", patchRes.status, patchRes.data);
           } catch (error) {
-            // Check if the error is an AxiosError using 'instanceof'
             if (error instanceof AxiosError && error.response) {
               const { status, data } = error.response;
               console.warn("PATCH error response:", status, data);
               if (status === 200 || status === 204) {
                 console.log("PATCH treated as error but actually succeeded.");
               } else {
-                throw error; // Rethrow if the error is not handled
+                throw error;
               }
             } else {
               console.error("Network or unknown PATCH error:", error);
-              throw error; // Rethrow non-Axios errors
+              throw error;
             }
           }
         }
@@ -636,20 +629,17 @@ const ItemDisplayPage = () => {
       content: msg.text,
     }));
 
-    // Add new user message to the conversation
     previousMessages.push({
       role: "user",
       content: newMessage.text,
     });
 
-    // Function to get the last assistant's response safely
     const getLastAssistantMessage = (msgs: Message[]) => {
       return (
         [...msgs].reverse().find((msg) => msg.type === "received")?.text || ""
       );
     };
 
-    // Include last assistant response
     const lastAssistantMessage = getLastAssistantMessage(messages);
     if (lastAssistantMessage) {
       previousMessages.push({
@@ -727,20 +717,16 @@ const ItemDisplayPage = () => {
     return cartItems[item.itemId] >= item.quantity;
   };
 
-  // Helper function to check if the item is explicitly added by the user
   const isItemUserAdded = (itemId: string): boolean => {
-    // Check if there is at least one cart entry for this item with status "ADD"
     return cartData.some(
       (cartItem) => cartItem.itemId === itemId && cartItem.status === "ADD"
     );
   };
 
-  // Added handler for closing Special Offers modal
   const handleOfferModalClose = () => {
     setOfferModal({ visible: false, content: "" });
   };
 
-  // Fetch related items when itemDetails changes
   useEffect(() => {
     if (itemDetails) {
       fetchRelatedItems();
@@ -749,7 +735,6 @@ const ItemDisplayPage = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Added Special Offers Modal from categories.tsx */}
       <Modal
         title="Special Offer!"
         open={offerModal.visible}
@@ -775,7 +760,6 @@ const ItemDisplayPage = () => {
       </Modal>
 
       <div className="px-4 sm:px-6 lg:px-8 py-8">
-        {/* Enhanced Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm mb-6">
           <button
             onClick={() => navigate("/main/dashboard/products")}
@@ -793,11 +777,9 @@ const ItemDisplayPage = () => {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column - Product Details */}
           <div className="lg:col-span-8 space-y-6">
             <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                {/* Enhanced Product Image Section with Carousel */}
                 <div className="relative">
                   <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 relative">
                     <img
@@ -805,8 +787,6 @@ const ItemDisplayPage = () => {
                       alt={itemDetails?.itemName}
                       className="w-full h-full object-contain transform transition-transform hover:scale-105"
                     />
-
-                    {/* Navigation arrows for multiple images */}
                     {getAllImages().length > 1 && (
                       <>
                         <button
@@ -824,8 +804,6 @@ const ItemDisplayPage = () => {
                       </>
                     )}
                   </div>
-
-                  {/* Image indicators/thumbnails */}
                   {getAllImages().length > 1 && (
                     <div className="flex justify-center mt-4 space-x-2">
                       {getAllImages().map((image, index) => (
@@ -847,17 +825,6 @@ const ItemDisplayPage = () => {
                       ))}
                     </div>
                   )}
-
-                  {/* Image view label */}
-                  {/* {getAllImages().length > 0 && (
-                    <div className="absolute bottom-4 left-4">
-                      <span className="bg-black/60 text-white px-2 py-1 rounded text-sm">
-                        {getCurrentImageView()}
-                      </span>
-                    </div>
-                  )} */}
-
-                  {/* Enhanced Discount Badge */}
                   {itemDetails && (
                     <div className="absolute top-4 right-4 flex items-center">
                       <span className="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-lg">
@@ -870,7 +837,6 @@ const ItemDisplayPage = () => {
                       </span>
                     </div>
                   )}
-{/* Stock Status Badge */}
                   {itemDetails && (
                     <div className="absolute top-4 left-4">
                       <span
@@ -883,8 +849,6 @@ const ItemDisplayPage = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Enhanced Product Information */}
                 <div className="space-y-4">
                   <div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
@@ -904,8 +868,6 @@ const ItemDisplayPage = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Enhanced Pricing */}
                   <div className="space-y-2">
                     <div className="flex items-baseline space-x-3">
                       <span className="text-3xl font-bold text-gray-900">
@@ -918,16 +880,7 @@ const ItemDisplayPage = () => {
                         ).toLocaleString()}
                       </span>
                     </div>
-                    {/* <div className="text-sm text-gray-600">
-                      Price per {itemDetails?.weightUnit || "unit"}: ₹
-                      {(
-                        Number(itemDetails?.itemPrice)
-                      ).toFixed(2)}
-                      /{itemDetails?.weightUnit}
-                    </div> */}
                   </div>
-
-                  {/* Product Specifications */}
                   <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                     <h3 className="font-semibold text-gray-900">
                       Product Details
@@ -945,12 +898,6 @@ const ItemDisplayPage = () => {
                           {itemDetails?.units}
                         </span>
                       </div>
-                      {/* <div>
-                        <span className="text-gray-600">Category:</span>
-                        <span className="ml-2 font-medium">
-                          {itemDetails?.category}
-                        </span>
-                      </div> */}
                       <div>
                         <span className="text-gray-600">Stock:</span>
                         <span className="ml-2 font-medium">
@@ -959,8 +906,6 @@ const ItemDisplayPage = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Enhanced Add to Cart Section */}
                   <div className="space-y-4">
                     {itemDetails && cartItems[itemDetails.itemId] > 0 ? (
                       <div className="flex items-center justify-between bg-purple-50 rounded-lg p-4">
@@ -1012,7 +957,9 @@ const ItemDisplayPage = () => {
                       </div>
                     ) : (
                       <button
-                        onClick={() => itemDetails && handleAddToCart(itemDetails)}
+                        onClick={() =>
+                          itemDetails && handleAddToCart(itemDetails)
+                        }
                         disabled={
                           !itemDetails ||
                           itemDetails.quantity === 0 ||
@@ -1033,8 +980,6 @@ const ItemDisplayPage = () => {
                         )}
                       </button>
                     )}
-
-                    {/* Max stock warning */}
                     {itemDetails && isMaxStockReached(itemDetails) && (
                       <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
                         <AlertCircle className="w-4 h-4" />
@@ -1044,8 +989,6 @@ const ItemDisplayPage = () => {
                       </div>
                     )}
                   </div>
-
-                  {/* AI Chat Button */}
                   <button
                     onClick={() => handleChatView(itemDetails?.itemName)}
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center space-x-2"
@@ -1056,19 +999,41 @@ const ItemDisplayPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Product Description */}
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Product Description
               </h2>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-gray-700 leading-relaxed mb-6">
                 {itemDetails?.itemDescription ||
                   "High-quality product with excellent features and benefits. Perfect for your needs with great value for money."}
               </p>
-            </div>
 
-            {/* AI Chat Section */}
+              {itemDetails?.itemId ===
+                "f2138ee5-21b2-4ece-894f-3ebb84d768a6" && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Compare Gold Prices
+                  </h3>
+                  <p className="text-gray-600 mb-3">
+                    Verify the authenticity and check today's gold prices:
+                  </p>
+                  <ul className="space-y-2">
+                    {goldPriceUrls?.goLdUrls?.split(",").map((url, index) => (
+                      <li key={index}>
+                        <a
+                          href={url.trim()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline transition-colors"
+                        >
+                          {url.trim()}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
             {showChatSection && (
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4">
@@ -1087,14 +1052,15 @@ const ItemDisplayPage = () => {
                     </button>
                   </div>
                 </div>
-
                 <div className="h-96 flex flex-col">
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     {messages.map((message) => (
                       <div
                         key={message.id}
                         className={`flex ${
-                          message.type === "sent" ? "justify-end" : "justify-start"
+                          message.type === "sent"
+                            ? "justify-end"
+                            : "justify-start"
                         }`}
                       >
                         <div
@@ -1111,14 +1077,15 @@ const ItemDisplayPage = () => {
                       </div>
                     ))}
                   </div>
-
                   <div className="border-t p-4">
                     <div className="flex space-x-2">
                       <input
                         type="text"
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && handleSendMessage()
+                        }
                         placeholder="Ask about this product..."
                         className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
@@ -1135,15 +1102,12 @@ const ItemDisplayPage = () => {
               </div>
             )}
           </div>
-
-          {/* Right Column - Related Products */}
           <div className="lg:col-span-4">
             <div className="bg-white rounded-xl p-6 shadow-sm sticky top-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                 <Package2 className="w-5 h-5 mr-2 text-purple-600" />
                 Related Products
               </h2>
-              
               {relatedItems.length > 0 ? (
                 <div className="space-y-4">
                   {relatedItems.map((item) => (
@@ -1177,8 +1141,6 @@ const ItemDisplayPage = () => {
                               )}
                             </div>
                           </div>
-                          
-                          {/* Add to Cart for Related Items */}
                           <div className="mt-2">
                             {cartItems[item.itemId] > 0 ? (
                               <div className="flex items-center justify-between">
@@ -1260,7 +1222,6 @@ const ItemDisplayPage = () => {
           </div>
         </div>
       </div>
-
       <Footer />
     </div>
   );
