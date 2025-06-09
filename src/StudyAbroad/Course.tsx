@@ -221,7 +221,7 @@ const CoursesPage: React.FC<{
 
     try {
       const response = await axios.post(
-        `https://meta.oxyloans.com/api/student-service/student/getCountryBasedData?pageIndex=${page}&pageSize=${pageSize}`,
+        `https://meta.oxyloans.com/api/user-service/student/getCountryBasedData?pageIndex=${page}&pageSize=${pageSize}`,
         { countryName: countryName },
         createAuthConfig()
       );
@@ -278,7 +278,7 @@ const CoursesPage: React.FC<{
     try {
       const encodedCourseName = encodeURIComponent(course.courseName);
       const response = await axios.get(
-        `https://meta.oxyloans.com/api/student-service/student/${encodedCourseName}/getCoursesBasedUniversities`,
+        `https://meta.oxyloans.com/api/user-service/student/${encodedCourseName}/getCoursesBasedUniversities`,
         createAuthConfig()
       );
       

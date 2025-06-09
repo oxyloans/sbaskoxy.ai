@@ -71,7 +71,7 @@ const apiService = {
   async getUniversityBasedCourses(university: string, accessToken: string) {
     try {
       const response = await fetch(
-        `${BASE_URL}/student-service/student/getUniversityBasedCourses/${encodeURIComponent(university)}`,
+        `${BASE_URL}/user-service/student/getUniversityBasedCourses/${encodeURIComponent(university)}`,
         {
           method: 'GET',
           headers: {

@@ -31,6 +31,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import BASE_URL from "../Config";
 import { message } from "antd";
+import AddressUpdateModal from "./AddressUpdate";
 
 interface OrderAddress {
   flatNo: string;
@@ -158,6 +159,45 @@ const MyOrders: React.FC = () => {
 
   //state variable for the Exchange orders button
   const [showExchangeOrders, setShowExchangeOrders] = useState<boolean>(false);
+
+  //state declarations for the update address
+  const [isAddressUpdateModalOpen, setIsAddressUpdateModalOpen] =
+    useState<boolean>(false);
+  const [addressFormData, setAddressFormData] = useState<{
+    flatNo: string;
+    landMark: string;
+    address: string;
+    pincode: string;
+    latitude: number;
+    longitude: number;
+    area: string;
+    houseType: string;
+    residenceName: string;
+  }>({
+    flatNo: "",
+    landMark: "",
+    address: "",
+    pincode: "",
+    latitude: 0,
+    longitude: 0,
+    area: "",
+    houseType: "",
+    residenceName: "",
+  });
+  const [addressFormErrors, setAddressFormErrors] = useState<{
+    flatNo: string;
+    landMark: string;
+    address: string;
+    pincode: string;
+  }>({
+    flatNo: "",
+    landMark: "",
+    address: "",
+    pincode: "",
+  });
+  const [isAddressUpdating, setIsAddressUpdating] = useState<boolean>(false);
+  const [addressUpdateSuccess, setAddressUpdateSuccess] =
+    useState<boolean>(false);
 
   // Helper function to check if exchange is within 10 days from delivery
   const isWithinExchangePeriod = (deliveredDate: string | null): boolean => {
@@ -1858,6 +1898,401 @@ const MyOrders: React.FC = () => {
     );
   };
 
+  //function to fetch co-ordinates for latitude and longitude
+  const getCoordinates = async (address: string) => {
+    try {
+      const API_KEY = "AIzaSyAM29otTWBIAefQe6mb7f617BbnXTHtN0M";
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        address
+      )}&key=${API_KEY}`;
+      const response = await axios.get(url);
+      return response.data.results[0]?.geometry.location;
+    } catch (error) {
+      console.error("Error fetching coordinates:", error);
+      return null;
+    }
+  };
+
+  //function to validate the address form
+  const validateAddressForm = () => {
+    const newFormErrors = {
+      flatNo: "",
+      landMark: "",
+      address: "",
+      pincode: "",
+    };
+
+    if (!addressFormData.flatNo.trim())
+      newFormErrors.flatNo = "Flat/House number is required";
+    if (!addressFormData.landMark.trim())
+      newFormErrors.landMark = "Landmark is required";
+    if (!addressFormData.address.trim())
+      newFormErrors.address = "Address is required";
+    if (!addressFormData.pincode.trim())
+      newFormErrors.pincode = "PIN code is required";
+    else if (!/^\d{6}$/.test(addressFormData.pincode))
+      newFormErrors.pincode = "Please enter a valid 6-digit PIN code";
+
+    setAddressFormErrors(newFormErrors);
+    return !Object.values(newFormErrors).some((error) => error);
+  };
+
+  //function to handle update address
+  const handleUpdateAddress = async () => {
+    if (!validateAddressForm()) return;
+    if (!selectedOrder) return;
+
+    try {
+      setIsAddressUpdating(true);
+
+      const fullAddress = `${addressFormData.flatNo}, ${addressFormData.landMark}, ${addressFormData.address}, ${addressFormData.pincode}`;
+      const coordinates = await getCoordinates(fullAddress);
+
+      if (!coordinates) {
+        message.error(
+          "Unable to find location coordinates. Please check the address."
+        );
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      const requestBody = {
+        address: addressFormData.address,
+        area: addressFormData.area,
+        flatNo: addressFormData.flatNo,
+        houseType: addressFormData.houseType,
+        landMark: addressFormData.landMark,
+        latitude: coordinates.lat,
+        longitude: coordinates.lng,
+        orderId: selectedOrder.orderId,
+        pincode: parseInt(addressFormData.pincode),
+        residenceName: addressFormData.residenceName,
+      };
+
+      await axios.patch(
+        `${BASE_URL}/order-service/orderAddressUpdate`,
+        requestBody,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      setAddressUpdateSuccess(true);
+      message.success("Address updated successfully!");
+
+      // Update the selected order's address in the state
+      setSelectedOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              orderAddress: {
+                flatNo: addressFormData.flatNo,
+                landMark: addressFormData.landMark,
+                address: addressFormData.address,
+                pincode: parseInt(addressFormData.pincode),
+              },
+            }
+          : prev
+      );
+
+      // Update the orders list
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.orderId === selectedOrder.orderId
+            ? {
+                ...order,
+                orderAddress: {
+                  flatNo: addressFormData.flatNo,
+                  landMark: addressFormData.landMark,
+                  address: addressFormData.address,
+                  pincode: parseInt(addressFormData.pincode),
+                },
+              }
+            : order
+        )
+      );
+
+      setTimeout(() => {
+        setAddressUpdateSuccess(false);
+        setIsAddressUpdateModalOpen(false);
+        resetAddressForm();
+      }, 2000);
+    } catch (error) {
+      console.error("Error updating address:", error);
+      message.error("Failed to update address. Please try again.");
+    } finally {
+      setIsAddressUpdating(false);
+    }
+  };
+
+  //function to reset the form after submission or cancellation.
+  const resetAddressForm = () => {
+    setAddressFormData({
+      flatNo: "",
+      landMark: "",
+      address: "",
+      pincode: "",
+      latitude: 0,
+      longitude: 0,
+      area: "",
+      houseType: "",
+      residenceName: "",
+    });
+    setAddressFormErrors({
+      flatNo: "",
+      landMark: "",
+      address: "",
+      pincode: "",
+    });
+  };
+
+  //function to open modal for update address modal
+  const openAddressUpdateModal = (order: OrderDetailsResponse) => {
+    setSelectedOrder(order);
+    setAddressFormData({
+      flatNo: order.orderAddress?.flatNo || "",
+      landMark: order.orderAddress?.landMark || "",
+      address: order.orderAddress?.address || "",
+      pincode: order.orderAddress?.pincode?.toString() || "",
+      latitude: 0,
+      longitude: 0,
+      area: "",
+      houseType: "",
+      residenceName: "",
+    });
+    setIsAddressUpdateModalOpen(true);
+  };
+
+  //compoenent for update address modal
+  // const AddressUpdateModal: React.FC = () => {
+  //   if (!isAddressUpdateModalOpen || !selectedOrder) return null;
+
+  //   return (
+  //     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
+  //       <div className="bg-white rounded-lg max-w-lg w-full max-h-[95vh] overflow-y-auto scrollbar-hidden">
+  //         <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-4 flex justify-between items-center">
+  //           <h2 className="text-xl font-semibold">Update Address</h2>
+  //           <button
+  //             onClick={() => setIsAddressUpdateModalOpen(false)}
+  //             className="p-1 hover:bg-purple-700 rounded-full transition-colors"
+  //           >
+  //             <X className="h-6 w-6" />
+  //           </button>
+  //         </div>
+  //         <div className="p-6">
+  //           {addressUpdateSuccess ? (
+  //             <div className="text-center py-6">
+  //               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+  //                 <CheckCircle className="w-8 h-8 text-green-500" />
+  //               </div>
+  //               <h3 className="text-lg font-medium text-gray-900 mb-2">
+  //                 Address Updated Successfully
+  //               </h3>
+  //               <p className="text-gray-600 mb-6">
+  //                 The address for your order has been updated.
+  //               </p>
+  //               <button
+  //                 onClick={() => setIsAddressUpdateModalOpen(false)}
+  //                 className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors"
+  //               >
+  //                 Close
+  //               </button>
+  //             </div>
+  //           ) : (
+  //             <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+  //               <div className="grid gap-6 sm:grid-cols-2">
+  //                 <div>
+  //                   <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                     Flat/House Number
+  //                   </label>
+  //                   <input
+  //                     type="text"
+  //                     value={addressFormData.flatNo}
+  //                     onChange={(e) =>{
+  //                       console.log(e.target.value)
+  //                       setAddressFormData({
+  //                         ...addressFormData,
+  //                         flatNo: e.target.value,
+  //                       })
+  //                     }
+  //                     }
+  //                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow"
+  //                     placeholder="Enter flat/house number"
+  //                   />
+  //                   {addressFormErrors.flatNo && (
+  //                     <p className="mt-1 text-sm text-red-600">
+  //                       {addressFormErrors.flatNo}
+  //                     </p>
+  //                   )}
+  //                 </div>
+  //                 <div>
+  //                   <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                     Landmark
+  //                   </label>
+  //                   <input
+  //                     type="text"
+  //                     value={addressFormData.landMark}
+  //                     onChange={(e) =>
+  //                       setAddressFormData({
+  //                         ...addressFormData,
+  //                         landMark: e.target.value,
+  //                       })
+
+  //                     }
+  //                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow"
+  //                     placeholder="Enter landmark"
+  //                   />
+  //                   {addressFormErrors.landMark && (
+  //                     <p className="mt-1 text-sm text-red-600">
+  //                       {addressFormErrors.landMark}
+  //                     </p>
+  //                   )}
+  //                 </div>
+  //               </div>
+
+  //               <div>
+  //                 <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                   Complete Address
+  //                 </label>
+  //                 <textarea
+  //                   value={addressFormData.address}
+  //                   onChange={(e) =>
+  //                     setAddressFormData({
+  //                       ...addressFormData,
+  //                       address: e.target.value,
+  //                     })
+  //                   }
+  //                   rows={3}
+  //                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow resize-none"
+  //                   placeholder="Enter complete address"
+  //                 />
+  //                 {addressFormErrors.address && (
+  //                   <p className="mt-1 text-sm text-red-600">
+  //                     {addressFormErrors.address}
+  //                   </p>
+  //                 )}
+  //               </div>
+
+  //               <div className="grid gap-6 sm:grid-cols-2">
+  //                 <div>
+  //                   <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                     PIN Code
+  //                   </label>
+  //                   <input
+  //                     type="text"
+  //                     value={addressFormData.pincode}
+  //                     onChange={(e) =>
+  //                       setAddressFormData({
+  //                         ...addressFormData,
+  //                         pincode: e.target.value
+  //                           .replace(/\D/g, "")
+  //                           .slice(0, 6),
+  //                       })
+  //                     }
+  //                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow"
+  //                     placeholder="Enter 6-digit PIN code"
+  //                     maxLength={6}
+  //                   />
+  //                   {addressFormErrors.pincode && (
+  //                     <p className="mt-1 text-sm text-red-600">
+  //                       {addressFormErrors.pincode}
+  //                     </p>
+  //                   )}
+  //                 </div>
+  //                 <div>
+  //                   <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                     Area
+  //                   </label>
+  //                   <input
+  //                     type="text"
+  //                     value={addressFormData.area}
+  //                     onChange={(e) =>
+  //                       setAddressFormData({
+  //                         ...addressFormData,
+  //                         area: e.target.value,
+  //                       })
+  //                     }
+  //                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow"
+  //                     placeholder="Enter area"
+  //                   />
+  //                 </div>
+  //               </div>
+
+  //               <div className="grid gap-6 sm:grid-cols-2">
+  //                 <div>
+  //                   <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                     House Type
+  //                   </label>
+  //                   <input
+  //                     type="text"
+  //                     value={addressFormData.houseType}
+  //                     onChange={(e) =>
+  //                       setAddressFormData({
+  //                         ...addressFormData,
+  //                         houseType: e.target.value,
+  //                       })
+  //                     }
+  //                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow"
+  //                     placeholder="Enter house type (e.g., Apartment, Villa)"
+  //                   />
+  //                 </div>
+  //                 <div>
+  //                   <label className="block text-sm font-medium text-gray-700 mb-1">
+  //                     Residence Name
+  //                   </label>
+  //                   <input
+  //                     type="text"
+  //                     value={addressFormData.residenceName}
+  //                     onChange={(e) =>
+  //                       setAddressFormData({
+  //                         ...addressFormData,
+  //                         residenceName: e.target.value,
+  //                       })
+  //                     }
+  //                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-shadow"
+  //                     placeholder="Enter residence name"
+  //                   />
+  //                 </div>
+  //               </div>
+
+  //               <div className="flex items-center justify-end gap-4 pt-4">
+  //                 <button
+  //                   type="button"
+  //                   onClick={() => {
+  //                     setIsAddressUpdateModalOpen(false);
+  //                     resetAddressForm();
+  //                   }}
+  //                   className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 transition-colors"
+  //                 >
+  //                   Cancel
+  //                 </button>
+  //                 <button
+  //                   type="button"
+  //                   onClick={handleUpdateAddress}
+  //                   disabled={isAddressUpdating}
+  //                   className="inline-flex items-center justify-center px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+  //                 >
+  //                   {isAddressUpdating ? (
+  //                     <>
+  //                       <span className="animate-spin h-5 w-5 border-b-2 border-white rounded-full mr-2"></span>
+  //                       Updating...
+  //                     </>
+  //                   ) : (
+  //                     "Update Address"
+  //                   )}
+  //                 </button>
+  //               </div>
+  //             </form>
+  //           )}
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
@@ -2560,13 +2995,22 @@ const MyOrders: React.FC = () => {
                       )}
                   </div>
                   {["0", "1", "2", "3"].includes(selectedOrder.orderStatus) && (
-                    <button
-                      onClick={openEditDeliveryTime}
-                      className="mt-3 flex items-center gap-1.5 text-purple-600 hover:text-purple-800 text-xs font-medium"
-                    >
-                      <Clock className="h-4 w-4" />
-                      Change Delivery Time
-                    </button>
+                    <div className="mt-3 flex flex-col gap-2">
+                      <button
+                        onClick={openEditDeliveryTime}
+                        className="flex items-center gap-1.5 text-purple-600 hover:text-purple-800 text-xs font-medium"
+                      >
+                        <Clock className="h-4 w-4" />
+                        Change Delivery Time
+                      </button>
+                      <button
+                        onClick={() => openAddressUpdateModal(selectedOrder)}
+                        className="flex items-center gap-1.5 text-purple-600 hover:text-purple-800 text-xs font-medium"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        Update Address
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -2996,6 +3440,18 @@ const MyOrders: React.FC = () => {
         )}
 
         <EditDeliveryTimeModal />
+        <AddressUpdateModal
+          isOpen={isAddressUpdateModalOpen}
+          selectedOrder={selectedOrder}
+          addressFormData={addressFormData}
+          addressFormErrors={addressFormErrors}
+          addressUpdateSuccess={addressUpdateSuccess}
+          isAddressUpdating={isAddressUpdating}
+          setAddressFormData={setAddressFormData}
+          setIsAddressUpdateModalOpen={setIsAddressUpdateModalOpen}
+          resetAddressForm={resetAddressForm}
+          handleUpdateAddress={handleUpdateAddress}
+        />
       </div>
       <Footer />
     </div>

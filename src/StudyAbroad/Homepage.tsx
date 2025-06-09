@@ -316,7 +316,7 @@ const UserSelectionPage = () => {
     
     try {
       const response = await axios.get<CountriesResponse>(
-        'https://meta.oxyloans.com/api/student-service/student/getAll-countries',
+        'https://meta.oxyloans.com/api/user-service/student/getAll-countries',
         createAuthConfig()
       );
       
@@ -738,10 +738,10 @@ const UserSelectionPage = () => {
                         </div>
                         <h2 className="text-lg font-semibold text-gray-800 mb-2">Counselor Dashboard</h2>
                         <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-                          Welcome to your counselor portal. Access student management tools and guidance resources.
+                          Thank you for your interest! This portal will be launching soon
                         </p>
                         
-                        <div className="space-y-3">
+                        {/* <div className="space-y-3">
                           <button 
                             onClick={() => navigate('/counselor-dashboard')}
                             className="w-full px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-medium shadow-md text-sm"
@@ -754,7 +754,7 @@ const UserSelectionPage = () => {
                           >
                             Manage Students
                           </button>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   ) : null}

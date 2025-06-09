@@ -166,7 +166,7 @@ const Documents = () => {
 
       console.log('Fetching documents for user:', userId);
 
-      const response = await fetch('https://meta.oxyloans.com/api/common-upload-service/getStudentDocuments', {
+      const response = await fetch('https://meta.oxyloans.com/api/user-service/student/getStudentDocuments', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -250,7 +250,7 @@ const Documents = () => {
         fileName: uploadData.file.name
       });
 
-      const response = await fetch('https://meta.oxyloans.com/api/common-upload-service/uploadStudentDocuments', {
+      const response = await fetch('https://meta.oxyloans.com/api/user-service/student/uploadStudentDocuments', {
         method: 'POST',
         body: formData,
         // Add headers if required

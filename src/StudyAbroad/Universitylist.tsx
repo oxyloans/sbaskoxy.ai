@@ -232,7 +232,7 @@ const UniversityListPage: React.FC = () => {
 
     try {
       const response = await axios.get(
-        `http://65.0.147.157:9001/api/student-service/student/${encodeURIComponent(selectedCourseName)}/getCoursesBasedUniversities`,
+        `https://meta.oxyloans.com/api/user-service/student/${encodeURIComponent(selectedCourseName)}/getCoursesBasedUniversities`,
         createAuthConfig()
       );
 
@@ -280,7 +280,7 @@ const UniversityListPage: React.FC = () => {
 
     try {
       const response = await axios.get(
-        `http://65.0.147.157:9001/api/student-service/student/getUniversityBasedCourses/${encodeURIComponent(university)}`,
+        `https://meta.oxyloans.com/api/user-service/student/getUniversityBasedCourses/${encodeURIComponent(university)}`,
         createAuthConfig()
       );
 

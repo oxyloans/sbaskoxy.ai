@@ -55,7 +55,6 @@ import ItemDisplayPage from "./kart/itemsdisplay";
 import CoursesPage from "./StudyAbroad/Course";
 import UserSelectionPage from "./StudyAbroad/Homepage";
 import UniversityDetailsPage from "./StudyAbroad/Univerisityhome";
-import PersonalDetailsPage from "./StudyAbroad/PersonalDetails";
 import UniversityListPage from "./StudyAbroad/Universitylist";
 import AllUniversities from "./StudyAbroad/AllUniversities";
 import StudentDashboard from "./StudyAbroad/StudentDashboard";
@@ -145,9 +144,10 @@ const App: React.FC = () => {
           <Route path="/assigned-task" element={<AssignedTasksPage />} />
           <Route path="/taskassigneduser" element={<TaskAssignedUser />} /> 
           {/* <Route path="/studyabroad" element={<StudyAbroadWEB />} /> */}
-            <Route path="/studyabroad-web" element={<StudyAbroadLandingPage />} />
+           {/* <Route path="/studentdashboardPre" element={<StudentDashboard />} /> */}
+            <Route path="/studyabroad" element={<StudyAbroadLandingPage />} />
             <Route path="/all-universities" element={<AllUniversities />} />
-            <Route path="/studentdashboardPre" element={<StudentDashboard />} />
+           
             <Route path="/student-dashboard" element={<StudentMainDashboard />} />
 
 
@@ -165,7 +165,7 @@ const App: React.FC = () => {
                                   <Route path="/universities" element={<UniversityDetailsPage />} />
                                   <Route path="/listofuniversities" element={<UniversityListPage />} />
                                   <Route path="/course" element={<CoursesPage />} />
-                                  <Route path="/studentdetails" element={<PersonalDetailsPage />} />
+                                  {/* <Route path="/studentdetails" element={<PersonalDetailsPage />} /> */}
                                   
 
           {/* Landing Page (First Page) */}

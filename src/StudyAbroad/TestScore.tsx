@@ -185,7 +185,7 @@ const TestScores = () => {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token') || localStorage.getItem('token');
       console.log('Using token:', token ? 'Token found' : 'No token found');
       
-      const response = await fetch(`https://meta.oxyloans.com/api/student-service/student/getStudentScores/${userId}`, {
+      const response = await fetch(`https://meta.oxyloans.com/api/user-service/student/getStudentScores/${userId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -253,7 +253,7 @@ const TestScores = () => {
 
       console.log('Payload being sent:', payload);
 
-      const response = await fetch('https://meta.oxyloans.com/api/student-service/student/saveStudentScores', {
+      const response = await fetch('https://meta.oxyloans.com/api/user-service/student/saveStudentScores', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
