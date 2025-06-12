@@ -10,7 +10,7 @@ import rice3 from "../assets/img/ricecard3.png";
 import rice4 from "../assets/img/ricecard4.png";
 import CARD from "../assets/img/oxycard1.png";
 import { CartContext } from "../until/CartContext";
-import { FaSearch, FaTimes, FaQuestionCircle,FaExternalLinkAlt } from "react-icons/fa";
+import { FaSearch, FaTimes, FaQuestionCircle, FaExternalLinkAlt } from "react-icons/fa";
 import BASE_URL from "../Config";
 
 interface Item {
@@ -22,7 +22,7 @@ interface Item {
   quantity: number;
   itemMrp: number;
   units: string;
-  inStock?: boolean; // Add inStock property
+  inStock?: boolean;
 }
 
 interface SubCategory {
@@ -57,9 +57,8 @@ const CategorySkeletonItem: React.FC = () => (
   <div className="px-2 py-1 rounded-full bg-gray-200 animate-pulse w-24 h-8 mx-1"></div>
 );
 
-
-// New OxyLoans Modal Component
-const OxyLoansModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onClose}) => {
+// OxyLoans Modal Component
+const OxyLoansModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
@@ -70,6 +69,7 @@ const OxyLoansModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
+ongono
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
@@ -87,40 +87,35 @@ const OxyLoansModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
-        
         <p className="text-gray-600 mb-6">
           Access OxyLoans services for all your financial needs via our app or website!
         </p>
-        
-        {/* App Store Buttons */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
-          <a 
-            href="https://play.google.com/store/apps/details?id=com.oxyloans.lender" 
-            className="transition-transform hover:scale-105 w-full sm:w-auto flex justify-center" 
-            target="_blank" 
+          <a
+            href="https://play.google.com/store/apps/details?id=com.oxyloans.lender"
+            className="transition-transform hover:scale-105 w-full sm:w-auto flex justify-center"
+            target="_blank"
             rel="noopener noreferrer"
           >
-            <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/512px-Google_Play_Store_badge_EN.svg.png" 
-              alt="Google Play Store" 
-              className="h-12" 
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/512px-Google_Play_Store_badge_EN.svg.png"
+              alt="Google Play Store"
+              className="h-12"
             />
           </a>
-          <a 
-            href="https://apps.apple.com/in/app/oxyloans-lender/id6444208708" 
-            className="transition-transform hover:scale-105 w-full sm:w-auto flex justify-center" 
-            target="_blank" 
+          <a
+            href="https://apps.apple.com/in/app/oxyloans-lender/id6444208708"
+            className="transition-transform hover:scale-105 w-full sm:w-auto flex justify-center"
+            target="_blank"
             rel="noopener noreferrer"
           >
-            <img 
-              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
-              alt="App Store" 
-              className="h-12" 
+            <img
+              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+              alt="App Store"
+              className="h-12"
             />
           </a>
         </div>
-        
-        {/* Website Button */}
         <div className="flex justify-center">
           <a
             href="https://oxyloans.com/signup"
@@ -131,7 +126,6 @@ const OxyLoansModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen
             Go To OxyLoans <FaExternalLinkAlt className="ml-2 w-4 h-4" />
           </a>
         </div>
-        
         <div className="mt-6 pt-4 border-t border-gray-200">
           <p className="text-sm text-gray-500 text-center">
             Lend and Earn Upto 1.75% Monthly ROI and 24% P.A.
@@ -144,14 +138,11 @@ const OxyLoansModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen
 
 const SkeletonLoader: React.FC = () => (
   <>
-    {/* Skeleton for category tabs */}
     <div className="flex overflow-x-auto py-4 px-4 space-x-2 mb-4">
       {Array(6).fill(0).map((_, index) => (
         <CategorySkeletonItem key={index} />
       ))}
     </div>
-    
-    {/* Skeleton for products grid */}
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-4">
       {Array(10).fill(0).map((_, index) => (
         <ProductSkeletonItem key={index} />
@@ -160,13 +151,12 @@ const SkeletonLoader: React.FC = () => (
   </>
 );
 
-// New FAQ Component
-const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onClose}) => {
+// FAQ Modal Component
+const FAQModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'container' | 'referral'>('container');
   const [scrolledToTop, setScrolledToTop] = useState(true);
   const contentRef = React.useRef<HTMLDivElement>(null);
 
-  // Scroll to top when tab changes
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -174,7 +164,6 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
     }
   }, [activeTab]);
 
-  // Track scroll position
   const handleScroll = () => {
     if (contentRef.current) {
       setScrolledToTop(contentRef.current.scrollTop === 0);
@@ -208,13 +197,11 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
-        
-        {/* Tabs */}
         <div className="flex border-b">
           <button
             className={`flex-1 py-3 px-4 font-medium text-sm transition-colors ${
-              activeTab === 'container' 
-                ? 'border-b-2 border-purple-600 text-purple-800' 
+              activeTab === 'container'
+                ? 'border-b-2 border-purple-600 text-purple-800'
                 : 'text-gray-600 hover:text-purple-600'
             }`}
             onClick={() => setActiveTab('container')}
@@ -223,8 +210,8 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
           </button>
           <button
             className={`flex-1 py-3 px-4 font-medium text-sm transition-colors ${
-              activeTab === 'referral' 
-                ? 'border-b-2 border-purple-600 text-purple-800' 
+              activeTab === 'referral'
+                ? 'border-b-2 border-purple-600 text-purple-800'
                 : 'text-gray-600 hover:text-purple-600'
             }`}
             onClick={() => setActiveTab('referral')}
@@ -232,12 +219,8 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
             Referral Program
           </button>
         </div>
-        
-        {/* Shadow when scrolled */}
         <div className={`h-2 bg-gradient-to-b from-gray-100 to-transparent transition-opacity ${scrolledToTop ? 'opacity-0' : 'opacity-100'}`}></div>
-        
-        {/* Content */}
-        <div 
+        <div
           ref={contentRef}
           className="flex-1 overflow-y-auto p-4 pb-6"
           onScroll={handleScroll}
@@ -247,28 +230,24 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
               <div>
                 <h3 className="text-lg font-bold text-purple-800 mb-2">About ASKOXY.AI</h3>
                 <p className="text-gray-700">
-                ASKOXY.AI is an AI-powered platform integrating <em>34+ marketplaces</em>, designed to simplify lives with innovative solutions, including <strong>premium rice delivery</strong>.
+                  ASKOXY.AI is an AI-powered platform integrating <em>34+ marketplaces</em>, designed to simplify lives with innovative solutions, including <strong>premium rice delivery</strong>.
                 </p>
               </div>
-              
               <div>
                 <h3 className="text-lg font-bold text-purple-800 mb-2">Who is the founder of ASKOXY.AI?</h3>
                 <p className="text-gray-700">
                   AskOxy.ai is led by <em>Radhakrishna Thatavarti</em> (<a href="https://www.linkedin.com/in/oxyradhakrishna/" className="text-blue-600 hover:underline">LinkedIn</a>), an entrepreneur with <em>over 24 years of experience</em> in software technology and business leadership. His vision is to <em>empower communities</em> through sustainable, customer-centric solutions using <em>AI, Blockchain, and Java technologies</em>.
                 </p>
               </div>
-              
               <div>
                 <h3 className="text-lg font-bold text-purple-800 mb-2">Free Steel Container Policy</h3>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">What is the Free Steel Container offer?</h4>
                 <p className="text-gray-700">
                   Customers who purchase a <em>26kg rice bag</em> will receive a <em>FREE steel rice container</em>. However, the container remains the <strong>property of OXY Group</strong> until ownership is earned.
                 </p>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">How can I earn ownership of the steel container?</h4>
                 <p className="text-gray-700">
@@ -279,7 +258,6 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
                   <li className="text-gray-700"><em>Purchase 9 rice bags</em> within <em>1 year</em>.</li>
                 </ol>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">What happens if I do not purchase regularly?</h4>
                 <ul className="list-disc ml-5 space-y-1">
@@ -290,7 +268,6 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
                   then the <em>container will be taken back</em>.
                 </p>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">How long does delivery take for the rice bag and container?</h4>
                 <ul className="list-disc ml-5 space-y-1">
@@ -298,7 +275,6 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
                   <li className="text-gray-700">Due to high demand, <em>container delivery</em> may be delayed.</li>
                 </ul>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">Who is eligible to be referred under this program?</h4>
                 <p className="text-gray-700">
@@ -311,7 +287,6 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
               <div>
                 <h3 className="text-lg font-bold text-purple-800 mb-2">Referral Program – Earn a Free Container & ₹100 Cashback!</h3>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">How do I refer someone?</h4>
                 <ul className="list-disc ml-5 space-y-1">
@@ -320,49 +295,42 @@ const FAQModal: React.FC<{isOpen: boolean; onClose: () => void}> = ({isOpen, onC
                   <li className="text-gray-700">Once they <em>place an order for rice and do not cancel it</em>, you'll receive the reward.</li>
                 </ul>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">What rewards do I get for referring a friend?</h4>
                 <p className="text-gray-700">
                   Apart from getting a <em>free steel container</em>, you will also receive <strong>₹100 cashback</strong> in your <em>ASKOXY.AI wallet</em> when you successfully refer someone.
                 </p>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">When will I receive my referral reward?</h4>
                 <p className="text-gray-700">
                   Referral rewards are credited <em>once your referred friend successfully places an order and does not cancel it</em>.
                 </p>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">Where can I check my referral status?</h4>
                 <p className="text-gray-700">
                   You can track your referrals in your <em>ASKOXY.AI dashboard</em>.
                 </p>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">Is there a limit to the number of people I can refer?</h4>
                 <p className="text-gray-700">
                   No, you can refer <em>as many friends as you like</em>. You will receive <strong>₹100 cashback for each successful referral</strong>, subject to promotional terms.
                 </p>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">What happens if my friend forgets to use my referral link?</h4>
                 <p className="text-gray-700">
                   Referrals must <em>use your link at the time of sign-up</em>. If they forget, the referral may not be counted, and you will <strong>not receive the reward</strong>.
                 </p>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">Can I refer myself using another account?</h4>
                 <p className="text-gray-700">
                   No, <em>self-referrals</em> are not allowed. Fraudulent activity may lead to disqualification from the referral program.
                 </p>
               </div>
-              
               <div>
                 <h4 className="font-medium text-purple-700 mb-1">Who do I contact if I have issues with my referral reward?</h4>
                 <p className="text-gray-700">
@@ -397,16 +365,14 @@ const Ricebags: React.FC = () => {
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
   const [noResults, setNoResults] = useState(false);
   const [showAppModal, setShowAppModal] = useState(false);
-  // New state for FAQ modal
   const [showFAQModal, setShowFAQModal] = useState(false);
   const [showOxyLoansModal, setShowOxyLoansModal] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const minSwipeDistance = 50;
-  const bannerImages = [rice1, rice2, rice3,rice4,CARD];
+  const bannerImages = [rice1, rice2, rice3, rice4, CARD];
 
-  // Get search query from location state if available
   useEffect(() => {
     if (location.state?.searchQuery) {
       setSearchTerm(location.state.searchQuery);
@@ -414,49 +380,35 @@ const Ricebags: React.FC = () => {
   }, [location.state]);
 
   const handleItemClick = (item: Item) => {
-    navigate(`/main/itemsdisplay/${item.itemId}`, { 
-      state: { item } 
+    navigate(`/main/itemsdisplay/${item.itemId}`, {
+      state: { item }
     });
   };
 
-  // Handle banner image click based on index
-const handleBannerClick = (index: number) => {
+  const handleBannerClick = (index: number) => {
     if (index === 0) {
-      // Rice1 image - Navigate to combo offers
       setActiveCategory("Combo Offers");
-      
-      // Find the combo offers section
-      const comboSection = document.querySelector('.combo-offers-section') || 
-                           document.getElementById('combo-offers') ||
-                           document.querySelector('[data-category="Combo Offers"]');
-      
+      const comboSection = document.querySelector('.combo-offers-section') ||
+        document.getElementById('combo-offers') ||
+        document.querySelector('[data-category="Combo Offers"]');
       if (comboSection) {
-        // Scroll with offset to position it better in the viewport
-        const yOffset = -80; // Adjust this value based on your header height
+        const yOffset = -80;
         const y = comboSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
-        
         window.scrollTo({
           top: y,
           behavior: 'smooth'
         });
       } else {
-        // More controlled scroll if section not found - scroll half a page
         window.scrollBy({
           top: window.innerHeight / 2,
           behavior: 'smooth'
         });
       }
     } else if (index === 2) {
-      // Rice3 image - Show app download modal
       setShowAppModal(true);
-    }
-    else if (index === 3) {
-      // Rice3 image - Show app download modal
+    } else if (index === 3) {
       setShowFAQModal(true);
-    }
-    // No special action for Rice2 (index 1)
-    else if (index === 4) {
-      // CARD image - Show OxyLoans modal
+    } else if (index === 4) {
       setShowOxyLoansModal(true);
     }
   };
@@ -479,7 +431,7 @@ const handleBannerClick = (index: number) => {
   };
 
   const context = useContext(CartContext);
-  
+
   if (!context) {
     throw new Error("CartDisplay must be used within a CartProvider");
   }
@@ -496,64 +448,77 @@ const handleBannerClick = (index: number) => {
     return () => clearInterval(timer);
   }, [isAutoPlay, bannerImages.length]);
 
-  // Sort items function: in-stock items first, out-of-stock items last
   const sortItemsByStock = (items: Item[]): Item[] => {
     return [...items].sort((a, b) => {
-      // Assume items with quantity > 0 are in stock
       const aInStock = a.quantity > 0;
       const bInStock = b.quantity > 0;
-      
-      // Set the inStock property for each item
       a.inStock = aInStock;
       b.inStock = bInStock;
-      
-      // Sort in-stock items first
       if (aInStock && !bInStock) return -1;
       if (!aInStock && bInStock) return 1;
       return 0;
     });
   };
 
-  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await axios.get(
-          BASE_URL+"/product-service/showItemsForCustomrs"
+          BASE_URL + "/product-service/showItemsForCustomrs"
         );
         const data: Category[] = response.data;
-        
+
         // Create a map to deduplicate items based on both itemId and itemName
         const uniqueItemsMap = new Map<string, Item>();
-        
+
         // Collect all items and ensure uniqueness by both itemId and itemName
         data.forEach(category => {
           category.itemsResponseDtoList.forEach(item => {
-            // Create a combined key using both itemId and normalized itemName
             const normalizedName = item.itemName.trim().toLowerCase();
-            
-            // Check if we already have an item with this name
             let isDuplicate = false;
             uniqueItemsMap.forEach((existingItem) => {
               if (existingItem.itemName.trim().toLowerCase() === normalizedName) {
                 isDuplicate = true;
               }
             });
-            
-            // Only add the item if it's not a duplicate by name
             if (!isDuplicate) {
               uniqueItemsMap.set(item.itemId, item);
             }
           });
         });
-        
-        // Convert map values to array for our "All Items" category
+
+        // Convert map values to array
         const uniqueItemsList = Array.from(uniqueItemsMap.values());
-        
-        // Sort all items by stock status
+
+        // Define grocery categories
+        const groceryCategoryNames = [
+          "Sugar",
+          "Wheat Flour (Atta)",
+          "Cooking Oil",
+          "salt crystals",
+          "Tea powder",
+          "Coffee powder",
+          "Bread",
+          "Peanut Butter",
+          "Maggi Noodles",
+          "Cashew nuts"
+        ];
+
+        // Filter items for Groceries (exclude containers, gold, and rice)
+        const groceryItems = uniqueItemsList.filter(item => {
+          const category = data.find(cat => cat.itemsResponseDtoList.some(i => i.itemId === item.itemId));
+          const categoryName = category?.categoryName || "";
+          return groceryCategoryNames.includes(categoryName);
+        });
+
+        // Filter items for non-grocery categories (exclude Groceries)
+        const nonGroceryCategories = data.filter(category => !groceryCategoryNames.includes(category.categoryName));
+
+        // Sort all items and grocery items by stock status
         const sortedUniqueItems = sortItemsByStock(uniqueItemsList);
-        
-        // Create new categories with sorted items
+        const sortedGroceryItems = sortItemsByStock(groceryItems);
+
+        // Create new categories with sorted items, including Groceries
         const allCategories: Category[] = [
           {
             categoryName: "All Items",
@@ -561,14 +526,19 @@ const handleBannerClick = (index: number) => {
             itemsResponseDtoList: sortedUniqueItems,
             subCategories: []
           },
-          ...data.map(category => ({
+          {
+            categoryName: "Groceries",
+            categoryImage: "https://askoxy.s3.ap-south-1.amazonaws.com/null/document_sugar.jpg", // Example image, can be customized
+            itemsResponseDtoList: sortedGroceryItems,
+            subCategories: []
+          },
+          ...nonGroceryCategories.map(category => ({
             ...category,
-            // Sort items within each category
             itemsResponseDtoList: sortItemsByStock(category.itemsResponseDtoList),
             subCategories: category.subCategories || []
           }))
         ];
-        
+
         setCategories(allCategories);
         setFilteredCategories(allCategories);
       } catch (error) {
@@ -577,12 +547,11 @@ const handleBannerClick = (index: number) => {
         setLoading(false);
       }
     };
-  
+
     fetchCategories();
     setCustomerId(localStorage.getItem("userId") || "");
   }, []);
 
-  // Filter items based on search term
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredCategories(categories);
@@ -591,50 +560,41 @@ const handleBannerClick = (index: number) => {
     }
 
     const term = searchTerm.toLowerCase().trim();
-    
-    // Create filtered categories with only matching items
+
     const filtered = categories.map(category => {
-      const filteredItems = category.itemsResponseDtoList.filter(item => 
-        item.itemName.toLowerCase().includes(term) || 
+      const filteredItems = category.itemsResponseDtoList.filter(item =>
+        item.itemName.toLowerCase().includes(term) ||
         (item.weight && item.weight.toLowerCase().includes(term))
       );
-      
-      // Sort filtered items by stock status
       const sortedFilteredItems = sortItemsByStock(filteredItems);
-      
       return {
         ...category,
         itemsResponseDtoList: sortedFilteredItems
       };
     });
-    
-    // Count total matching items
+
     const totalMatchingItems = filtered.reduce(
-      (count, category) => count + category.itemsResponseDtoList.length, 
+      (count, category) => count + category.itemsResponseDtoList.length,
       0
     );
-    
+
     setNoResults(totalMatchingItems === 0);
     setFilteredCategories(filtered);
-    
-    // If there are matching items, set the active category to show results
+
     if (totalMatchingItems > 0) {
-      // Find the first category with matching items
       const firstCategoryWithItems = filtered.find(
         cat => cat.itemsResponseDtoList.length > 0
       );
-      
       if (firstCategoryWithItems) {
         setActiveCategory(firstCategoryWithItems.categoryName);
       }
     }
   }, [searchTerm, categories]);
 
-  // This function will be passed to the Header component to update search term
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     if (!value.trim()) {
-      setActiveCategory("All Items"); // Reset to all items when search is cleared
+      setActiveCategory("All Items");
     }
   };
 
@@ -650,7 +610,6 @@ const handleBannerClick = (index: number) => {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
@@ -664,12 +623,10 @@ const handleBannerClick = (index: number) => {
     setTimeout(() => setIsAutoPlay(true), 5000);
   };
 
-  // Function to detect mobile device
   const isMobile = () => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
 
-  // Function to open the appropriate app store
   const openAppStore = () => {
     if (isMobile()) {
       if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
@@ -678,14 +635,11 @@ const handleBannerClick = (index: number) => {
         window.location.href = "https://play.google.com/store/apps/details?id=com.oxyrice.oxyrice_customer";
       }
     }
-    // On desktop, the modal will show both options
   };
 
   return (
     <div className="min-h-screen">
-      
-      {/* Image Slider */}
-      <div 
+      <div
         className="relative w-full overflow-hidden cursor-pointer"
         style={{
           height: 'min(30vw * 0.5625, 250px)',
@@ -714,7 +668,7 @@ const handleBannerClick = (index: number) => {
               src={bannerImages[currentImageIndex]}
               className="w-full h-full object-cover md:object-contain"
               onLoad={() => setImageLoaded(true)}
-              style={{ 
+              style={{
                 opacity: imageLoaded ? 1 : 0,
                 transition: 'opacity 0.3s ease-in-out'
               }}
@@ -722,21 +676,19 @@ const handleBannerClick = (index: number) => {
             />
           </motion.div>
         </AnimatePresence>
-
-        {/* Slider Indicators */}
         <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-2 z-10">
           {bannerImages.map((_, index) => (
             <motion.button
               key={index}
               onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering the parent's onClick
+                e.stopPropagation();
                 setCurrentImageIndex(index);
                 setIsAutoPlay(false);
                 setTimeout(() => setIsAutoPlay(true), 5000);
               }}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                currentImageIndex === index 
-                  ? 'w-6 bg-purple-600' 
+                currentImageIndex === index
+                  ? 'w-6 bg-purple-600'
                   : 'w-1.5 bg-purple-300'
               }`}
               whileHover={{ scale: 1.2 }}
@@ -745,8 +697,6 @@ const handleBannerClick = (index: number) => {
           ))}
         </div>
       </div>
-
-      {/* App Modal */}
       <AnimatePresence>
         {showAppModal && (
           <motion.div
@@ -773,11 +723,9 @@ const handleBannerClick = (index: number) => {
                   <FaTimes className="w-5 h-5" />
                 </button>
               </div>
-              
               <p className="text-gray-600 mb-6">
                 Download ASKOXY.AI for a seamless shopping experience with exclusive app-only offers!
               </p>
-              
               <div className="grid grid-cols-2 gap-2 justify-center">
                 <a
                   href="https://apps.apple.com/in/app/oxyrice-rice-grocery-delivery/id6738732000"
@@ -804,9 +752,8 @@ const handleBannerClick = (index: number) => {
                   />
                 </a>
               </div>
-              
               <div className="mt-6 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-500 text-center">
+                <p className="text-sm text-gray-500 text-center">
                   Enjoy exclusive app-only discounts, faster checkout, and order tracking!
                 </p>
               </div>
@@ -814,34 +761,29 @@ const handleBannerClick = (index: number) => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* FAQ Modal */}
       <AnimatePresence>
         {showFAQModal && (
-          <FAQModal 
-            isOpen={showFAQModal} 
-            onClose={() => setShowFAQModal(false)} 
+          <FAQModal
+            isOpen={showFAQModal}
+            onClose={() => setShowFAQModal(false)}
           />
         )}
       </AnimatePresence>
-
       <AnimatePresence>
-  {showOxyLoansModal && (
-    <OxyLoansModal 
-      isOpen={showOxyLoansModal} 
-      onClose={() => setShowOxyLoansModal(false)} 
-    />
-  )}
-</AnimatePresence>
-
-      {/* Search results indicator (if searching) */}
+        {showOxyLoansModal && (
+          <OxyLoansModal
+            isOpen={showOxyLoansModal}
+            onClose={() => setShowOxyLoansModal(false)}
+          />
+        )}
+      </AnimatePresence>
       {searchTerm && (
         <div className="bg-purple-50 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center">
             <FaSearch className="text-purple-600 mr-2" />
             <span className="text-purple-800 font-medium">
-              {noResults 
-                ? "No results found for: " 
+              {noResults
+                ? "No results found for: "
                 : "Search results for: "}
               <span className="font-bold">{searchTerm}</span>
             </span>
@@ -857,42 +799,33 @@ const handleBannerClick = (index: number) => {
           </button>
         </div>
       )}
-
-      {/* Main Content */}
       <main className="bg-white">
-      <motion.div
-  initial={{ y: -20, opacity: 0 }}
-  animate={{ y: 0, opacity: 1 }}
-  className="text-center py-2 md:py-6 relative"
->
-  {/* Container for the heading and FAQ button */}
-  <div className="flex justify-between items-center mb-4">
-    {/* Centered Heading */}
-    <div className="flex-1 text-center">
-      <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-        Premium Quality Rice
-      </h1>
-    </div>
-
-    {/* FAQ Button (Right-aligned) */}
-    <motion.button
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-      className="px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg shadow-md hover:bg-purple-700 transition-all"
-      onClick={() => setShowFAQModal(true)}
-      aria-label="View FAQs"
-    >
-      <FaQuestionCircle className="w-5 h-5 inline-block" />
-      <span className="ml-2">FAQs</span>
-    </motion.button>
-  </div>
-
-  {/* Description Text */}
-  <p className="text-m md:text-lg text-gray-600 px-4">
-    Discover our exclusive collection of premium rice varieties
-  </p>
-</motion.div>
-
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-center py-2 md:py-6 relative"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex-1 text-center">
+              <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                Premium Quality Rice
+              </h1>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg shadow-md hover:bg-purple-700 transition-all"
+              onClick={() => setShowFAQModal(true)}
+              aria-label="View FAQs"
+            >
+              <FaQuestionCircle className="w-5 h-5 inline-block" />
+              <span className="ml-2">FAQs</span>
+            </motion.button>
+          </div>
+          <p className="text-m md:text-lg text-gray-600 px-4">
+            Discover our exclusive collection of premium rice varieties
+          </p>
+        </motion.div>
         {noResults ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="bg-gray-100 rounded-full p-4 mb-4">
@@ -929,21 +862,19 @@ const handleBannerClick = (index: number) => {
           />
         )}
       </main>
-
-      {/* Scroll to Top Button */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         className="fixed bottom-24 right-4 p-3 rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-purple-800 text-white z-50"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
-        <svg 
+        <svg
           className="h-6 w-6"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path 
+          <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
@@ -951,12 +882,9 @@ const handleBannerClick = (index: number) => {
           />
         </svg>
       </motion.button>
-
-      {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
         <div className="flex overflow-x-auto py-3 px-4 space-x-4 scrollbar-hide css-hide-scrollbar">
           {loading ? (
-            // Skeleton navigation items for mobile
             Array(5).fill(0).map((_, index) => (
               <div key={index} className="flex-shrink-0 px-4 py-2 rounded-full bg-gray-200 animate-pulse w-24 h-8"></div>
             ))
@@ -978,7 +906,6 @@ const handleBannerClick = (index: number) => {
           )}
         </div>
       </nav>
-
       <Footer />
     </div>
   );
