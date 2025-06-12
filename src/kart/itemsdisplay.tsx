@@ -70,6 +70,11 @@ interface GoldPriceUrl {
   description: string;
 }
 
+interface GoldImage {
+  id: string;
+  imageUrl: string;
+}
+
 const ItemDisplayPage = () => {
   const { itemId } = useParams<{ itemId: string }>();
   const { state } = useLocation();
@@ -102,6 +107,15 @@ const ItemDisplayPage = () => {
     visible: false,
     content: "",
   });
+  const [goldPriceModal, setGoldPriceModal] = useState<{
+    visible: boolean;
+    urls: string[];
+    images: GoldImage[];
+  }>({
+    visible: false,
+    urls: [],
+    images: [],
+  });
   const [displayedOffers, setDisplayedOffers] = useState<Set<string>>(
     new Set()
   );
@@ -128,8 +142,32 @@ const ItemDisplayPage = () => {
       setGoldPriceUrls(response.data || null);
     } catch (error) {
       console.error("Error fetching gold price URLs:", error);
-      // setGoldPriceUrls();
     }
+  };
+
+  const fetchGoldImages = async (id: string) => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/product-service/imagePriceBasedOnItemId?itemId=${id}`
+      );
+      console.log("Gold images response:", response.data);
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching gold images:", error);
+      return [];
+    }
+  };
+
+  const handleComparePrices = async () => {
+    if (!itemId) return;
+    const urls =
+      goldPriceUrls?.goLdUrls?.split(",").map((url) => url.trim()) || [];
+    const images = await fetchGoldImages(itemId);
+    setGoldPriceModal({ visible: true, urls, images });
+  };
+
+  const handleGoldPriceModalClose = () => {
+    setGoldPriceModal({ visible: false, urls: [], images: [] });
   };
 
   const normalizeWeight = (value: any): number | null => {
@@ -148,7 +186,7 @@ const ItemDisplayPage = () => {
       setItemImages(response.data || []);
       setCurrentImageIndex(0);
     } catch (error) {
-      console.error("Error fetching item images:", error);    
+      console.error("Error fetching item images:", error);
       setItemImages([]);
     }
   };
@@ -198,7 +236,7 @@ const ItemDisplayPage = () => {
     setItemDetails(item);
     fetchItemImages(item.itemId);
     if (item.itemId !== "f2138ee5-21b2-4ece-894f-3ebb84d768a6") {
-      // setGoldPriceUrls([]);
+      setGoldPriceUrls(undefined);
     } else {
       fetchGoldPriceUrls(item.itemId);
     }
@@ -329,7 +367,7 @@ const ItemDisplayPage = () => {
         ) {
           setOfferModal({
             visible: true,
-            content: `<b>2+1 Offer Is Active.</b><br><br>Buy  frequent Bags of ${
+            content: `<b>2+1 Offer Is Active.</b><br><br>Buy frequent Bags of ${
               addItem.itemName
             } of ${normalizeWeight(addItem.weight)} Kg and get 1 Bag of ${
               freeItem.itemName
@@ -498,12 +536,6 @@ const ItemDisplayPage = () => {
     }
   };
 
-  useEffect(() => {
-    if (itemDetails) {
-      fetchRelatedItems();
-    }
-  }, [itemDetails]);
-
   const handleRemoveItem = async (itemId: string) => {
     setLoadingItems((prev) => ({
       ...prev,
@@ -594,7 +626,7 @@ const ItemDisplayPage = () => {
       try {
         await fetchCartData(item.itemId);
       } catch (err) {
-        console.error("Error fetching updated cart data:", err);
+        console.error("Error retrieving updated cart data:", err);
         message.error("Cart updated, but failed to refresh view.");
       }
     } catch (error) {
@@ -759,6 +791,74 @@ const ItemDisplayPage = () => {
         />
       </Modal>
 
+      <Modal
+        title="Compare Gold Prices"
+        open={goldPriceModal.visible}
+        onCancel={handleGoldPriceModalClose}
+        footer={[
+          <button
+            key="close"
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg hover:from-blue-700 hover:to-blue-900"
+            onClick={handleGoldPriceModalClose}
+          >
+            Close
+          </button>,
+        ]}
+        centered
+        width="90%"
+        style={{ maxWidth: "600px" }}
+      >
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Gold Item Images
+            </h3>
+            {goldPriceModal.images.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4">
+                {goldPriceModal.images.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image.imageUrl}
+                    alt={`Gold item ${index + 1}`}
+                    className="w-full h-32 object-contain rounded-lg bg-gray-50"
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">No additional images available.</p>
+            )}
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Gold Price Comparison Links
+            </h3>
+            <p className="text-gray-600 mb-3">
+              Verify the authenticity and check today's gold prices:
+            </p>
+            {goldPriceModal.urls.length > 0 ? (
+              <ul className="space-y-2">
+                {goldPriceModal.urls.map((url, index) => (
+                  <li key={index}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline transition-colors"
+                    >
+                      {url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500">
+                No price comparison links available.
+              </p>
+            )}
+          </div>
+        </div>
+      </Modal>
+
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <nav className="flex items-center space-x-2 text-sm mb-6">
           <button
@@ -825,6 +925,17 @@ const ItemDisplayPage = () => {
                       ))}
                     </div>
                   )}
+                  {itemDetails?.itemId ===
+                    "f2138ee5-21b2-4ece-894f-3ebb84d768a6" && (
+                    <div className="flex justify-center mt-4">
+                      <button
+                        onClick={handleComparePrices}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg"
+                      >
+                        <span>Compare Prices</span>
+                      </button>
+                    </div>
+                  )}
                   {itemDetails && (
                     <div className="absolute top-4 right-4 flex items-center">
                       <span className="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-lg">
@@ -874,7 +985,6 @@ const ItemDisplayPage = () => {
                         ₹{Number(itemDetails?.itemPrice).toLocaleString()}
                       </span>
                       <span className="text-lg text-gray-500 line-through">
-                        ₹
                         {Number(
                           itemDetails?.itemMrp || itemDetails?.priceMrp
                         ).toLocaleString()}
@@ -988,14 +1098,14 @@ const ItemDisplayPage = () => {
                         </span>
                       </div>
                     )}
+                    <button
+                      onClick={() => handleChatView(itemDetails?.itemName)}
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center space-x-2"
+                    >
+                      <Bot className="w-5 h-5" />
+                      <span>Ask AI about this product</span>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleChatView(itemDetails?.itemName)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center space-x-2"
-                  >
-                    <Bot className="w-5 h-5" />
-                    <span>Ask AI about this product</span>
-                  </button>
                 </div>
               </div>
             </div>
@@ -1007,32 +1117,6 @@ const ItemDisplayPage = () => {
                 {itemDetails?.itemDescription ||
                   "High-quality product with excellent features and benefits. Perfect for your needs with great value for money."}
               </p>
-
-              {itemDetails?.itemId ===
-                "f2138ee5-21b2-4ece-894f-3ebb84d768a6" && (
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Compare Gold Prices
-                  </h3>
-                  <p className="text-gray-600 mb-3">
-                    Verify the authenticity and check today's gold prices:
-                  </p>
-                  <ul className="space-y-2">
-                    {goldPriceUrls?.goLdUrls?.split(",").map((url, index) => (
-                      <li key={index}>
-                        <a
-                          href={url.trim()}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline transition-colors"
-                        >
-                          {url.trim()}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </div>
             {showChatSection && (
               <div className="bg-white rounded-xl shadow-sm overflow-hidden">
