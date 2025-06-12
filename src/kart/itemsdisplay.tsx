@@ -148,7 +148,7 @@ const ItemDisplayPage = () => {
       setItemImages(response.data || []);
       setCurrentImageIndex(0);
     } catch (error) {
-      console.error("Error fetching item images:", error);
+      console.error("Error fetching item images:", error);    
       setItemImages([]);
     }
   };
