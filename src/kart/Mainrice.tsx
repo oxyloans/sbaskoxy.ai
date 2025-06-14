@@ -69,7 +69,6 @@ const OxyLoansModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isO
       className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
-ongono
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
@@ -511,12 +510,18 @@ const Ricebags: React.FC = () => {
           return groceryCategoryNames.includes(categoryName);
         });
 
+        // Sort grocery items to place "Cashew nuts" at the start
+        const sortedGroceryItems = sortItemsByStock(groceryItems).sort((a, b) => {
+          if (a.itemName.toLowerCase() === "cashew nuts") return -1;
+          if (b.itemName.toLowerCase() === "cashew nuts") return 1;
+          return 0;
+        });
+
         // Filter items for non-grocery categories (exclude Groceries)
         const nonGroceryCategories = data.filter(category => !groceryCategoryNames.includes(category.categoryName));
 
-        // Sort all items and grocery items by stock status
+        // Sort all items by stock status
         const sortedUniqueItems = sortItemsByStock(uniqueItemsList);
-        const sortedGroceryItems = sortItemsByStock(groceryItems);
 
         // Create new categories with sorted items, including Groceries
         const allCategories: Category[] = [
@@ -528,7 +533,7 @@ const Ricebags: React.FC = () => {
           },
           {
             categoryName: "Groceries",
-            categoryImage: "https://askoxy.s3.ap-south-1.amazonaws.com/null/document_sugar.jpg", // Example image, can be customized
+            categoryImage: null, // Removed image for Groceries filter
             itemsResponseDtoList: sortedGroceryItems,
             subCategories: []
           },
@@ -566,7 +571,14 @@ const Ricebags: React.FC = () => {
         item.itemName.toLowerCase().includes(term) ||
         (item.weight && item.weight.toLowerCase().includes(term))
       );
-      const sortedFilteredItems = sortItemsByStock(filteredItems);
+      // Apply Cashew nuts sorting for Groceries category in search results
+      const sortedFilteredItems = category.categoryName === "Groceries"
+        ? sortItemsByStock(filteredItems).sort((a, b) => {
+            if (a.itemName.toLowerCase() === "cashew nuts") return -1;
+            if (b.itemName.toLowerCase() === "cashew nuts") return 1;
+            return 0;
+          })
+        : sortItemsByStock(filteredItems);
       return {
         ...category,
         itemsResponseDtoList: sortedFilteredItems

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message, Modal } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Package, AlertCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import checkProfileCompletion from "../until/ProfileCheck";
 import BASE_URL from "../Config";
 
@@ -72,6 +72,18 @@ interface CategoriesProps {
   updateCartCount: (count: number) => void;
   setActiveCategory: React.Dispatch<React.SetStateAction<string>>;
 }
+
+const comingSoonItems = [
+  "Sugar",
+  "Wheat Flour (Atta)",
+  "Cooking Oil",
+  "Salt Crystals",
+  "Tea powder",
+  "Coffee powder",
+  "Bread",
+  "Peanut Butter",
+  "Maggi Noodles",
+];
 
 const Categories: React.FC<CategoriesProps> = ({
   categories,
@@ -434,6 +446,7 @@ const Categories: React.FC<CategoriesProps> = ({
       setLoadingItems((prev) => ({
         ...prev,
         items: { ...prev.items, [item.itemId]: false },
+        status: { ...prev.status, [item.itemId]: "" },
       }));
     }
   };
@@ -708,7 +721,7 @@ const Categories: React.FC<CategoriesProps> = ({
                   <div className="absolute left-0 top-0 z-10 w-auto">
                     <div
                       className="bg-purple-600 text-white text-[10px] xs:text-xs sm:text-sm font-bold 
-                    px-1.5 xs:px-2 sm:px-3 lg:px-4 
+                    px-1.5 xs:px-2 sm:px-3 
                     py-0.5 xs:py-0.5 sm:py-1 
                     flex items-center"
                     >
@@ -789,7 +802,14 @@ const Categories: React.FC<CategoriesProps> = ({
                     )}
                   </div>
 
-                  {item.quantity !== 0 ? (
+                  {comingSoonItems.some(
+                    (comingItem) =>
+                      item.itemName.toLowerCase() === comingItem.toLowerCase()
+                  ) ? (
+                    <div className="w-full py-2 mt-2 text-center text-sm font-medium text-gray-500">
+                      Coming Soon
+                    </div>
+                  ) : item.quantity !== 0 ? (
                     isItemUserAdded(item.itemId) ? (
                       <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1 mt-2">
                         <motion.button
