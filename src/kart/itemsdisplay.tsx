@@ -75,6 +75,18 @@ interface GoldImage {
   imageUrl: string;
 }
 
+const COMING_SOON_ITEMS = [
+  "Sugar",
+  "Wheat Flour (Atta)",
+  "Cooking Oil",
+  "Salt Crystals",
+  "Tea Powder",
+  "Coffee Powder",
+  "Bread",
+  "Peanut Butter",
+  "Maggi Noodles",
+];
+
 const ItemDisplayPage = () => {
   const { itemId } = useParams<{ itemId: string }>();
   const { state } = useLocation();
@@ -132,6 +144,10 @@ const ItemDisplayPage = () => {
   const { count, setCount } = context;
 
   const apiKey = "";
+
+  const isComingSoon = (itemName: string) => {
+    return COMING_SOON_ITEMS.includes(itemName);
+  };
 
   const fetchGoldPriceUrls = async (id: string) => {
     try {
@@ -734,7 +750,10 @@ const ItemDisplayPage = () => {
     return Math.round(((mrp - price) / mrp) * 100);
   };
 
-  const getStockStatus = (quantity: number) => {
+  const getStockStatus = (quantity: number, itemName: string) => {
+    if (isComingSoon(itemName)) {
+      return { text: "Coming Soon", color: "bg-blue-100 text-blue-600" };
+    }
     if (quantity === 0)
       return { text: "Out of Stock", color: "bg-red-100 text-red-600" };
     if (quantity <= 5)
@@ -952,10 +971,10 @@ const ItemDisplayPage = () => {
                     <div className="absolute top-4 left-4">
                       <span
                         className={`px-3 py-1.5 rounded-full text-sm font-medium shadow-lg ${
-                          getStockStatus(itemDetails.quantity).color
+                          getStockStatus(itemDetails.quantity, itemDetails.itemName).color
                         }`}
                       >
-                        {getStockStatus(itemDetails.quantity).text}
+                        {getStockStatus(itemDetails.quantity, itemDetails.itemName).text}
                       </span>
                     </div>
                   )}
@@ -1064,6 +1083,10 @@ const ItemDisplayPage = () => {
                           <Trash2 className="w-4 h-4" />
                           <span className="text-sm">Remove</span>
                         </button>
+                      </div>
+                    ) : itemDetails && isComingSoon(itemDetails.itemName) ? (
+                      <div className="w-full bg-blue-100 text-blue-600 py-4 px-6 rounded-lg font-semibold flex items-center justify-center space-x-2">
+                        <span>Coming Soon</span>
                       </div>
                     ) : (
                       <button
@@ -1264,6 +1287,10 @@ const ItemDisplayPage = () => {
                                     )}
                                   </button>
                                 </div>
+                              </div>
+                            ) : isComingSoon(item.itemName) ? (
+                              <div className="w-full bg-blue-100 text-blue-600 py-1.5 px-3 rounded text-sm font-medium flex items-center justify-center">
+                                <span>Coming Soon</span>
                               </div>
                             ) : (
                               <button
