@@ -99,12 +99,11 @@ const ItemDisplayPage = () => {
   const [relatedItems, setRelatedItems] = useState<Item[]>([]);
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
-  const [showChat, setShowChat] = useState(false);
+  const [showChatSection, setShowChatSection] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const customerId = localStorage.getItem("userId");
   const token = localStorage.getItem("accessToken");
-  const [showChatSection, setShowChatSection] = useState(false);
   const [loadingItems, setLoadingItems] = useState<{
     items: { [key: string]: boolean };
     status: { [key: string]: string };
@@ -210,10 +209,16 @@ const ItemDisplayPage = () => {
   const fetchItemDetails = async (id: string) => {
     try {
       const response = await axios.get(
-        `${BASE_URL}/product-service/showItemsForCustomrs`
+        `${BASE_URL}/product-service/showGroupItemsForCustomrs`
       );
-      const allItems = response.data.flatMap(
-        (category: any) => category.itemsResponseDtoList
+      // Flatten the nested structure to get all items
+      const allItems = response.data.flatMap((categoryType: any) =>
+        categoryType.categories.flatMap((category: any) =>
+          category.itemsResponseDtoList.map((item: any) => ({
+            ...item,
+            category: category.categoryName,
+          }))
+        )
       );
       const item = allItems.find((item: Item) => item.itemId === id);
       if (item) {
@@ -482,18 +487,17 @@ const ItemDisplayPage = () => {
   const fetchRelatedItems = async () => {
     try {
       const response = await axios.get(
-        `${BASE_URL}/product-service/showItemsForCustomrs`
+        `${BASE_URL}/product-service/showGroupItemsForCustomrs`
       );
 
       console.log("Fetched Categories:", response.data);
 
-      const matchingCategory = response.data.find(
-        (category: any) =>
-          category.itemsResponseDtoList &&
-          Array.isArray(category.itemsResponseDtoList) &&
-          category.itemsResponseDtoList.some(
-            (item: any) => item.itemId === itemDetails?.itemId
-          )
+      const matchingCategory = response.data.flatMap((categoryType: any) =>
+        categoryType.categories
+      ).find((category: any) =>
+        category.itemsResponseDtoList.some(
+          (item: any) => item.itemId === itemDetails?.itemId
+        )
       );
 
       if (
@@ -502,7 +506,11 @@ const ItemDisplayPage = () => {
       ) {
         const categoryItems = matchingCategory.itemsResponseDtoList
           .filter((item: any) => item.itemId !== itemDetails?.itemId)
-          .slice(0, 4);
+          .slice(0, 4)
+          .map((item: any) => ({
+            ...item,
+            category: matchingCategory.categoryName,
+          }));
 
         console.log("Related Items:", categoryItems);
         setRelatedItems(categoryItems);
@@ -658,15 +666,15 @@ const ItemDisplayPage = () => {
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
-    const newMessage = {
+    const newMessage: Message = {
       id: messages.length,
       text: inputMessage,
-      type: "sent" as const,
+      type: "sent",
     };
     setMessages((prev) => [...prev, newMessage]);
     setInputMessage("");
 
-    const mapTypeToRole = (type: any) => {
+    const mapTypeToRole = (type: Message["type"]) => {
       if (type === "sent") return "user";
       if (type === "received") return "assistant";
       return "system";
@@ -714,9 +722,9 @@ const ItemDisplayPage = () => {
       setMessages((prev) => [
         ...prev,
         {
-          id: messages.length + 2,
+          id: messages.length + 1,
           text: response.data.choices[0].message.content,
-          type: "system" as const,
+          type: "system",
         },
       ]);
     } catch (error) {
@@ -724,23 +732,23 @@ const ItemDisplayPage = () => {
       setMessages((prev) => [
         ...prev,
         {
-          id: messages.length + 2,
+          id: messages.length + 1,
           text: "Sorry, I couldn't process your request at the moment.",
-          type: "system" as const,
+          type: "system",
         },
       ]);
     }
   };
 
-  const handleChatView = (value: any) => {
+  const handleChatView = (value: string) => {
     setShowChatSection(!showChatSection);
-    if (messages.length == 0) {
+    if (messages.length === 0) {
       setMessages((prev) => [
         ...prev,
         {
           id: messages.length + 1,
-          text: `What would you like to know about ${value} this product?`,
-          type: "system" as const,
+          text: `What would you like to know about ${value}?`,
+          type: "system",
         },
       ]);
     }
@@ -754,23 +762,26 @@ const ItemDisplayPage = () => {
     if (isComingSoon(itemName)) {
       return { text: "Coming Soon", color: "bg-blue-100 text-blue-600" };
     }
-    if (quantity === 0)
+    if (quantity === 0) {
       return { text: "Out of Stock", color: "bg-red-100 text-red-600" };
-    if (quantity <= 5)
+    }
+    if (quantity <= 5) {
       return {
-        text: `Only ${quantity} left!`,
+        text: `Only ${quantity}`,
         color: "bg-yellow-100 text-yellow-600",
       };
+    }
     return { text: "In Stock", color: "bg-green-100 text-green-600" };
   };
 
   const isMaxStockReached = (item: Item) => {
-    return cartItems[item.itemId] >= item.quantity;
+    return (cartItems[item.itemId] || 0) >= item.quantity;
   };
 
-  const isItemUserAdded = (itemId: string): boolean => {
+  const isItemAdded = (itemId: string): boolean => {
     return cartData.some(
-      (cartItem) => cartItem.itemId === itemId && cartItem.status === "ADD"
+      (cartItem: CartItem) =>
+        cartItem.itemId === itemId && cartItem.status === "ADD"
     );
   };
 
@@ -971,10 +982,14 @@ const ItemDisplayPage = () => {
                     <div className="absolute top-4 left-4">
                       <span
                         className={`px-3 py-1.5 rounded-full text-sm font-medium shadow-lg ${
-                          getStockStatus(itemDetails.quantity, itemDetails.itemName).color
+                          getStockStatus(itemDetails.quantity, itemDetails.itemName)
+                            .color
                         }`}
                       >
-                        {getStockStatus(itemDetails.quantity, itemDetails.itemName).text}
+                        {
+                          getStockStatus(itemDetails.quantity, itemDetails.itemName)
+                            .text
+                        }
                       </span>
                     </div>
                   )}
@@ -1040,9 +1055,7 @@ const ItemDisplayPage = () => {
                       <div className="flex items-center justify-between bg-purple-50 rounded-lg p-4">
                         <div className="flex items-center space-x-4">
                           <button
-                            onClick={() =>
-                              handleQuantityChange(itemDetails, false)
-                            }
+                            onClick={() => handleQuantityChange(itemDetails, false)}
                             disabled={
                               loadingItems.items[itemDetails.itemId] ||
                               cartItems[itemDetails.itemId] <= 0
@@ -1059,9 +1072,7 @@ const ItemDisplayPage = () => {
                             {cartItems[itemDetails.itemId]}
                           </span>
                           <button
-                            onClick={() =>
-                              handleQuantityChange(itemDetails, true)
-                            }
+                            onClick={() => handleQuantityChange(itemDetails, true)}
                             disabled={
                               loadingItems.items[itemDetails.itemId] ||
                               isMaxStockReached(itemDetails)
@@ -1090,9 +1101,7 @@ const ItemDisplayPage = () => {
                       </div>
                     ) : (
                       <button
-                        onClick={() =>
-                          itemDetails && handleAddToCart(itemDetails)
-                        }
+                        onClick={() => itemDetails && handleAddToCart(itemDetails)}
                         disabled={
                           !itemDetails ||
                           itemDetails.quantity === 0 ||
@@ -1122,7 +1131,7 @@ const ItemDisplayPage = () => {
                       </div>
                     )}
                     <button
-                      onClick={() => handleChatView(itemDetails?.itemName)}
+                      onClick={() => handleChatView(itemDetails?.itemName || "")}
                       className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center space-x-2"
                     >
                       <Bot className="w-5 h-5" />
@@ -1165,9 +1174,7 @@ const ItemDisplayPage = () => {
                       <div
                         key={message.id}
                         className={`flex ${
-                          message.type === "sent"
-                            ? "justify-end"
-                            : "justify-start"
+                          message.type === "sent" ? "justify-end" : "justify-start"
                         }`}
                       >
                         <div

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message, Modal } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,6 +47,7 @@ interface Offer {
 
 interface UserEligibleOffer {
   offerName: string;
+
   eligible: boolean;
   weight: number;
 }
@@ -73,18 +74,6 @@ interface CategoriesProps {
   setActiveCategory: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const comingSoonItems = [
-  "Sugar",
-  "Wheat Flour (Atta)",
-  "Cooking Oil",
-  "Salt Crystals",
-  "Tea powder",
-  "Coffee powder",
-  "Bread",
-  "Peanut Butter",
-  "Maggi Noodles",
-];
-
 const Categories: React.FC<CategoriesProps> = ({
   categories,
   activeCategory,
@@ -98,13 +87,23 @@ const Categories: React.FC<CategoriesProps> = ({
 }) => {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [cartData, setCartData] = useState<CartItem[]>([]);
-  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(
+    null
+  );
   const [offers, setOffers] = useState<Offer[]>([]);
-  const [userEligibleOffers, setUserEligibleOffers] = useState<UserEligibleOffer[]>([]);
+  const [userEligibleOffers, setUserEligibleOffers] = useState<
+    UserEligibleOffer[]
+  >([]);
   const [isOffersModalVisible, setIsOffersModalVisible] = useState(false);
   const [isFetchingOffers, setIsFetchingOffers] = useState(false);
-  const [displayedOffers, setDisplayedOffers] = useState<Set<string>>(new Set());
-  const [offerModal, setOfferModal] = useState<{ visible: boolean; content: string }>({
+  const [displayedOffers, setDisplayedOffers] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("displayedOffers");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+  const [offerModal, setOfferModal] = useState<{
+    visible: boolean;
+    content: string;
+  }>({
     visible: false,
     content: "",
   });
@@ -116,6 +115,55 @@ const Categories: React.FC<CategoriesProps> = ({
     items: {},
     status: {},
   });
+
+  const location = useLocation();
+
+  const [selectedFilter, setSelectedFilter] = useState<string | null>("ALL");
+  const [selectedFilterKey, setSelectedFilterKey] = useState<string | null>(
+    "0"
+  );
+  const [activeWeightFilter, setActiveWeightFilter] = useState<string | null>(
+    null
+  );
+
+  const [disabledFilters, setDisabledFilters] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  const weightFilters = [
+    { label: "1 KG", value: "1.0" },
+    { label: "5 KG", value: "5.0" },
+    { label: "10 KG", value: "10.0" },
+    { label: "26 KG", value: "26.0" },
+  ];
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const weight = queryParams.get("weight");
+    if (weight && weightFilters.some((filter) => filter.value === weight)) {
+      setActiveWeightFilter(weight);
+    } else {
+      setActiveWeightFilter(null);
+    }
+  }, [location.search]);
+
+  const handleWeightFilterClick = (value: string) => {
+    if (activeWeightFilter === value) {
+      setActiveWeightFilter(null);
+    } else {
+      setActiveWeightFilter(value);
+    }
+
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "toggle_weight_filter", {
+        filter_value: value,
+        new_state: activeWeightFilter === value ? "off" : "on",
+      });
+    }
+
+    setSelectedFilterKey("0");
+    setSelectedFilter("ALL");
+  };
 
   const fetchCartData = async (itemId: string = "") => {
     const userId = localStorage.getItem("userId");
@@ -142,7 +190,8 @@ const Categories: React.FC<CategoriesProps> = ({
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
-      const customerCart: CartItem[] = response.data?.customerCartResponseList || [];
+      const customerCart: CartItem[] =
+        response.data?.customerCartResponseList || [];
 
       console.log("fetchCartData API response:", response.data);
 
@@ -174,6 +223,11 @@ const Categories: React.FC<CategoriesProps> = ({
         customerCart,
       });
 
+      const goldBarItemIds = [
+        "619bd23a-0267-46da-88da-30977037225a",
+        "4fca7ab8-bfc6-446a-9405-1aba1912d90a",
+      ];
+
       const newDisplayedOffers = new Set(displayedOffers);
 
       // Check for 2+1 Offer
@@ -181,6 +235,9 @@ const Categories: React.FC<CategoriesProps> = ({
         (item) => item.status === "ADD" && item.cartQuantity >= 2
       );
       for (const addItem of twoPlusOneItems) {
+        if (goldBarItemIds.includes(addItem.itemId)) {
+          continue; // Skip gold bar items
+        }
         const freeItem = customerCart.find(
           (item) =>
             item.itemId === addItem.itemId &&
@@ -195,7 +252,13 @@ const Categories: React.FC<CategoriesProps> = ({
         ) {
           setOfferModal({
             visible: true,
-            content: `<b>2+1 Offer Is Active.</b><br><br>Buy 2 Bags of ${addItem.itemName} of ${normalizeWeight(addItem.weight)} Kg and get 1 Bag of ${freeItem.itemName} of ${normalizeWeight(freeItem.weight)} Kg for free offer has been applied.<br><br><i style="color: grey;"><strong>Note: </strong>This offer is only applicable once.</i>`,
+            content: `<b>2+1 Offer Is Active.</b><br><br>Buy Two Bags of ${
+              addItem.itemName
+            } of ${normalizeWeight(addItem.weight)} Kg and get One Bag of ${
+              freeItem.itemName
+            } of ${normalizeWeight(
+              freeItem.weight
+            )} Kg for free offer has been applied.<br><br><i style="color: grey;"><strong>Note: </strong>This offer is only applicable once.</i>`,
           });
           newDisplayedOffers.add(`2+1_${addItem.itemId}`);
         }
@@ -209,19 +272,25 @@ const Categories: React.FC<CategoriesProps> = ({
           item.cartQuantity >= 1
       );
       for (const addItem of fivePlusTwoItems) {
+        if (goldBarItemIds.includes(addItem.itemId)) {
+          continue; // Skip gold bar items
+        }
         const freeItems = customerCart.find(
           (item) =>
             item.status === "FREE" &&
             normalizeWeight(item.weight) === 1.0 &&
             item.cartQuantity === 2
         );
-        if (
-          freeItems &&
-          !newDisplayedOffers.has(`5+2_${addItem.itemId}`)
-        ) {
+        if (freeItems && !newDisplayedOffers.has(`5+2_${addItem.itemId}`)) {
           setOfferModal({
             visible: true,
-            content: `<b>5+2 Offer Is Active.</b><br><br>Buy 1 Bag of ${addItem.itemName} of ${normalizeWeight(addItem.weight)} Kg and get 2 Bags of ${freeItems.itemName} of ${normalizeWeight(freeItems.weight)} Kg for free offer has been applied.<br><br><i style="color: grey;"><strong>Note: </strong>This offer is only applicable once.</i>`,
+            content: `<b>5+2 Offer Is Active.</b><br><br>Buy One Bag of ${
+              addItem.itemName
+            } of ${normalizeWeight(addItem.weight)} Kg and get Two Bags of ${
+              freeItems.itemName
+            } of ${normalizeWeight(
+              freeItems.weight
+            )} Kg for free offer has been applied.<br><br><i style="color: grey;"><strong>Note: </strong>This offer is only applicable once.</i>`,
           });
           newDisplayedOffers.add(`5+2_${addItem.itemId}`);
         }
@@ -231,10 +300,14 @@ const Categories: React.FC<CategoriesProps> = ({
       const containerOfferItems = customerCart.filter(
         (item) =>
           item.status === "ADD" &&
-          (normalizeWeight(item.weight) === 10.0 || normalizeWeight(item.weight) === 26.0) &&
+          (normalizeWeight(item.weight) === 10.0 ||
+            normalizeWeight(item.weight) === 26.0) &&
           item.cartQuantity >= 1
       );
       for (const addItem of containerOfferItems) {
+        if (goldBarItemIds.includes(addItem.itemId)) {
+          continue; // Skip gold bar items
+        }
         const freeContainer = customerCart.find(
           (item) =>
             item.status === "FREE" &&
@@ -247,7 +320,7 @@ const Categories: React.FC<CategoriesProps> = ({
         ) {
           setOfferModal({
             visible: true,
-            content: `<b>Special Offer!</b><br>Free Container added to the cart successfully.`,
+            content: `<br>Free Container added to the cart successfully.`,
           });
           newDisplayedOffers.add(`container_${addItem.itemId}`);
         }
@@ -258,6 +331,10 @@ const Categories: React.FC<CategoriesProps> = ({
       updateCart(cartItemsMap);
       updateCartCount(totalQuantity);
       localStorage.setItem("cartCount", totalQuantity.toString());
+      localStorage.setItem(
+        "displayedOffers",
+        JSON.stringify(Array.from(newDisplayedOffers))
+      );
       setDisplayedOffers(newDisplayedOffers);
 
       if (itemId) {
@@ -274,6 +351,7 @@ const Categories: React.FC<CategoriesProps> = ({
       updateCart({});
       updateCartCount(0);
       localStorage.setItem("cartCount", "0");
+      message.error("Failed to fetch cart data.");
       if (itemId) {
         setLoadingItems((prev) => ({
           ...prev,
@@ -281,7 +359,6 @@ const Categories: React.FC<CategoriesProps> = ({
           status: { ...prev.status, [itemId]: "" },
         }));
       }
-      message.error("Failed to fetch cart data.");
     }
   };
 
@@ -416,7 +493,7 @@ const Categories: React.FC<CategoriesProps> = ({
       return;
     }
 
-    if (!checkProfileCompletion(userId, "true")) {
+    if (!checkProfileCompletion()) {
       Modal.error({
         title: "Profile Incomplete",
         content: "Please complete your profile to add items to the cart.",
@@ -446,7 +523,6 @@ const Categories: React.FC<CategoriesProps> = ({
       setLoadingItems((prev) => ({
         ...prev,
         items: { ...prev.items, [item.itemId]: false },
-        status: { ...prev.status, [item.itemId]: "" },
       }));
     }
   };
@@ -454,6 +530,34 @@ const Categories: React.FC<CategoriesProps> = ({
   const calculateDiscount = (mrp: number | string, price: number): number => {
     const mrpNum = typeof mrp === "string" ? parseFloat(mrp) : mrp;
     return Math.round(((mrpNum - price) / mrpNum) * 100);
+  };
+
+  const getCurrentCategoryItems = () => {
+    const currentCategory =
+      categories.find((cat) => cat.categoryName === activeCategory) ||
+      categories[0];
+    if (!currentCategory) return [];
+
+    const goldBarItemIds = [
+      "619bd23a-0267-46da-88da-30977037225a",
+      "4fca7ab8-bfc6-446a-9405-1aba1912d90a",
+    ];
+
+    let items = currentCategory.itemsResponseDtoList;
+
+    if (activeWeightFilter) {
+      items = items.filter((item) => {
+        // Exclude gold bar items when a weight filter is active
+        if (goldBarItemIds.includes(item.itemId)) {
+          return false;
+        }
+        // Apply weight filter for other items
+        const itemWeight = parseFloat(item.weight).toFixed(1);
+        return itemWeight === activeWeightFilter;
+      });
+    }
+
+    return items;
   };
 
   const handleQuantityChange = async (
@@ -517,14 +621,6 @@ const Categories: React.FC<CategoriesProps> = ({
         status: { ...prev.status, [item.itemId]: "" },
       }));
     }
-  };
-
-  const getCurrentCategoryItems = () => {
-    const currentCategory =
-      categories.find((cat) => cat.categoryName === activeCategory) ||
-      categories[0];
-    if (!currentCategory) return [];
-    return currentCategory.itemsResponseDtoList;
   };
 
   const getCurrentSubCategories = () => {
@@ -656,6 +752,49 @@ const Categories: React.FC<CategoriesProps> = ({
         </div>
       </div>
 
+      <div className="mb-4 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center space-x-3 pb-2">
+          {weightFilters.map((filter, index) => (
+            <motion.button
+              key={index}
+              whileHover={{
+                scale:
+                  filter.value === "1.0" && disabledFilters[filter.value]
+                    ? 1
+                    : 1.02,
+              }}
+              whileTap={{
+                scale:
+                  filter.value === "1.0" && disabledFilters[filter.value]
+                    ? 1
+                    : 0.98,
+              }}
+              className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                filter.value === "1.0" && disabledFilters[filter.value]
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed opacity-60"
+                  : filter.value === activeWeightFilter
+                  ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md"
+                  : "bg-gray-50 text-gray-700 hover:bg-purple-50 border border-purple-100"
+              }`}
+              onClick={() => handleWeightFilterClick(filter.value)}
+              disabled={filter.value === "1.0" && disabledFilters[filter.value]}
+              title={
+                filter.value === "1.0" && disabledFilters[filter.value]
+                  ? "Disabled. Click Reset to enable."
+                  : ""
+              }
+            >
+              {filter.label}
+              {filter.value === "1.0" && (
+                <span className="ml-1 text-xs">
+                  {disabledFilters[filter.value] ? "(Disabled)" : ""}
+                </span>
+              )}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
       {getCurrentSubCategories().length > 0 && (
         <div className="mb-6 overflow-x-auto scrollbar whitespace-nowrap">
           <div className="flex space-x-3 pb-2 w-max">
@@ -721,7 +860,7 @@ const Categories: React.FC<CategoriesProps> = ({
                   <div className="absolute left-0 top-0 z-10 w-auto">
                     <div
                       className="bg-purple-600 text-white text-[10px] xs:text-xs sm:text-sm font-bold 
-                    px-1.5 xs:px-2 sm:px-3 
+                    px-1.5 xs:px-2 sm:px-3 lg:px-4 
                     py-0.5 xs:py-0.5 sm:py-1 
                     flex items-center"
                     >
@@ -787,8 +926,12 @@ const Categories: React.FC<CategoriesProps> = ({
                     {item.itemName}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Weight: {item.weight}
-                    {item.units}
+                    Weight: {item.weight}{" "}
+                    {item.units == "pcs"
+                      ? "Pc"
+                      : item.weight == "1"
+                      ? "Kg"
+                      : item.units}
                   </p>
 
                   <div className="flex items-baseline space-x-2">
@@ -802,14 +945,7 @@ const Categories: React.FC<CategoriesProps> = ({
                     )}
                   </div>
 
-                  {comingSoonItems.some(
-                    (comingItem) =>
-                      item.itemName.toLowerCase() === comingItem.toLowerCase()
-                  ) ? (
-                    <div className="w-full py-2 mt-2 text-center text-sm font-medium text-gray-500">
-                      Coming Soon
-                    </div>
-                  ) : item.quantity !== 0 ? (
+                  {item.quantity !== 0 ? (
                     isItemUserAdded(item.itemId) ? (
                       <div className="flex items-center justify-between bg-purple-50 rounded-lg p-1 mt-2">
                         <motion.button

@@ -35,17 +35,20 @@ const SearchBar = () => {
       try {
         const token = localStorage.getItem("accessToken");
         const response = await axios.get(
-          `${BASE_URL}/product-service/showItemsForCustomrs`,
+          `${BASE_URL}/product-service/showGroupItemsForCustomrs`,
           {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           }
         );
 
-        const items = response.data.flatMap((category: any) =>
-          category.itemsResponseDtoList.map((item: any) => ({
-            ...item,
-            categoryName: category.categoryName,
-          }))
+        // Flatten the nested structure: categoryType > categories > itemsResponseDtoList
+        const items = response.data.flatMap((group: any) =>
+          group.categories.flatMap((category: any) =>
+            category.itemsResponseDtoList.map((item: any) => ({
+              ...item,
+              categoryName: category.categoryName,
+            }))
+          )
         );
         setAllItems(items);
         setIsDataLoaded(true);

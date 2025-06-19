@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import BASE_URL from "../Config";
 
 /**
@@ -7,36 +7,29 @@ import BASE_URL from "../Config";
  * @param {string} token - The authentication token
  * @returns {Promise<boolean>} - Whether profile is complete or not
  */
-export default async function checkProfileCompletion(customerId: string, token: string): Promise<boolean> {
-  if (!customerId || !token) {
-    console.error("Missing customerId or token");
-    return false;
+export default function checkProfileCompletion() {
+  const profileData = localStorage.getItem("profileData");
+  // console.log("profileData", profileData);
+
+  if (profileData) {
+    const parsedData = JSON.parse(profileData);
+    //   console.log("parsedData", parsedData);
+    return !!(
+      (
+        parsedData.userFirstName &&
+        parsedData.userFirstName != "" &&
+        parsedData.userFirstName !== null
+      )
+      // parsedData.userLastName &&
+      // parsedData.userLastName != "" &&
+      // parsedData.userLastName !== null &&
+      // parsedData.customerEmail &&
+      // parsedData.customerEmail != "" &&
+      // parsedData.customerEmail !== null &&
+      // parsedData.alterMobileNumber &&
+      // parsedData.alterMobileNumber != " " &&
+      // parsedData.alterMobileNumber !== null
+    );
   }
-  
-  try {
-    const response = await axios({
-      method: "GET",
-      url: `${BASE_URL}/user-service/customerProfileDetails?customerId=${customerId}`,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    
-    if (response.status === 200) {
-      const profileData = response.data;
-      
-      return !!(
-        profileData.firstName &&
-        profileData.firstName !== "" &&
-        profileData.firstName !== null 
-        // profileData.mobileNumber &&
-        // profileData.mobileNumber !== "" &&
-        // profileData.mobileNumber !== null
-      );
-    }
-    return false;
-  } catch (error) {
-    console.error("Error checking profile completion:", error);
-    return false;
-  }
+  return false;
 }
