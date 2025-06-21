@@ -10,7 +10,6 @@ import rice3 from "../assets/img/ricecard3.png";
 import rice4 from "../assets/img/ricecard4.png";
 import CARD from "../assets/img/oxycard1.png";
 import { CartContext } from "../until/CartContext";
-import VideoImage from "../assets/img/Videothumb.png";
 import {
   FaSearch,
   FaUniversity,
@@ -30,11 +29,12 @@ import {
 } from "lucide-react";
 import BASE_URL from "../Config";
 
+// Define interfaces to match categories.tsx
 interface Item {
   itemName: string;
   itemId: string;
   itemImage: string | null;
-  weight: string; // Changed to string for compatibility with Categories.tsx
+  weight: string;
   itemPrice: number;
   quantity: number;
   itemMrp: number;
@@ -44,22 +44,16 @@ interface Item {
   savePercentage?: number;
   barcodeValue?: string | null;
   inStock?: boolean;
-}
-
-interface SubCategory {
-  id: string;
-  name: string;
-  image?: string | null;
+  categoryName?: string; // Align with categories.tsx
 }
 
 interface Category {
   categoryName: string;
   categoryImage: string | null;
   itemsResponseDtoList: Item[];
-  subCategories?: SubCategory[];
 }
 
-interface CategoryGroup {
+interface CategoryType {
   categoryType: string;
   categories: Category[];
 }
@@ -510,7 +504,7 @@ const FAQModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
 };
 
 const Ricebags: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryType[]>([]);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("All Items");
@@ -527,7 +521,9 @@ const Ricebags: React.FC = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<CategoryType[]>(
+    []
+  );
   const [noResults, setNoResults] = useState(false);
   const [showAppModal, setShowAppModal] = useState(false);
   const [showFAQModal, setShowFAQModal] = useState(false);
@@ -558,7 +554,9 @@ const Ricebags: React.FC = () => {
       if (comboSection) {
         const yOffset = -80;
         const y =
-          comboSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          comboSection.getBoundingClientRect().top +
+          window.pageYOffset +
+          yOffset;
         window.scrollTo({ top: y, behavior: "smooth" });
       } else {
         window.scrollBy({ top: window.innerHeight / 2, behavior: "smooth" });
@@ -571,7 +569,9 @@ const Ricebags: React.FC = () => {
       if (goldSection) {
         const yOffset = -80;
         const y =
-          goldSection.getBoundingClientRect().top + window.pageYOffset + yOffset;
+          goldSection.getBoundingClientRect().top +
+          window.pageYOffset +
+          yOffset;
         window.scrollTo({ top: y, behavior: "smooth" });
       } else {
         window.scrollBy({ top: window.innerHeight / 2, behavior: "smooth" });
@@ -627,44 +627,40 @@ const Ricebags: React.FC = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          BASE_URL+"/product-service/showGroupItemsForCustomrs"
+          `${BASE_URL}/product-service/showGroupItemsForCustomrs`
         );
-        const data: CategoryGroup[] = response.data;
+        const data: CategoryType[] = response.data;
 
         if (!Array.isArray(data)) {
           throw new Error("Invalid API response: Expected an array");
         }
 
+        // Process categories and items
+        const processedCategories: CategoryType[] = data.map((group) => ({
+          categoryType: group.categoryType,
+          categories: group.categories.map((category) => ({
+            categoryName: category.categoryName,
+            categoryImage: category.categoryImage || null,
+            itemsResponseDtoList: category.itemsResponseDtoList.map((item) => ({
+              ...item,
+              weight: String(item.weight) || "0",
+              inStock: item.quantity > 0,
+              categoryName: category.categoryName, // Add categoryName for filtering
+            })),
+          })),
+        }));
+
+        // Create "All Items" category
         const uniqueItemsMap = new Map<string, Item>();
-        const allCategories: Category[] = [];
-
         data.forEach((group) => {
-          if (!group.categories || !Array.isArray(group.categories)) {
-            console.warn(`Invalid categories for group ${group.categoryType}`);
-            return;
-          }
           group.categories.forEach((category) => {
-            if (!category.itemsResponseDtoList) {
-              console.warn(`No items for category ${category.categoryName}`);
-              return;
-            }
-            const mappedCategory: Category = {
-              categoryName: category.categoryName || "Unnamed Category",
-              categoryImage: category.categoryImage || null, // Changed from categoryLogo
-              itemsResponseDtoList: category.itemsResponseDtoList.map((item) => ({
-                ...item,
-                weight: String(item.weight) || "0", // Convert weight to string
-              })),
-              subCategories: category.subCategories || [],
-            };
-
-            allCategories.push(mappedCategory);
-
             category.itemsResponseDtoList.forEach((item) => {
               if (item.itemId && !uniqueItemsMap.has(item.itemId)) {
                 uniqueItemsMap.set(item.itemId, {
                   ...item,
-                  weight: String(item.weight) || "0", // Convert weight to string
+                  weight: String(item.weight) || "0",
+                  inStock: item.quantity > 0,
+                  categoryName: category.categoryName,
                 });
               }
             });
@@ -674,14 +670,18 @@ const Ricebags: React.FC = () => {
         const uniqueItemsList = Array.from(uniqueItemsMap.values());
         const sortedUniqueItems = sortItemsByStock(uniqueItemsList);
 
-        const allItemsCategory: Category = {
-          categoryName: "All Items",
-          categoryImage: null,
-          itemsResponseDtoList: sortedUniqueItems,
-          subCategories: [],
+        const allItemsCategory: CategoryType = {
+          categoryType: "All Items",
+          categories: [
+            {
+              categoryName: "All Items",
+              categoryImage: null,
+              itemsResponseDtoList: sortedUniqueItems,
+            },
+          ],
         };
 
-        const finalCategories = [allItemsCategory, ...allCategories];
+        const finalCategories = [allItemsCategory, ...processedCategories];
 
         setCategories(finalCategories);
         setFilteredCategories(finalCategories);
@@ -706,23 +706,30 @@ const Ricebags: React.FC = () => {
 
     const term = searchTerm.toLowerCase().trim();
 
-    const filtered = categories.map((category) => {
-      const filteredItems = category.itemsResponseDtoList.filter(
-        (item) =>
-          item.itemName.toLowerCase().includes(term) ||
-          item.weight.toLowerCase().includes(term) // weight is already string
-      );
-
-      const sortedFilteredItems = sortItemsByStock(filteredItems);
-
-      return {
-        ...category,
-        itemsResponseDtoList: sortedFilteredItems,
-      };
-    });
+    const filtered = categories
+      .map((categoryType) => ({
+        ...categoryType,
+        categories: categoryType.categories
+          .map((category) => ({
+            ...category,
+            itemsResponseDtoList: category.itemsResponseDtoList.filter(
+              (item) =>
+                item.itemName.toLowerCase().includes(term) ||
+                item.weight.toLowerCase().includes(term)
+            ),
+          }))
+          .filter((category) => category.itemsResponseDtoList.length > 0),
+      }))
+      .filter((categoryType) => categoryType.categories.length > 0);
 
     const totalMatchingItems = filtered.reduce(
-      (count, category) => count + category.itemsResponseDtoList.length,
+      (count, categoryType) =>
+        count +
+        categoryType.categories.reduce(
+          (subCount, category) =>
+            subCount + category.itemsResponseDtoList.length,
+          0
+        ),
       0
     );
 
@@ -731,11 +738,11 @@ const Ricebags: React.FC = () => {
 
     if (totalMatchingItems > 0) {
       const firstCategoryWithItems = filtered.find(
-        (cat) => cat.itemsResponseDtoList.length > 0
+        (catType) => catType.categories.length > 0
       );
 
       if (firstCategoryWithItems) {
-        setActiveCategory(firstCategoryWithItems.categoryName);
+        setActiveCategory(firstCategoryWithItems.categoryType);
       }
     }
   }, [searchTerm, categories]);
@@ -1004,7 +1011,7 @@ const Ricebags: React.FC = () => {
           <div className="flex justify-between items-center mb-4">
             <div className="flex-1 text-center">
               <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-                Premium Quality Rice
+                Premium Quality Products
               </h1>
             </div>
 
@@ -1025,94 +1032,116 @@ const Ricebags: React.FC = () => {
           </p>
         </motion.div>
 
-        {noResults ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="bg-gray-100 rounded-full p-4 mb-4">
-              <FaSearch className="text-gray-400 w-10 h-10" />
-            </div>
-            <h2 className="text-xl font-medium text-gray-700 mb-2">
-              No items found
-            </h2>
-            <p className="text-gray-500 mb-6 text-center max-w-md">
-              We couldn't find any items matching your search. Try using
-              different keywords or browse our categories.
-            </p>
+        {loading ? (
+          <SkeletonLoader />
+        ) : noResults ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 text-lg">No products found.</p>
             <button
+              className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors"
               onClick={() => {
                 setSearchTerm("");
                 setActiveCategory("All Items");
               }}
-              className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors"
             >
               View All Products
             </button>
           </div>
-        ) : loading ? (
-          <SkeletonLoader />
         ) : (
           <Categories
             categories={filteredCategories}
             activeCategory={activeCategory}
             onCategoryClick={setActiveCategory}
-            setActiveCategory={setActiveCategory}
             loading={loading}
             cart={cart}
             onItemClick={handleItemClick}
             updateCart={setCart}
             customerId={customerId}
             updateCartCount={setCount}
+            setActiveCategory={setActiveCategory}
           />
         )}
-      </main>
 
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="fixed bottom-24 right-4 p-3 rounded-full shadow-lg bg-gradient-to-r from-purple-600 to-purple-800 text-white z-50"
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 24 24"
-          stroke="currentColor"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="py-8 px-4 md:px-8 bg-gray-50"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 10l7-7m0 0l7 7m-7-7v18"
-          />
-        </svg>
-      </motion.button>
+          <h2 className="text-2xl font-bold text-purple-800 mb-6 text-center">
+            Why Choose ASKOXY.AI?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <Award className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Premium Quality
+              </h3>
+              <p className="text-gray-600">
+                Sourced directly from trusted farmers for unmatched freshness.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <Globe className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Fast Delivery
+              </h3>
+              <p className="text-gray-600">
+                Get your products delivered within 24 hours.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <FileText className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Exclusive Offers
+              </h3>
+              <p className="text-gray-600">
+                Enjoy special discounts and freebies with every purchase.
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
-        <div className="flex overflow-x-auto py-3 px-4 space-x-4 scrollbar-hide css-hide-scrollbar">
-          {loading
-            ? Array(5)
-                .fill(0)
-                .map((_, index) => (
-                  <div
-                    key={index}
-                    className="flex-shrink-0 px-4 py-2 rounded-full bg-gray-200 animate-pulse w-24 h-8"
-                  ></div>
-                ))
-            : filteredCategories.map((category, index) => (
-                <motion.button
-                  key={index}
-                  whileTap={{ scale: 0.95 }}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    activeCategory === category.categoryName
-                      ? "bg-gradient-to-r from-purple-600 to-purple-800 text-white shadow-md"
-                      : "bg-purple-50 text-purple-700 hover:bg-purple-100"
-                  }`}
-                  onClick={() => setActiveCategory(category.categoryName)}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="py-8 px-4 md:px-8 bg-white"
+        >
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-purple-800 mb-6 text-center">
+              Learn More About Our Services
+            </h2>
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="relative w-full md:w-1/2">
+                <button
+                  onClick={() => setIsVideoModalOpen(true)}
+                  className="absolute inset-0 flex items-center justify-center"
                 >
-                  {category.categoryName}
-                </motion.button>
-              ))}
-        </div>
-      </nav>
+                  <PlayCircle className="w-16 h-16 text-white opacity-80 hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
+              <div className="w-full md:w-1/2 flex flex-col justify-center">
+                <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                  Discover ASKOXY.AI
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Watch our video to learn how ASKOXY.AI is revolutionizing the
+                  way you shop for premium products with AI-powered solutions.
+                </p>
+                <button
+                  onClick={() => setIsVideoModalOpen(true)}
+                  className="w-fit px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors flex items-center"
+                >
+                  Watch Now <ArrowRight className="ml-2 w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {isVideoModalOpen && <VideoModal />}
+      </main>
 
       <Footer />
     </div>
